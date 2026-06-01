@@ -1,0 +1,298 @@
+:root {
+  font-family: system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  color: #e8e8ef;
+  background: #0f0f18;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: #7eb8ff;
+}
+
+body {
+  margin: 0;
+}
+
+.home {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.home h1 {
+  margin-top: 0;
+}
+
+.chapter-list {
+  list-style: none;
+  padding: 0;
+}
+
+.chapter-list li {
+  margin-bottom: 0.75rem;
+}
+
+.chapter-list a {
+  display: grid;
+  gap: 0.25rem;
+  padding: 1rem;
+  border: 1px solid #2a2a3a;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.chapter-list a:hover {
+  border-color: #4a6fa5;
+}
+
+.chapter-list .num {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.chapter-list .title {
+  font-weight: 600;
+}
+
+.chapter-list .goal {
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+.chapter-layout {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.chapter-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.chapter-nav a {
+  padding: 0.35rem 0.65rem;
+  border-radius: 4px;
+  text-decoration: none;
+  background: #1a1a28;
+}
+
+.chapter-nav a.active {
+  background: #3d5a80;
+  color: #fff;
+}
+
+.chapter-header .chapter-label {
+  color: #888;
+  margin: 0;
+}
+
+.chapter-header h1 {
+  margin: 0.25rem 0;
+}
+
+.goal {
+  color: #aaa;
+}
+
+.doc-btn {
+  display: inline-block;
+  margin-top: 0.5rem;
+}
+
+.chapter-body {
+  display: grid;
+  grid-template-columns: 1fr 680px 240px;
+  gap: 1.5rem;
+}
+
+@media (max-width: 1100px) {
+  .chapter-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chapter-prose {
+  min-width: 0;
+}
+
+.demo-pane {
+  border: 2px solid #3d5a80;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #1a1a2e;
+}
+
+.demo-pane canvas {
+  display: block;
+  cursor: crosshair;
+}
+
+.status-panel {
+  background: #1a1a28;
+  border-radius: 8px;
+  padding: 1rem;
+  font-size: 0.9rem;
+}
+
+.status-panel dl {
+  margin: 0;
+}
+
+.status-panel dt {
+  color: #888;
+  margin-top: 0.5rem;
+}
+
+.status-panel dd {
+  margin: 0;
+}
+
+.status-panel .ok {
+  color: #2ecc71;
+}
+
+.status-panel .bad {
+  color: #e74c3c;
+}
+
+.mono {
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+}
+
+.error {
+  color: #e74c3c;
+}
+
+.event-log pre,
+.event-feed {
+  font-size: 0.75rem;
+  max-height: 200px;
+  overflow: auto;
+  background: #0a0a12;
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+
+.check-list {
+  list-style: none;
+  padding: 0;
+}
+
+.check-list li {
+  padding: 0.35rem 0;
+}
+
+.check-list li.pass {
+  color: #2ecc71;
+}
+
+.check-list li.fail {
+  color: #888;
+}
+
+.chapter-footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #2a2a3a;
+}
+
+.chapter-nav-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.chapter-nav-buttons a.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.config-block {
+  background: #0a0a12;
+  padding: 1rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.connect-demo button,
+.auth-demo button {
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #3d5a80;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.hint {
+  font-size: 0.9rem;
+  color: #aaa;
+  margin-bottom: 0.5rem;
+}
+
+.palette {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.palette button {
+  width: 32px;
+  height: 32px;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.palette button.selected {
+  border-color: #fff;
+}
+
+.play-link {
+  font-weight: 600;
+}
+
+.play-link.big {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: #3d5a80;
+  color: #fff;
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+.play-layout {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.play-header a {
+  text-decoration: none;
+}
+
+.play-body {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 1rem;
+}
+
+@media (max-width: 800px) {
+  .play-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+.summary-panel ul {
+  padding-left: 1.2rem;
+}

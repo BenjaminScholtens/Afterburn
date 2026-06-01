@@ -1,0 +1,5 @@
+# Proxy Management API (avoids CORS from Netlify origin)
+/mgmt-api/*  https://api.dev.crowdedkingdoms.com/:splat  200
+
+# SPA client-side routes
+/*           /index.html  200

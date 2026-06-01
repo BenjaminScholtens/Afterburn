@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout simple-web-demo
+        uses: actions/checkout@v4
+        with:
+          path: simple-web-demo
+
+      - name: Checkout CrowdyJS
+        uses: actions/checkout@v4
+        with:
+          repository: CrowdedKingdoms/CrowdyJS
+          path: CrowdyJS
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: |
+            CrowdyJS/package-lock.json
+            simple-web-demo/package-lock.json
+
+      - name: Build CrowdyJS
+        run: npm ci && npm run build
+        working-directory: CrowdyJS
+
+      - name: Install demo dependencies
+        run: npm ci
+        working-directory: simple-web-demo
+
+      - name: Install Playwright browser
+        run: npx playwright install chromium
+        working-directory: simple-web-demo
+
+      - name: Unit tests
+        run: npm test
+        working-directory: simple-web-demo
+
+      - name: E2E tests (validates docs against dev tier)
+        run: npm run test:e2e
+        working-directory: simple-web-demo
