@@ -10,7 +10,6 @@ import {
   GAME_HTTP_URL,
   GAME_WS_URL,
   MANAGEMENT_GRAPHQL_URL,
-  MANAGEMENT_URL,
 } from '@/config';
 import { voxelToCell } from '@/game/world/coordinates';
 import { voxelStateToRgba } from '@/game/world/VoxelStore';
