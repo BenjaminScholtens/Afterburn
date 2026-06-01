@@ -196,17 +196,37 @@ export class CrowdySession {
       this.log(`Registered guest ${this._user.email}`);
       return this._user;
     } catch {
-      const login = await this.client.auth.login({
-        email: creds.email,
-        password: creds.password,
-      });
-      this._user = {
-        userId: String(login.user.userId),
-        email: login.user.email ?? creds.email,
-        gamertag: login.user.gamertag ?? undefined,
-      };
-      this.log(`Logged in guest ${this._user.email}`);
-      return this._user;
+      try {
+        const login = await this.client.auth.login({
+          email: creds.email,
+          password: creds.password,
+        });
+        this._user = {
+          userId: String(login.user.userId),
+          email: login.user.email ?? creds.email,
+          gamertag: login.user.gamertag ?? undefined,
+        };
+        this.log(`Logged in guest ${this._user.email}`);
+        return this._user;
+      } catch {
+        // Stale creds saved when mgmt-api proxy was unavailable on first visit.
+        this.log('Guest auth failed — regenerating credentials');
+        localStorage.removeItem(GUEST_CREDS_KEY);
+        creds = this.generateGuestCreds();
+        this.saveGuestCreds(creds);
+        const retry = await this.client.auth.register({
+          email: creds.email,
+          password: creds.password,
+          gamertag: `Guest-${creds.email.slice(6, 14)}`,
+        });
+        this._user = {
+          userId: String(retry.user.userId),
+          email: retry.user.email ?? creds.email,
+          gamertag: retry.user.gamertag ?? undefined,
+        };
+        this.log(`Registered fresh guest ${this._user.email}`);
+        return this._user;
+      }
     }
   }
 
@@ -500,7 +520,7 @@ function presenceLocationForUuid(uuid: string): { x: number; y: number; z: numbe
 }
 
 async function postLocalPresence(uuid: string, pose: ActorPose): Promise<void> {
-  if (typeof window === 'undefined') return;
+  if (!import.meta.env.DEV || typeof window === 'undefined') return;
   try {
     await fetch('/collab/presence', {
       method: 'POST',
@@ -516,7 +536,7 @@ async function listLocalPresence(
   selfUuid: string,
   maxAgeMs: number,
 ): Promise<PresenceActor[]> {
-  if (typeof window === 'undefined') return [];
+  if (!import.meta.env.DEV || typeof window === 'undefined') return [];
   try {
     const response = await fetch('/collab/presence');
     if (!response.ok) return [];
@@ -531,7 +551,7 @@ async function listLocalPresence(
 }
 
 async function postLocalPaint(cell: SharedPaintCell): Promise<void> {
-  if (typeof window === 'undefined') return;
+  if (!import.meta.env.DEV || typeof window === 'undefined') return;
   try {
     await fetch('/collab/paint', {
       method: 'POST',
@@ -544,7 +564,7 @@ async function postLocalPaint(cell: SharedPaintCell): Promise<void> {
 }
 
 async function listLocalPaint(): Promise<SharedPaintCell[]> {
-  if (typeof window === 'undefined') return [];
+  if (!import.meta.env.DEV || typeof window === 'undefined') return [];
   try {
     const response = await fetch('/collab/paint');
     if (!response.ok) return [];

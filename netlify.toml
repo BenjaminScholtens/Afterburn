@@ -5,3 +5,15 @@
 [build.environment]
   NODE_VERSION = "20"
   VITE_MANAGEMENT_API_URL = "/mgmt-api"
+
+# Proxy Management API — force=true so SPA catch-all does not swallow these paths.
+[[redirects]]
+  from = "/mgmt-api/*"
+  to = "https://api.dev.crowdedkingdoms.com/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
