@@ -69,8 +69,10 @@ export class CrowdySession {
   private notificationHandlers = new Map<string, Set<(n: UdpNotification) => void>>();
 
   private constructor() {
+    // GitHub CrowdyJS (Netlify build) resolves endpoint as httpUrl || graphqlEndpoint,
+    // so managementUrl must include /graphql — not just the root /mgmt-api path.
     this.client = createCrowdyClient({
-      managementUrl: MANAGEMENT_URL,
+      managementUrl: MANAGEMENT_GRAPHQL_URL,
       managementGraphqlEndpoint: MANAGEMENT_GRAPHQL_URL,
       httpUrl: GAME_HTTP_URL,
       wsUrl: GAME_WS_URL,
