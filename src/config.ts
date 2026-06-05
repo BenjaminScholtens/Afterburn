@@ -42,8 +42,9 @@ export const VIEWPORT_SCROLL_SPEED = 4;
 export const VIEWPORT_PUSH_SPEED = 3;
 
 /** Star Fox–style battle royale arena (world pixels). */
-export const BATTLE_ARENA_CENTER_X = 2000;
-export const BATTLE_ARENA_CENTER_Y = 2000;
+export const BATTLE_ARENA_CENTER_X = 0;
+export const BATTLE_ARENA_CENTER_Y = 0;
+export const BATTLE_ARENA_CENTER_Z = 0;
 export const BATTLE_INITIAL_ZONE_RADIUS = 1400;
 export const BATTLE_MIN_ZONE_RADIUS = 120;
 export const BATTLE_MATCH_MS = 480_000;
@@ -54,8 +55,9 @@ export const BATTLE_FIRE_COOLDOWN_MS = 200;
 export const BATTLE_SHIP_ACCEL = 0.55;
 export const BATTLE_SHIP_MAX_SPEED = 7;
 export const BATTLE_SHIP_DRAG = 0.92;
-export const BATTLE_PROJECTILE_SPEED = 14;
-export const BATTLE_PROJECTILE_LIFETIME_MS = 1200;
+export const BATTLE_PROJECTILE_SPEED = 22;
+export const BATTLE_PROJECTILE_LIFETIME_MS = 1800;
+export const BATTLE_LASER_MUZZLE_OFFSET = 3.5;
 
 export const DOCS_BASE = 'https://docs.crowdedkingdoms.com/build-a-game';
 

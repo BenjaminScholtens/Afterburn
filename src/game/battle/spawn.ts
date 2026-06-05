@@ -1,6 +1,6 @@
 import {
   BATTLE_ARENA_CENTER_X,
-  BATTLE_ARENA_CENTER_Y,
+  BATTLE_ARENA_CENTER_Z,
   BATTLE_INITIAL_ZONE_RADIUS,
   BATTLE_SHIP_MAX_HP,
 } from '@/config';
@@ -15,17 +15,19 @@ export function randomSpawn(seed: string): ShipState {
   const dist = 200 + (hash % 500);
   return {
     worldX: BATTLE_ARENA_CENTER_X + Math.cos(angle) * dist,
-    worldY: BATTLE_ARENA_CENTER_Y + Math.sin(angle) * dist,
-    angle: angle + Math.PI,
+    worldY: ((hash >> 8) % 120) - 60,
+    worldZ: BATTLE_ARENA_CENTER_Z + Math.sin(angle) * dist,
+    yaw: angle + Math.PI,
+    pitch: 0,
     hp: BATTLE_SHIP_MAX_HP,
     alive: true,
     kills: 0,
   };
 }
 
-export function isInsideInitialArena(x: number, y: number): boolean {
+export function isInsideInitialArena(x: number, z: number): boolean {
   return (
-    Math.hypot(x - BATTLE_ARENA_CENTER_X, y - BATTLE_ARENA_CENTER_Y) <=
+    Math.hypot(x - BATTLE_ARENA_CENTER_X, z - BATTLE_ARENA_CENTER_Z) <=
     BATTLE_INITIAL_ZONE_RADIUS
   );
 }

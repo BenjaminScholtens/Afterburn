@@ -7,9 +7,9 @@ export function Home() {
       <header>
         <h1>Star Fox Royale</h1>
         <p>
-          A Star Fox–style space battle royale on Crowded Kingdoms — blast rivals,
-          dodge the shrinking sector, and be the last fighter flying. The chapters
-          below walk through how it was built.
+          N64-style 3D space battle royale — your Arwing stays centered while the
+          sector scrolls past. Blast rivals before the ring closes. Chapters below
+          show how it was built.
         </p>
         <Link to="/play" className="play-link big">
           Launch battle royale →

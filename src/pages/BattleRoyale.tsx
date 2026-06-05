@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { BattlePane } from '@/components/BattlePane';
+import { BattleRadar } from '@/components/BattleRadar';
 import { useBattleRoyale } from '@/game/battle/useBattleRoyale';
 import { CrowdySession } from '@/game/session/CrowdySession';
 
@@ -20,26 +21,24 @@ export function BattleRoyale() {
         <Link to="/">← Tutorial</Link>
         <h1>Star Fox Royale</h1>
         <p>
-          Click the arena first, then fly: <strong>W</strong> boost · <strong>A/D</strong> turn ·{' '}
-          <strong>S</strong> brake · mouse aim · click or space to fire.
+          N64 open-sector flight — click arena to focus: <strong>W</strong> boost ·{' '}
+          <strong>A/D</strong> bank · <strong>↑/↓</strong> climb/dive · hold <strong>Space</strong>{' '}
+          or <strong>click</strong> to laser
         </p>
       </header>
       <div className="play-body">
         <div className="play-main">
-          <BattlePane
-            renderOptions={{
-              viewport: game.viewport,
-              localShip: game.localShip,
-              remoteShips: game.remoteShips,
-              projectiles: game.projectiles,
-              zone: game.zone,
-            }}
-            onAim={game.handleAim}
-            onFire={game.handleFire}
-          />
-          <div className="battle-hud">
+          <div className="battle-viewport">
+            <BattlePane getSnapshot={game.getSnapshot} setFiring={game.setFiring} />
+            <BattleRadar
+              localShip={game.localShip}
+              remoteShips={game.remoteShips}
+              zone={game.zone}
+            />
+          </div>
+          <div className="battle-hud n64-hud">
             <div className="hud-stat">
-              <span className="label">HP</span>
+              <span className="label">Shield</span>
               <span className="value">{game.localShip.hp}</span>
             </div>
             <div className="hud-stat">
@@ -47,13 +46,13 @@ export function BattleRoyale() {
               <span className="value">{game.localShip.kills}</span>
             </div>
             <div className="hud-stat">
-              <span className="label">Pilots left</span>
+              <span className="label">Pilots</span>
               <span className="value" data-testid="alive-count">
                 {game.aliveCount}
               </span>
             </div>
             <div className="hud-stat">
-              <span className="label">Sector closes</span>
+              <span className="label">Sector</span>
               <span className="value">{formatTime(game.zone.remainingMs)}</span>
             </div>
           </div>
@@ -67,8 +66,8 @@ export function BattleRoyale() {
         <aside className="battle-sidebar">
           <p className="battle-user">{session.user?.email ?? 'Connecting…'}</p>
           <p className="battle-hint">
-            Fly like Star Fox: boost into the fight, bank with A/D, and blast rivals before the
-            outer nebula closes in.
+            Your Arwing stays centered — the nebula scrolls past like Star Fox 64. Use the sector
+            radar (top-right) for rival bearings; colored arrows point toward other pilots.
           </p>
           <ol className="battle-log">
             {game.events.slice(-8).map((e) => (

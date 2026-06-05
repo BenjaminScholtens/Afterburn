@@ -14,8 +14,10 @@ export interface Projectile {
   ownerUuid: string;
   x: number;
   y: number;
+  z: number;
   vx: number;
   vy: number;
+  vz: number;
   bornAt: number;
 }
 
@@ -24,12 +26,23 @@ export interface FireEventPayload {
   ownerUuid: string;
   x: number;
   y: number;
+  z: number;
   vx: number;
   vy: number;
+  vz: number;
 }
 
 export interface HitEventPayload {
   projectileId: string;
   targetUuid: string;
   damage: number;
+}
+
+export interface BattleSceneSnapshot {
+  localUuid: string;
+  localShip: ShipState;
+  remoteShips: RemoteShip[];
+  projectiles: Projectile[];
+  zone: import('@/game/battle/zone').ZoneState;
+  tick: number;
 }

@@ -1,64 +1,54 @@
 import { useEffect, useRef } from 'react';
-import type { BattleRenderOptions } from '@/game/render/BattleRenderer';
-import { BattleRenderer } from '@/game/render/BattleRenderer';
+import { ThreeBattleScene } from '@/game/render/ThreeBattleScene';
+import type { BattleSceneSnapshot } from '@/game/battle/types';
 
 interface BattlePaneProps {
-  renderOptions: BattleRenderOptions;
-  onAim?: (worldX: number, worldY: number) => void;
-  onFire?: () => void;
+  getSnapshot: () => BattleSceneSnapshot;
+  setFiring?: (active: boolean) => void;
   width?: number;
   height?: number;
 }
 
 export function BattlePane({
-  renderOptions,
-  onAim,
-  onFire,
+  getSnapshot,
+  setFiring,
   width = 640,
   height = 480,
 }: BattlePaneProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const rendererRef = useRef<BattleRenderer | null>(null);
+  const hostRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<ThreeBattleScene | null>(null);
+  const snapshotRef = useRef(getSnapshot);
+  snapshotRef.current = getSnapshot;
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    rendererRef.current = new BattleRenderer(canvas);
-    rendererRef.current.resize();
+    const host = hostRef.current;
+    if (!host) return;
+    const scene = new ThreeBattleScene(host);
+    sceneRef.current = scene;
+    scene.startLoop(() => snapshotRef.current());
+
+    const onResize = () => scene.resize();
+    window.addEventListener('resize', onResize);
+
+    return () => {
+      window.removeEventListener('resize', onResize);
+      scene.dispose();
+      sceneRef.current = null;
+    };
   }, []);
 
-  useEffect(() => {
-    rendererRef.current?.render(renderOptions);
-  }, [renderOptions]);
-
-  const pointerToWorld = (clientX: number, clientY: number) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return null;
-    const rect = canvas.getBoundingClientRect();
-    const sx = clientX - rect.left;
-    const sy = clientY - rect.top;
-    return renderOptions.viewport.screenToWorld(sx, sy);
-  };
-
   return (
-    <div className="battle-pane demo-pane" style={{ width, height }}>
-      <canvas
-        ref={canvasRef}
-        width={width}
-        height={height}
-        tabIndex={0}
-        aria-label="Star Fox Royale flight arena"
-        onPointerDown={(e) => {
-          canvasRef.current?.focus();
-          const world = pointerToWorld(e.clientX, e.clientY);
-          if (world) onAim?.(world.x, world.y);
-          onFire?.();
-        }}
-        onPointerMove={(e) => {
-          const world = pointerToWorld(e.clientX, e.clientY);
-          if (world) onAim?.(world.x, world.y);
-        }}
-      />
+    <div
+      className="battle-pane demo-pane"
+      style={{ width, height }}
+      onPointerDown={() => {
+        hostRef.current?.focus();
+        setFiring?.(true);
+      }}
+      onPointerUp={() => setFiring?.(false)}
+      onPointerLeave={() => setFiring?.(false)}
+    >
+      <div ref={hostRef} className="battle-3d-host" tabIndex={0} aria-label="Star Fox 3D arena" />
     </div>
   );
 }

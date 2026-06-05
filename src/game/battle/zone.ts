@@ -1,6 +1,6 @@
 import {
   BATTLE_ARENA_CENTER_X,
-  BATTLE_ARENA_CENTER_Y,
+  BATTLE_ARENA_CENTER_Z,
   BATTLE_INITIAL_ZONE_RADIUS,
   BATTLE_MATCH_MS,
   BATTLE_MIN_ZONE_RADIUS,
@@ -8,7 +8,7 @@ import {
 
 export interface ZoneState {
   centerX: number;
-  centerY: number;
+  centerZ: number;
   radius: number;
   elapsedMs: number;
   remainingMs: number;
@@ -28,7 +28,7 @@ export function getZoneState(now = Date.now()): ZoneState {
     (BATTLE_MIN_ZONE_RADIUS - BATTLE_INITIAL_ZONE_RADIUS) * t;
   return {
     centerX: BATTLE_ARENA_CENTER_X,
-    centerY: BATTLE_ARENA_CENTER_Y,
+    centerZ: BATTLE_ARENA_CENTER_Z,
     radius,
     elapsedMs: elapsed,
     remainingMs: Math.max(0, BATTLE_MATCH_MS - elapsed),
@@ -37,10 +37,10 @@ export function getZoneState(now = Date.now()): ZoneState {
 
 export function distanceToZoneEdge(
   x: number,
-  y: number,
+  z: number,
   zone: ZoneState,
 ): number {
   const dx = x - zone.centerX;
-  const dy = y - zone.centerY;
-  return zone.radius - Math.hypot(dx, dy);
+  const dz = z - zone.centerZ;
+  return zone.radius - Math.hypot(dx, dz);
 }

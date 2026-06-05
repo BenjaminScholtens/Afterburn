@@ -71,7 +71,7 @@ test.describe('Battle royale route', () => {
   test('/play loads Star Fox Royale', async ({ page }) => {
     await page.goto('/play');
     await expect(page.getByRole('heading', { name: 'Star Fox Royale' })).toBeVisible();
-    await expect(page.locator('.battle-pane canvas')).toBeVisible();
+    await expect(page.locator('.battle-canvas')).toBeVisible();
     await expect(page.getByText('Pilots left')).toBeVisible();
   });
 
@@ -83,8 +83,8 @@ test.describe('Battle royale route', () => {
 
     await Promise.all([pageA.goto('/play'), pageB.goto('/play')]);
 
-    await expect(pageA.locator('.battle-pane canvas')).toBeVisible();
-    await expect(pageB.locator('.battle-pane canvas')).toBeVisible();
+    await expect(pageA.locator('.battle-canvas')).toBeVisible();
+    await expect(pageB.locator('.battle-canvas')).toBeVisible();
 
     await expect
       .poll(async () => Number(await pageA.getByTestId('alive-count').textContent()), {
