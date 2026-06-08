@@ -8,12 +8,6 @@ const crowdyRoot = resolve(root, '../CrowdyJS');
 const crowdyDist = resolve(crowdyRoot, 'dist/index.js');
 
 if (!existsSync(crowdyDist)) {
-  if (!existsSync(resolve(crowdyRoot, 'package.json'))) {
-    console.error(
-      'CrowdyJS not found at ../CrowdyJS. Clone the monorepo or check out CrowdyJS as a sibling directory.',
-    );
-    process.exit(1);
-  }
-  console.log('Building CrowdyJS (file:../CrowdyJS dependency)...');
-  execSync('npm run build', { cwd: crowdyRoot, stdio: 'inherit' });
+  console.log('CrowdyJS SDK not built — bootstrapping (fork/Netlify layout)...');
+  execSync('bash scripts/bootstrap-crowdyjs.sh', { cwd: root, stdio: 'inherit' });
 }

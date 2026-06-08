@@ -1,0 +1,1665 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type User {
+  userId: BigInt!
+  email: String
+  gamertag: String
+  disambiguation: String
+  state: String
+  isConfirmed: Boolean!
+  createdAt: DateTime!
+  grantEarlyAccess: Boolean!
+  grantEarlyAccessOverride: Boolean!
+  orgId: BigInt
+  externalId: String
+  userType: String!
+  isSuperAdmin: Boolean!
+
+  """
+  Company-employee flag that grants access to control-plane / operator features. Independent from is_super_admin.
+  """
+  isOperator: Boolean!
+
+  """
+  The current user's effective permission keys on the given org. Empty if not a member. Always full set if super admin.
+  """
+  permissionsForOrg(orgId: BigInt!): [String!]!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type UserDonationData {
+  totalAmountCents: String!
+  currency: String!
+}
+
+type UserPropertyTokenData {
+  available: String!
+  inUse: String!
+  total: String!
+}
+
+type FreePlayWindowInfo {
+  isCurrentlyActive: Boolean!
+  description: String!
+  nextWindowStart: String
+}
+
+type PageInfo {
+  totalCount: Int!
+  limit: Int!
+  offset: Int!
+}
+
+type UsersPage {
+  items: [User!]!
+  pageInfo: PageInfo!
+}
+
+type AuthResponse {
+  token: String!
+  gameTokenId: String!
+  user: User!
+}
+
+type Organization {
+  orgId: BigInt!
+  name: String!
+  slug: String!
+  ownerUserId: BigInt!
+  status: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type OrgMember {
+  orgMemberId: BigInt!
+  orgId: BigInt!
+  userId: BigInt!
+  status: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type OrgToken {
+  orgTokenId: BigInt!
+  orgId: BigInt!
+  label: String
+  environmentId: String
+  kind: String!
+  isActive: Boolean!
+  expiresAt: DateTime
+  lastUsedAt: DateTime
+  revokedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type OrgRole {
+  orgRoleId: BigInt!
+  orgId: BigInt!
+  roleName: String!
+  description: String
+  isSystem: Boolean!
+  createdAt: DateTime!
+  permissions: [String!]!
+}
+
+"""
+Represents one user's membership in one organization. Bundles the org, the union of permissions across the user's assigned roles, and the role list itself - so the UI can render an org dashboard without a follow-up round trip.
+"""
+type OrgMembership {
+  org: Organization!
+  permissions: [String!]!
+  roles: [OrgRole!]!
+  joinedAt: DateTime!
+}
+
+type OrgPermission {
+  permissionKey: ID!
+  description: String
+  category: String
+}
+
+"""
+Returned exactly once - on org token creation. The plaintext `token` field is never re-emitted. Future listings show metadata only via the `OrgToken` type.
+"""
+type OrgTokenWithSecret {
+  orgTokenId: BigInt!
+  orgId: BigInt!
+
+  """The plaintext token. Save it now; it is not stored."""
+  token: String!
+  label: String
+  isActive: Boolean!
+  expiresAt: DateTime
+  createdAt: DateTime!
+}
+
+type AppAccessTier {
+  tierId: BigInt!
+  appId: BigInt!
+  name: String!
+  tierOrder: Float!
+  isFree: Boolean!
+  isDefault: Boolean!
+  priceCents: BigInt
+  currency: String
+  billingPeriod: String
+  description: String
+  permissionKeys: [String!]!
+  status: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type AppUserAccess {
+  appUserAccessId: BigInt!
+  appId: BigInt!
+  userId: BigInt!
+  tierId: BigInt
+  status: String!
+  grantedBy: String!
+  subscriptionId: String
+  expiresAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type App {
+  appId: BigInt!
+  orgId: BigInt!
+  name: String!
+  slug: String
+  description: String
+  visibility: AppVisibility!
+  status: AppStatus!
+  metadata: String
+  state: String
+  createdBy: BigInt!
+  splitMode: Boolean!
+  gameApiUrl: String
+  deploymentTarget: String!
+  runtimeStatus: String!
+  runtimeDenialReason: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  org: Organization
+}
+
+"""
+PUBLIC = listed in marketplace, UNLISTED = direct link only, PRIVATE = members only
+"""
+enum AppVisibility {
+  PUBLIC
+  UNLISTED
+  PRIVATE
+}
+
+"""
+DRAFT = invisible to non-members, LIVE = purchasable/playable, ARCHIVED = read-only
+"""
+enum AppStatus {
+  DRAFT
+  LIVE
+  ARCHIVED
+}
+
+type AppsPage {
+  items: [App!]!
+  pageInfo: PageInfo!
+}
+
+type OrgWallet {
+  walletId: BigInt!
+  orgId: BigInt!
+  balanceCents: BigInt!
+  currency: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type WalletTransaction {
+  transactionId: BigInt!
+  walletId: BigInt!
+  orgId: BigInt!
+  amountCents: BigInt!
+  balanceAfter: BigInt!
+  transactionType: String!
+  description: String
+  referenceId: String
+  appId: BigInt
+  createdAt: DateTime!
+}
+
+type AppBudget {
+  appBudgetId: BigInt!
+  orgId: BigInt!
+  appId: BigInt!
+  monthlyLimitCents: BigInt
+  currentMonthUsageCents: BigInt!
+  periodStart: DateTime!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type ServiceQuota {
+  quotaId: BigInt!
+  orgId: BigInt
+  appId: BigInt
+  tierId: BigInt
+  metric: String!
+  limitValue: BigInt!
+  period: String!
+  actionOnExceed: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Checkout {
+  checkoutId: BigInt!
+  userId: BigInt!
+  provider: PaymentProvider!
+  purpose: CheckoutPurpose!
+  status: CheckoutStatus!
+  amountCents: BigInt
+  currency: String
+
+  """Stripe Checkout Session id, PayPal Order id, etc."""
+  externalId: String!
+
+  """URL to redirect the user to."""
+  externalUrl: String!
+  orgId: BigInt
+  appId: BigInt
+  tierId: BigInt
+  error: String
+  createdAt: DateTime!
+  completedAt: DateTime
+  expiresAt: DateTime
+}
+
+"""External payment processor for a checkout."""
+enum PaymentProvider {
+  STRIPE
+  PAYPAL
+}
+
+"""
+Why the checkout exists. Drives which side effect runs on webhook completion: ORG_WALLET_TOPUP credits an org_wallet; APP_ACCESS_PURCHASE upserts app_user_access; DONATION inserts donations; PROPERTY_TOKENS credits property_tokens; SHARED_APP_SUBSCRIPTION activates a paid shared-environment app slot.
+"""
+enum CheckoutPurpose {
+  ORG_WALLET_TOPUP
+  APP_ACCESS_PURCHASE
+  DONATION
+  PROPERTY_TOKENS
+  SHARED_APP_SUBSCRIPTION
+}
+
+"""
+Lifecycle state of a Checkout. Updated by webhook reconciliation, not by the redirect URL.
+"""
+enum CheckoutStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  EXPIRED
+  CANCELED
+}
+
+type PaymentEventRecord {
+  eventId: BigInt!
+  provider: PaymentProvider!
+  externalEventId: String!
+  eventType: String!
+  checkoutId: BigInt
+  processedAt: DateTime
+  error: String
+  createdAt: DateTime!
+}
+
+type PaymentEventsPage {
+  items: [PaymentEventRecord!]!
+  pageInfo: PageInfo!
+}
+
+type CheckoutsPage {
+  items: [Checkout!]!
+  pageInfo: PageInfo!
+}
+
+type CksDeployProgressStep {
+  id: String!
+  kind: String!
+
+  """Human-readable step label for the org UI"""
+  label: String!
+  status: String!
+  attempt: Int!
+  error: String
+}
+
+type CksDeployProgressTask {
+  id: String!
+  kind: String!
+  label: String!
+  status: String!
+  error: String
+  steps: [CksDeployProgressStep!]!
+}
+
+type CksDeployProgress {
+  changeOrderId: String!
+
+  """Change order kind (deploy or destroy pipeline identifier)"""
+  changeOrderKind: String!
+  changeOrderStatus: String!
+  targetVersion: String
+  error: String
+  tasksTotal: Int!
+  tasksSucceeded: Int!
+  tasksFailed: Int!
+  tasksInProgress: Int!
+  tasksPending: Int!
+  currentTaskKind: String
+  currentStepKind: String
+
+  """True when the deploy failed but the change order was left in_progress"""
+  isStuck: Boolean!
+
+  """Redeploy is allowed (failed deploy or stuck order cleared)"""
+  canRetry: Boolean!
+  tasks: [CksDeployProgressTask!]!
+}
+
+type CksEnvironment {
+  id: String!
+  orgId: BigInt!
+  slug: String!
+  displayName: String!
+  primaryCloud: String!
+  primaryRegion: String!
+  status: String!
+  subdomainHandle: String
+  desiredEnvironmentVersion: String
+  observedEnvironmentVersion: String
+  databaseFlavor: String
+  gameApiFlavor: String
+  udpBuddyFlavor: String
+  caddyFlavor: String
+  gameApiMinServers: Int!
+  gameApiMaxServers: Int!
+  udpBuddyMinServers: Int!
+  udpBuddyMaxServers: Int!
+  loadBalancerCount: Int!
+
+  """'dedicated' (multi-VM) or 'dev_single' (one dev-only VM)."""
+  environmentClass: String!
+
+  """Single VM flavor when environmentClass = 'dev_single'."""
+  singleBoxFlavor: String
+  billingStatus: String!
+  billingGraceDeadline: DateTime
+  suspendedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type CksEnvironmentComponent {
+  id: String!
+  environmentId: String!
+  kind: String!
+  desiredVersion: String
+  desiredSpecJson: String
+  observedVersion: String
+  observedSpecJson: String
+  status: String
+  lastObservedAt: DateTime
+}
+
+type CksEnvironmentChangeOrder {
+  id: String!
+  environmentId: String!
+  kind: String!
+  payloadJson: String!
+  requestedBy: BigInt
+  status: String!
+  claimedBy: String
+  claimedAt: DateTime
+  finishedAt: DateTime
+  error: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type CksEnvironmentAudit {
+  id: String!
+  environmentId: String!
+  action: String!
+  payloadJson: String
+  createdAt: DateTime!
+}
+
+type CksEnvironmentSecretValue {
+  id: String!
+  environmentId: String!
+  name: String!
+  kind: String
+  sealedCiphertextBase64: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type CksEnvironmentVersion {
+  version: String!
+  releasedAt: DateTime!
+  status: String!
+  notes: String
+
+  """Pinned cks-game-api git tag from the ingested manifest."""
+  gameApiGitTag: String
+}
+
+type CksOvhDatacenter {
+  region: String!
+  name: String
+  city: String
+  continent: String
+  status: String!
+  isAvailable: Boolean!
+  syncedAt: DateTime!
+
+  """
+  Number of customer-selectable instances in this datacenter after availability, pricing, and admin visibility filters.
+  """
+  selectableInstanceCount: Int!
+}
+
+"""
+Customer-selectable catalog instance flavor. Hidden, unavailable, or unpriced rows are omitted from environmentFlavors.
+"""
+type CksOvhFlavor {
+  flavorName: String!
+  flavorType: String
+  vcpus: Int
+  ramMb: Int
+  diskGb: Int
+  quotaAvailable: Int
+  rawHourlyCostCents: BigInt
+
+  """
+  Customer hourly price in cents. Non-null for every flavor returned from environmentFlavors.
+  """
+  customerHourlyPriceCents: BigInt!
+
+  """
+  Customer monthly reference price in cents. Display-only until monthly billing is implemented.
+  """
+  customerMonthlyPriceCents: BigInt
+  currency: String!
+  availabilityStatus: String!
+  pricingSource: String
+  pricingMode: String!
+  syncedAt: DateTime!
+}
+
+type CksEnvironmentQuote {
+  datacenter: String!
+  databaseFlavor: String!
+  gameApiFlavor: String!
+  udpBuddyFlavor: String!
+  caddyFlavor: String!
+  gameApiMinServers: Int!
+  gameApiMaxServers: Int!
+  udpBuddyMinServers: Int!
+  udpBuddyMaxServers: Int!
+  loadBalancerCount: Int!
+  hourlyCostCents: BigInt!
+  firstDayReserveCents: BigInt!
+  walletBalanceCents: BigInt!
+  availableBalanceCents: BigInt!
+  currency: String!
+  canCreate: Boolean!
+}
+
+type CksEnvironmentOutput {
+  id: String!
+  environmentId: String!
+  componentKind: String!
+  name: String!
+  label: String!
+  value: String!
+  valueKind: String!
+}
+
+type CksEnvironmentBillingResource {
+  id: String!
+  environmentId: String!
+  provider: String!
+  resourceId: String!
+  resourceName: String
+  componentKind: String!
+  region: String!
+  flavorName: String
+  status: String!
+  customerHourlyPriceCents: BigInt
+  currency: String!
+  observedAt: DateTime!
+}
+
+type CksBuddyHealth {
+  """False when no server_status row exists for this environment."""
+  registered: Boolean!
+  ip4: String
+  clientPort: Int
+  status: String
+  clients: Int
+  updatedAt: DateTime
+
+  """Seconds since server_status.updated_at (game DB heartbeat)."""
+  heartbeatAgeSec: Float
+
+  """
+  True when heartbeat is missing or older than the staleness threshold (~30s). Game-api rejects assignment when age > ~11s.
+  """
+  isStale: Boolean!
+
+  """Operator-facing hint when multiplayer assignment may fail."""
+  troubleshootingHint: String!
+}
+
+type CksEnvironmentDetail {
+  environment: CksEnvironment!
+
+  """
+  Buddy UDP server heartbeat from mirrored server_status. Null when env is destroyed or management DB has no row.
+  """
+  buddyHealth: CksBuddyHealth
+  components: [CksEnvironmentComponent!]!
+  changeOrders: [CksEnvironmentChangeOrder!]!
+  audit: [CksEnvironmentAudit!]!
+  secrets: [CksEnvironmentSecretValue!]!
+  outputs: [CksEnvironmentOutput!]!
+  billingResources: [CksEnvironmentBillingResource!]!
+
+  """
+  Live deploy task/step progress for the active or most recent failed deploy
+  """
+  deployProgress: CksDeployProgress
+
+  """Destroy tear-down progress for game-api and platform change orders"""
+  destroyProgress: [CksDeployProgress!]!
+}
+
+type UsageMinuteRow {
+  minute: DateTime!
+  recvBytes: String!
+  sendBytes: String!
+  recvMsgs: String
+  sendMsgs: String
+}
+
+type UsageRatePeaks {
+  peakSendMsgsPerSec: Float!
+  peakSendMbitPerSec: Float!
+  avgSendMsgsPerSec: Float!
+  avgSendMbitPerSec: Float!
+  sampleMinutes: Float!
+}
+
+type BuddyLiveRates {
+  serverId: String!
+  clientSendMsgsPerSec: Float!
+  clientSendMbitPerSec: Float!
+  clientRecvMsgsPerSec: Float!
+  clientRecvMbitPerSec: Float!
+  clients: Float!
+  updatedAt: DateTime!
+}
+
+type EnvironmentUsageSummary {
+  environmentSlug: String!
+  environmentId: String!
+  orgId: String!
+  replication: [UsageMinuteRow!]!
+  graphql: [UsageMinuteRow!]!
+  replicationRates: UsageRatePeaks!
+  buddyLive: BuddyLiveRates
+}
+
+type AppUsageRollupRow {
+  appId: String!
+  appSlug: String!
+  appName: String!
+  replicationSendBytes: String!
+  replicationRecvBytes: String!
+  graphqlSendBytes: String!
+  graphqlRecvBytes: String!
+}
+
+type EnvironmentUsageRollupRow {
+  environmentId: String!
+  environmentSlug: String!
+  displayName: String!
+  replicationSendBytes: String!
+  replicationRecvBytes: String!
+  graphqlSendBytes: String!
+  graphqlRecvBytes: String!
+}
+
+type GraphqlOperationUsageRow {
+  operationName: String!
+  totalOps: String!
+  sendBytes: String!
+  recvBytes: String!
+}
+
+type AppUsageSummary {
+  appId: String!
+  replicationSendBytes: String!
+  replicationRecvBytes: String!
+  graphqlSendBytes: String!
+  graphqlRecvBytes: String!
+  topGraphqlOperations: [GraphqlOperationUsageRow!]!
+}
+
+type GraphQLServer {
+  graphqlServerId: ID!
+
+  """Logical kind of GraphQL service: 'management-api' or 'game-api'."""
+  kind: String
+  ip4: String
+  ip6: String
+  runtimeServerId: String
+  providerInstanceId: String
+  publicIp4: String
+  publicIp6: String
+  apiPort: Int!
+  status: ServerState!
+  cpuUsagePct: Float
+  memoryUsagePct: Float
+  loadAverage1m: Float
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""The current state of the GraphQL server"""
+enum ServerState {
+  Starting
+  ReadyForClients
+  Stopping
+  Offline
+}
+
+type VersionInfo {
+  """Major version number"""
+  major: Int!
+
+  """Minor version number"""
+  minor: Int!
+
+  """Patch version number"""
+  patch: Int!
+
+  """Build number"""
+  build: Int!
+}
+
+type ServerVersionInfo {
+  """Current server version"""
+  serverVersion: VersionInfo!
+
+  """Minimum accepted client version"""
+  minimumClientVersion: VersionInfo!
+}
+
+"""Operator-facing view of cks_environments."""
+type CpAdminEnvironment {
+  id: ID!
+  orgId: String
+  slug: String!
+  displayName: String!
+  primaryCloud: String!
+  primaryRegion: String!
+  status: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletionProtectionEnabled: Boolean!
+  deletionProtectionSetAt: DateTime
+  deletionProtectionSetByEmail: String
+  subdomainHandle: String
+}
+
+type CpAdminEnvironmentsPage {
+  rows: [CpAdminEnvironment!]!
+  total: Int!
+  page: Int!
+  pageSize: Int!
+}
+
+type CpChangeOrder {
+  id: ID!
+  environmentId: String!
+  kind: String!
+
+  """JSON-encoded payload"""
+  payloadJson: String
+  status: String!
+  claimedBy: String
+  claimedAt: DateTime
+  finishedAt: DateTime
+  error: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type CpChangeOrdersPage {
+  rows: [CpChangeOrder!]!
+  total: Int!
+  page: Int!
+  pageSize: Int!
+}
+
+type CpTaskRow {
+  id: ID!
+  changeOrderId: String!
+  environmentId: String
+  kind: String!
+  ordinal: Int!
+  dependsOn: [String!]!
+  status: String!
+
+  """JSON-encoded context"""
+  contextJson: String
+  error: String
+  createdAt: DateTime!
+  startedAt: DateTime
+  finishedAt: DateTime
+  updatedAt: DateTime!
+}
+
+type CpStepRow {
+  id: ID!
+  taskId: String!
+  ordinal: Int!
+  kind: String!
+  status: String!
+  attempt: Int!
+  payloadJson: String
+  intentJson: String
+  idempotencyKey: String
+  handleJson: String
+  outputJson: String
+  recheckAt: DateTime
+  claimedBy: String
+  error: String
+  createdAt: DateTime!
+  startedAt: DateTime
+  finishedAt: DateTime
+  updatedAt: DateTime!
+}
+
+type CpChangeOrderDetail {
+  order: CpChangeOrder!
+  tasks: [CpTaskRow!]!
+  steps: [CpStepRow!]!
+}
+
+type CpAuditEntry {
+  id: ID!
+  actorUserId: String
+  actorKind: String!
+  action: String!
+  entityKind: String
+  entityId: String
+  environmentId: String
+  payloadJson: String
+  createdAt: DateTime!
+}
+
+type CpSecretRow {
+  id: ID!
+  environmentId: String!
+  name: String!
+  kind: String
+  createdAt: DateTime!
+  rotatedAt: DateTime
+}
+
+type CpEnvSecretRow {
+  id: ID!
+  environmentId: String!
+  name: String!
+  kind: String
+  createdAt: DateTime!
+  rotatedAt: DateTime
+}
+
+type CpOperatorUser {
+  userId: ID!
+  email: String
+  gamertag: String
+  isOperator: Boolean!
+  isSuperAdmin: Boolean!
+  createdAt: DateTime!
+}
+
+type CpOvhCatalogRow {
+  region: String!
+  flavorName: String!
+  vcpus: Int
+  ramMb: Int
+  diskGb: Int
+  inboundBandwidth: Int
+  outboundBandwidth: Int
+  ovhHourlyPriceCents: String
+  customerHourlyPriceCents: String
+  customerPricingMode: String!
+  quotaAvailable: Int
+}
+
+type CpUsageMinuteRow {
+  minute: DateTime!
+  recvBytes: String!
+  sendBytes: String!
+  recvMsgs: String
+  sendMsgs: String
+}
+
+type CpUsageRatePeaks {
+  peakSendMsgsPerSec: Float!
+  peakSendMbitPerSec: Float!
+  avgSendMsgsPerSec: Float!
+  avgSendMbitPerSec: Float!
+  sampleMinutes: Float!
+}
+
+type CpBuddyLiveRates {
+  serverId: String!
+  clientSendMsgsPerSec: Float!
+  clientSendMbitPerSec: Float!
+  clientRecvMsgsPerSec: Float!
+  clientRecvMbitPerSec: Float!
+  clients: Float!
+  updatedAt: DateTime!
+}
+
+type CpUsageSummary {
+  environmentSlug: String!
+  orgId: String
+  replication: [CpUsageMinuteRow!]!
+  graphql: [CpUsageMinuteRow!]!
+  replicationRates: CpUsageRatePeaks!
+  buddyLive: CpBuddyLiveRates
+}
+
+"""
+Operator-facing view of one ingested (or git-only pending) environment release manifest.
+"""
+type CpEnvironmentVersionRow {
+  version: String!
+  releasedAt: DateTime!
+  status: String!
+  notes: String
+  sourceCommit: String
+  gameApiGitTag: String
+  buddyVersion: String
+  ingestedAt: DateTime!
+  updatedAt: DateTime!
+
+  """True when releases/<version>.yaml exists on the configured git ref."""
+  inGit: Boolean!
+
+  """True when a row exists in cks_environment_versions."""
+  inDb: Boolean!
+
+  """
+  True when this ingested available release is what org redeploy targets (newest available, or ENVIRONMENT_DEFAULT_VERSION).
+  """
+  isLatestAvailable: Boolean!
+}
+
+"""
+Operator release manifest list merged from git and cks_environment_versions.
+"""
+type CpEnvironmentVersionsPage {
+  rows: [CpEnvironmentVersionRow!]!
+
+  """Version org redeploy resolves to when no explicit version is passed."""
+  latestAvailableVersion: String
+
+  """
+  False when GitHub manifest listing failed (e.g. invalid GITHUB_PAT). Rows may still come from the database.
+  """
+  gitSourceAvailable: Boolean!
+}
+
+"""
+cks-game-api tag on GitHub that is not yet pinned by any available environment release.
+"""
+type CpUnreleasedGameApiTag {
+  tag: String!
+
+  """ISO timestamp when the tag was created on GitHub."""
+  taggedAt: String
+
+  """Environment version that Publish & ingest would create (v0.1.N+1)."""
+  proposedEnvironmentVersion: String!
+
+  """
+  True when create-schema.sql differs between this tag and the current deploy-target game-api pin.
+  """
+  schemaChanged: Boolean!
+}
+
+"""Game-api tags eligible for one-click environment release publish."""
+type CpUnreleasedGameApiTagsPage {
+  tags: [CpUnreleasedGameApiTag!]!
+
+  """gameApiGitTag on the current org deploy target, if any."""
+  currentDeployTargetGameApiTag: String
+
+  """False when GitHub tag listing failed (e.g. invalid GITHUB_PAT)."""
+  gitSourceAvailable: Boolean!
+}
+
+"""Result of publishing an environment release from a game-api tag."""
+type CpPublishEnvironmentReleaseResult {
+  version: CpEnvironmentVersionRow!
+  schemaChanged: Boolean!
+
+  """True when releases/vX.Y.Z.yaml was committed to the manifest git ref."""
+  committedToGit: Boolean!
+
+  """Set when ingest succeeded but the GitHub manifest commit failed."""
+  gitCommitError: String
+}
+
+"""
+Public platform discovery. Clients/SDKs read the shared game-api URL here to route apps deployed to the shared environment.
+"""
+type PlatformConfig {
+  """Shared game-api HTTP/GraphQL root for shared-environment apps."""
+  sharedGameApiUrl: String
+
+  """Shared game-api WebSocket root (subscriptions / UDP proxy)."""
+  sharedGameApiWsUrl: String
+
+  """Free shared app slots an org gets before a paid subscription."""
+  freeAppsPerOrg: Int!
+}
+
+type SharedEnvPlan {
+  planId: BigInt!
+  code: String!
+  name: String!
+  description: String
+  priceCents: BigInt!
+  currency: String!
+  billingInterval: String!
+  status: String!
+}
+
+type AppSharedSubscription {
+  appId: BigInt!
+  orgId: BigInt!
+  planId: BigInt
+  provider: String
+  status: String!
+  currentPeriodEnd: DateTime
+}
+
+"""
+The shared-environment runtime gate + current billing-window usage for an app.
+"""
+type AppRuntimeState {
+  appId: BigInt!
+  deploymentTarget: AppDeploymentTarget!
+  runtimeStatus: AppRuntimeStatus!
+
+  """
+  free_allowance | insufficient_funds | spend_cap | subscription_lapsed when not active.
+  """
+  runtimeDenialReason: String
+  walletBalanceCents: BigInt!
+  currentHourUsageCents: BigInt!
+  currentDayUsageCents: BigInt!
+  hourlyLimitCents: BigInt
+  dailyLimitCents: BigInt
+}
+
+"""
+Where an app runs: none (draft), shared (the shared game-api), or dedicated (a provisioned environment).
+"""
+enum AppDeploymentTarget {
+  NONE
+  SHARED
+  DEDICATED
+}
+
+"""
+The per-app runtime gate game-api + Buddy enforce: active, grace, denied, or suspended.
+"""
+enum AppRuntimeStatus {
+  ACTIVE
+  GRACE
+  DENIED
+  SUSPENDED
+}
+
+"""An org's free shared app slot quota usage."""
+type FreeAppQuota {
+  orgId: BigInt!
+  quota: Int!
+  usedFree: Int!
+  paidApps: Int!
+  remainingFree: Int!
+}
+
+"""
+Result of publishing an app to the shared environment. Free path returns a runtime state with no checkout; paid path returns a checkout to redirect to.
+"""
+type PublishAppResult {
+  appId: BigInt!
+
+  """True when published under the free quota (no payment)."""
+  free: Boolean!
+
+  """Subscription checkout to redirect to (paid path only)."""
+  checkout: Checkout
+}
+
+"""Org off-session auto-billing configuration."""
+type OrgAutoBilling {
+  orgId: BigInt!
+  enabled: Boolean!
+
+  """Max auto-billed per period in cents. Null = no limit."""
+  limitCents: BigInt
+  period: String!
+  autoBilledThisPeriodCents: BigInt!
+  rechargeAmountCents: BigInt!
+  lowWaterThresholdCents: BigInt!
+  hasPaymentMethod: Boolean!
+  lastError: String
+}
+
+"""A saved (vaulted) off-session payment method."""
+type SavedPaymentMethod {
+  paymentMethodId: BigInt!
+  provider: String!
+  brand: String
+  last4: String
+  isDefault: Boolean!
+  status: String!
+}
+
+"""
+Stripe SetupIntent handle the browser uses to vault a card for auto-billing.
+"""
+type PaymentMethodSetup {
+  externalCustomerId: String!
+  clientSecret: String
+  publishableKey: String
+}
+
+"""
+BigInt custom scalar type. Input should be a string representation of a BigInt.
+"""
+scalar BigInt
+
+type Query {
+  me: User
+  user(id: BigInt!): User
+  myDonationData: UserDonationData!
+  myPropertyTokens: UserPropertyTokenData!
+  freePlayWindowInfo: FreePlayWindowInfo!
+
+  """
+  Super admin only. Paginated user search across email, gamertag, disambiguation, and exact user_id.
+  """
+  usersPaginated(query: String, limit: Int = 50, offset: Int = 0): UsersPage!
+  organization(id: BigInt!): Organization
+  organizationBySlug(slug: String!): Organization
+  myOrganizations: [OrgMembership!]!
+
+  """
+  The full seed list of permission keys. Used by the UI to render role editors.
+  """
+  orgPermissions: [OrgPermission!]!
+  orgMembers(orgId: BigInt!): [OrgMember!]!
+  orgRoles(orgId: BigInt!): [OrgRole!]!
+  memberRoles(orgMemberId: BigInt!): [OrgRole!]!
+  orgTokens(orgId: BigInt!): [OrgToken!]!
+
+  """
+  Public marketplace listing. Returns visibility=PUBLIC + status=LIVE only. No auth required.
+  """
+  apps(filter: AppMarketplaceFilterInput, limit: Int = 50, offset: Int = 0): AppsPage!
+  appBySlug(orgSlug: String!, appSlug: String!): App
+  app(appId: BigInt!): App
+
+  """Apps the caller can see: org member OR active app_user_access."""
+  myApps: [App!]!
+  appsForOrg(orgSlug: String!): [App!]!
+
+  """
+  Public listing of access tiers for an app. Used by the marketplace app detail page.
+  """
+  appAccessTiers(appId: BigInt!): [AppAccessTier!]!
+
+  """
+  Runtime permission keys that can be granted through app tiers or grid permissions.
+  """
+  runtimePermissions: [String!]!
+  myAppAccess(appId: BigInt!): AppUserAccess
+  appUserAccessByApp(appId: BigInt!, status: String, limit: Int = 50, offset: Int = 0): [AppUserAccess!]!
+  walletBalance(orgId: BigInt!): OrgWallet!
+  walletTransactions(orgId: BigInt!, limit: Int, offset: Int): [WalletTransaction!]!
+  appBudget(orgId: BigInt!, appId: BigInt!): AppBudget
+  appBudgets(orgId: BigInt!): [AppBudget!]!
+  quotasForOrg(orgId: BigInt!): [ServiceQuota!]!
+  quotasForApp(appId: BigInt!): [ServiceQuota!]!
+
+  """
+  The most-specific quota that applies to (orgId, appId, tierId, metric). Walks tier -> app -> org -> free_tier_defaults. Returns null if nothing matches.
+  """
+  effectiveQuota(metric: String!, orgId: BigInt, appId: BigInt, tierId: BigInt): ServiceQuota
+  myCheckouts(limit: Int = 50, offset: Int = 0): CheckoutsPage!
+
+  """Super admin only. Cross-tenant payments audit."""
+  checkouts(filter: CheckoutFilterInput, limit: Int = 50, offset: Int = 0): CheckoutsPage!
+
+  """Super admin only. Inbound payment webhook audit log."""
+  paymentEvents(limit: Int = 50, offset: Int = 0): PaymentEventsPage!
+  orgEnvironments(orgId: BigInt!): [CksEnvironment!]!
+  orgEnvironment(orgId: BigInt!, slug: String!): CksEnvironmentDetail
+  environmentVersions: [CksEnvironmentVersion!]!
+
+  """
+  OVH datacenters that have at least one customer-priced instance flavor available for customer selection.
+  """
+  environmentDatacenters: [CksOvhDatacenter!]!
+
+  """
+  Customer-selectable instance flavors in the datacenter with current availability and customer pricing.
+  """
+  environmentFlavors(datacenter: String!): [CksOvhFlavor!]!
+
+  """
+  Pricing quote for the selected flavors. Fails if any flavor is unavailable, hidden, or lacks customer pricing.
+  """
+  environmentQuote(input: EnvironmentQuoteInput!): CksEnvironmentQuote!
+
+  """
+  Per-minute replication and GraphQL usage for apps linked to an environment. Observability only.
+  """
+  environmentUsageSummary(orgId: BigInt!, environmentSlug: String!, since: DateTime!): EnvironmentUsageSummary!
+
+  """Aggregate usage totals per environment in an organization."""
+  orgUsageByEnvironment(orgId: BigInt!, since: DateTime!): [EnvironmentUsageRollupRow!]!
+
+  """Per-app usage totals for apps linked to an environment."""
+  environmentUsageByApp(orgId: BigInt!, environmentSlug: String!, since: DateTime!): [AppUsageRollupRow!]!
+
+  """Top GraphQL operations by bytes for an app in the time range."""
+  appGraphqlOperations(orgId: BigInt!, appId: BigInt!, since: DateTime!, limit: Int = 20): [GraphqlOperationUsageRow!]!
+
+  """Replication and GraphQL totals plus top operations for one app."""
+  appUsageSummary(orgId: BigInt!, appId: BigInt!, since: DateTime!, operationLimit: Int = 20): AppUsageSummary!
+
+  """Returns all registered GraphQL servers"""
+  graphqlServers: [GraphQLServer!]!
+
+  """Returns only active (ReadyForClients) GraphQL servers"""
+  activeGraphQLServers: [GraphQLServer!]!
+
+  """
+  Returns version information for the server and minimum client version requirements
+  """
+  versionInfo: ServerVersionInfo!
+  cpEnvironments(page: Int! = 1, pageSize: Int! = 50): CpAdminEnvironmentsPage!
+  cpEnvironment(slug: String!): CpAdminEnvironment
+  cpChangeOrders(environmentId: String, page: Int! = 1, pageSize: Int! = 50): CpChangeOrdersPage!
+  cpChangeOrder(id: String!): CpChangeOrderDetail
+  cpAudit(environmentId: String, limit: Int! = 200): [CpAuditEntry!]!
+  cpSecrets(environmentId: String): [CpSecretRow!]!
+  cpEnvSecrets(environmentId: String): [CpEnvSecretRow!]!
+  cpOvhCatalogSummary(region: String): [CpOvhCatalogRow!]!
+  cpUsageSummary(environmentSlug: String!, since: DateTime!): CpUsageSummary!
+  cpUnreleasedGameApiTags: CpUnreleasedGameApiTagsPage!
+  cpEnvironmentVersions: CpEnvironmentVersionsPage!
+  operatorUsers: [CpOperatorUser!]!
+
+  """
+  Public platform discovery. Returns the shared game-api URL clients use for shared-environment apps. No auth required.
+  """
+  platformConfig: PlatformConfig!
+
+  """Public catalog of paid shared-environment app-slot subscription plans."""
+  sharedEnvPlans: [SharedEnvPlan!]!
+  orgFreeAppQuota(orgId: BigInt!): FreeAppQuota!
+  appSharedSubscription(appId: BigInt!): AppSharedSubscription
+
+  """
+  Shared-environment runtime gate + current billing-window usage for an app.
+  """
+  appRuntimeState(appId: BigInt!): AppRuntimeState!
+  orgAutoBilling(orgId: BigInt!): OrgAutoBilling!
+  orgPaymentMethods(orgId: BigInt!): [SavedPaymentMethod!]!
+}
+
+input AppMarketplaceFilterInput {
+  query: String
+  orgSlug: String
+}
+
+input CheckoutFilterInput {
+  provider: PaymentProvider
+  purpose: CheckoutPurpose
+  status: CheckoutStatus
+  userId: BigInt
+  orgId: BigInt
+  appId: BigInt
+}
+
+input EnvironmentQuoteInput {
+  orgId: BigInt!
+  datacenter: String!
+
+  """Deployment class: 'dedicated' (default) or 'dev_single'."""
+  environmentClass: String
+
+  """
+  Single VM flavor for environmentClass='dev_single'. Ignored for dedicated.
+  """
+  flavor: String
+
+  """
+  Flavor name from environmentFlavors(datacenter); must have a published hourly price. Required for dedicated.
+  """
+  databaseFlavor: String
+
+  """
+  Flavor name from environmentFlavors(datacenter) for per-tenant game-api VMs; must have a published hourly price. Required for dedicated.
+  """
+  gameApiFlavor: String
+
+  """
+  Flavor name from environmentFlavors(datacenter); must have a published hourly price. Required for dedicated.
+  """
+  udpBuddyFlavor: String
+
+  """
+  Flavor name from environmentFlavors(datacenter) for the Caddy LB VMs in front of the game-api fleet; must have a published hourly price. Required for dedicated.
+  """
+  caddyFlavor: String
+  gameApiMinServers: Int
+  gameApiMaxServers: Int
+  udpBuddyMinServers: Int
+  udpBuddyMaxServers: Int
+  loadBalancerCount: Int
+}
+
+type Mutation {
+  login(loginUserInput: LoginUserInput!): AuthResponse!
+  register(registerUserInput: RegisterUserInput!): AuthResponse!
+  confirmEmail(token: String!): Boolean!
+  requestPasswordReset(email: String!): Boolean!
+  resetPassword(resetPasswordInput: ResetPasswordInput!): Boolean!
+  resendConfirmationEmail(email: String!): Boolean!
+  logout: Boolean!
+  changePassword(currentPassword: String!, newPassword: String!): Boolean!
+  logoutAllDevices: Boolean!
+  updateGamertag(input: UpdateGamertagInput!): User!
+  setSuperAdmin(userId: BigInt!, value: Boolean!): User!
+
+  """
+  Super-admin only. Flip users.is_operator to grant or revoke control-plane / operator access.
+  """
+  setOperator(userId: BigInt!, value: Boolean!): User!
+  setEarlyAccessOverride(userId: BigInt!, value: Boolean!): User!
+  updateUserType(userId: BigInt!, value: String!): User!
+  forceLogoutUser(userId: BigInt!): Boolean!
+
+  """
+  Soft-deletes the caller's account: anonymizes PII, revokes sessions. Wallet, voxel, and donation history stays intact via FK.
+  """
+  deleteMyAccount: Boolean!
+  createOrganization(input: CreateOrganizationInput!): Organization!
+
+  """Super admin only. Used to freeze/unfreeze orgs platform-wide."""
+  setOrgStatus(orgId: BigInt!, status: String!): Organization!
+
+  """
+  Returns the plaintext token exactly once. Save it; subsequent queries only show metadata.
+  """
+  createOrgToken(input: CreateOrgTokenInput!): OrgTokenWithSecret!
+  updateOrgToken(orgTokenId: BigInt!, input: UpdateOrgTokenInput!): OrgToken!
+  revokeOrgToken(orgTokenId: BigInt!): Boolean!
+  inviteOrgMember(input: InviteOrgMemberInput!): OrgMember!
+  removeOrgMember(orgId: BigInt!, userId: BigInt!): Boolean!
+  updateOrgMemberRoles(orgId: BigInt!, userId: BigInt!, roleIds: [BigInt!]!): OrgMember!
+  createOrgRole(input: CreateOrgRoleInput!): OrgRole!
+  updateOrgRole(orgRoleId: BigInt!, input: UpdateOrgRoleInput!): OrgRole!
+  deleteOrgRole(orgRoleId: BigInt!): Boolean!
+  createApp(input: CreateAppInput!): App!
+  updateApp(appId: BigInt!, input: UpdateAppInput!): App!
+  archiveApp(appId: BigInt!): App!
+
+  """Super admin only. Used to take down or relist apps platform-wide."""
+  setAppVisibility(appId: BigInt!, visibility: AppVisibility!): App!
+  createAccessTier(input: CreateAccessTierInput!): AppAccessTier!
+  updateAccessTier(tierId: BigInt!, input: UpdateAccessTierInput!): AppAccessTier!
+  archiveAccessTier(tierId: BigInt!): AppAccessTier!
+  grantAppAccess(input: GrantAppAccessInput!): AppUserAccess!
+  revokeAppAccess(appId: BigInt!, userId: BigInt!): AppUserAccess!
+  setAppBudget(orgId: BigInt!, appId: BigInt!, monthlyLimitCents: BigInt!): AppBudget!
+  setQuota(input: SetQuotaInput!): ServiceQuota!
+  deleteQuota(quotaId: BigInt!): Boolean!
+
+  """
+  Creates a Checkout row, opens the provider session, and returns the row with externalUrl set. Redirect the user to externalUrl. Status starts PENDING and updates via webhook.
+  """
+  createCheckout(input: CreateCheckoutInput!): Checkout!
+
+  """
+  Captures an approved PayPal order after the hosted checkout redirects back. Wallet credit still reconciles through PayPal webhooks.
+  """
+  capturePaypalCheckout(orderId: String!): Checkout!
+
+  """
+  Creates an environment only if each selected instance flavor is available and customer-priced in the catalog (same rule as environmentQuote). Use environmentFlavors / environmentDatacenters for valid options.
+  """
+  createEnvironment(input: CreateEnvironmentInput!): CksEnvironmentDetail!
+  destroyEnvironment(input: DestroyEnvironmentInput!): CksEnvironmentChangeOrder!
+
+  """
+  Permanently deletes a destroyed environment record from the platform. Cloud resources must already be torn down via destroyEnvironment.
+  """
+  purgeEnvironment(input: PurgeEnvironmentInput!): Boolean!
+  resumeEnvironment(input: ResumeEnvironmentInput!): CksEnvironmentChangeOrder!
+  updateEnvironmentScaling(input: UpdateEnvironmentScalingInput!): CksEnvironmentChangeOrder!
+
+  """
+  Redeploys the environment to the latest available release version (or the configured default), reusing its current flavors/scaling and linked apps. Preserves the environment URLs. No-op-safe: re-running when already at latest still redeploys. If a prior deploy failed but stayed in_progress, it is abandoned first so the redeploy can proceed.
+  """
+  redeployEnvironment(input: RedeployEnvironmentInput!): CksEnvironmentChangeOrder!
+
+  """
+  SSH-restarts the Buddy systemd service on the active UDP runtime VM. Symptom relief when server_status heartbeat is stale; does not replace cks-udp-api pool fixes.
+  """
+  restartEnvironmentServices(input: RestartEnvironmentServicesInput!): CksEnvironmentChangeOrder!
+  setEnvironmentDeletionProtection(environmentId: String!, enabled: Boolean!): Boolean!
+  putCpSecret(environmentId: String!, name: String!, plaintext: String!, kind: String): CpSecretRow!
+  deleteCpSecret(environmentId: String!, name: String!): Boolean!
+  putCpEnvSecret(environmentId: String!, name: String!, plaintext: String!, kind: String): CpEnvSecretRow!
+  ingestEnvironmentVersion(input: IngestEnvironmentVersionInput!): CpEnvironmentVersionRow!
+  publishEnvironmentReleaseFromGameApiTag(input: PublishEnvironmentReleaseFromGameApiTagInput!): CpPublishEnvironmentReleaseResult!
+  yankEnvironmentVersion(version: String!): Boolean!
+
+  """
+  Publish an app to the shared game-api environment. Free under the org quota; otherwise pass a planId for a paid subscription checkout.
+  """
+  publishAppToShared(appId: BigInt!, planId: BigInt, provider: PaymentProvider, successUrl: String, cancelUrl: String): PublishAppResult!
+  cancelSharedSubscription(appId: BigInt!): AppSharedSubscription!
+
+  """Set per-app hourly/daily spend caps (cents). Pass null to clear a cap."""
+  setAppSpendCaps(appId: BigInt!, hourlyLimitCents: BigInt, dailyLimitCents: BigInt): AppRuntimeState!
+
+  """
+  Enable/disable off-session auto-billing. Pass limitCents=null for no limit.
+  """
+  setAutoBilling(orgId: BigInt!, enabled: Boolean!, limitCents: BigInt, rechargeAmountCents: BigInt, lowWaterThresholdCents: BigInt): OrgAutoBilling!
+
+  """
+  Begin vaulting a card for auto-billing. Returns a Stripe SetupIntent client secret for the browser to confirm.
+  """
+  setupSharedPaymentMethod(orgId: BigInt!): PaymentMethodSetup!
+  removeSharedPaymentMethod(orgId: BigInt!, paymentMethodId: BigInt!): Boolean!
+}
+
+input LoginUserInput {
+  email: String!
+  password: String!
+}
+
+input RegisterUserInput {
+  email: String!
+  password: String!
+  gamertag: String
+}
+
+input ResetPasswordInput {
+  token: String!
+  newPassword: String!
+}
+
+input UpdateGamertagInput {
+  gamertag: String!
+  disambiguation: String!
+}
+
+input CreateOrganizationInput {
+  name: String!
+  slug: String!
+}
+
+input CreateOrgTokenInput {
+  orgId: BigInt!
+  label: String
+  expiresAt: DateTime
+}
+
+input UpdateOrgTokenInput {
+  label: String
+  expiresAt: DateTime
+  isActive: Boolean
+}
+
+input InviteOrgMemberInput {
+  orgId: BigInt!
+  userId: BigInt!
+}
+
+input CreateOrgRoleInput {
+  orgId: BigInt!
+  roleName: String!
+  description: String
+  permissions: [String!]!
+}
+
+input UpdateOrgRoleInput {
+  roleName: String
+  description: String
+  permissions: [String!]
+}
+
+input CreateAppInput {
+  orgId: BigInt!
+  name: String!
+  slug: String!
+  description: String
+  visibility: AppVisibility
+  status: AppStatus
+  metadata: String
+}
+
+input UpdateAppInput {
+  name: String
+  description: String
+  visibility: AppVisibility
+  status: AppStatus
+  metadata: String
+}
+
+input CreateAccessTierInput {
+  appId: BigInt!
+  name: String!
+  tierOrder: Int
+  isFree: Boolean
+  isDefault: Boolean
+  description: String
+  permissionKeys: [String!]
+}
+
+input UpdateAccessTierInput {
+  name: String
+  tierOrder: Int
+  isFree: Boolean
+  isDefault: Boolean
+  priceCents: BigInt
+  currency: String
+  billingPeriod: String
+  description: String
+  stripePriceId: String
+  paypalPlanId: String
+  permissionKeys: [String!]
+}
+
+input GrantAppAccessInput {
+  appId: BigInt!
+  userId: BigInt!
+  tierId: BigInt
+  grantedBy: String
+}
+
+input SetQuotaInput {
+  orgId: BigInt
+  appId: BigInt
+  tierId: BigInt
+  metric: String!
+  limitValue: BigInt!
+  period: String
+  actionOnExceed: String
+}
+
+input CreateCheckoutInput {
+  provider: PaymentProvider!
+  purpose: CheckoutPurpose!
+  orgId: BigInt
+  appId: BigInt
+  tierId: BigInt
+  planId: BigInt
+  amountCents: BigInt
+  currency: String = "usd"
+  successUrl: String
+  cancelUrl: String
+}
+
+input CreateEnvironmentInput {
+  orgId: BigInt!
+  displayName: String!
+
+  """
+  Optional explicit slug for scripts/E2E. When omitted, the API generates an opaque e-{12} slug.
+  """
+  slug: String
+  x25519PublicKeyBase64: String!
+  datacenter: String!
+
+  """
+  Deployment class: 'dedicated' (default, multi-VM) or 'dev_single' (one cheap dev-only VM running Postgres + management-api + game-api + Buddy). dev_single is not for production.
+  """
+  environmentClass: String
+
+  """
+  Single VM flavor for environmentClass='dev_single' (e.g. b3-8); must have a published hourly price. Ignored for dedicated.
+  """
+  flavor: String
+
+  """
+  Flavor name from environmentFlavors(datacenter); must have a published hourly price. Required for dedicated.
+  """
+  databaseFlavor: String
+
+  """
+  Flavor name from environmentFlavors(datacenter) for per-tenant game-api VMs; must have a published hourly price. Required for dedicated.
+  """
+  gameApiFlavor: String
+
+  """
+  Flavor name from environmentFlavors(datacenter); must have a published hourly price. Required for dedicated.
+  """
+  udpBuddyFlavor: String
+
+  """
+  Flavor name from environmentFlavors(datacenter) for the Caddy LB VMs in front of the game-api fleet; must have a published hourly price. Required for dedicated.
+  """
+  caddyFlavor: String
+  gameApiMinServers: Int
+  gameApiMaxServers: Int
+  udpBuddyMinServers: Int
+  udpBuddyMaxServers: Int
+  loadBalancerCount: Int
+  appIds: [String!]
+}
+
+input DestroyEnvironmentInput {
+  orgId: BigInt!
+  slug: String!
+}
+
+input PurgeEnvironmentInput {
+  orgId: BigInt!
+  slug: String!
+}
+
+input ResumeEnvironmentInput {
+  orgId: BigInt!
+  slug: String!
+}
+
+input UpdateEnvironmentScalingInput {
+  orgId: BigInt!
+  slug: String!
+  gameApiMinServers: Int!
+  gameApiMaxServers: Int!
+  udpBuddyMinServers: Int!
+  udpBuddyMaxServers: Int!
+  loadBalancerCount: Int!
+
+  """
+  Caddy LB flavor (in front of the game-api fleet). When omitted the existing value is preserved.
+  """
+  caddyFlavor: String
+}
+
+input RedeployEnvironmentInput {
+  orgId: BigInt!
+  slug: String!
+  deployMode: RedeployDeployMode
+}
+
+"""
+full = replace VMs. services = update in place on existing runtime servers. Omit for automatic routing.
+"""
+enum RedeployDeployMode {
+  FULL
+  SERVICES
+}
+
+input RestartEnvironmentServicesInput {
+  orgId: BigInt!
+  slug: String!
+}
+
+input IngestEnvironmentVersionInput {
+  version: String!
+  force: Boolean! = false
+  status: String
+  notes: String
+}
+
+input PublishEnvironmentReleaseFromGameApiTagInput {
+  """cks-game-api semver tag (e.g. v0.6.20)."""
+  gameApiTag: String!
+
+  """Overwrite an existing environment version row if it already exists."""
+  force: Boolean! = false
+}

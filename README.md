@@ -6,11 +6,13 @@ Documentation lives in [cks-docs/docs-build-a-game](../cks-docs/docs-build-a-gam
 
 ## Prerequisites
 
-- Node.js 20+
-- This repo checked out **next to** [`CrowdyJS`](../CrowdyJS/) (monorepo layout below)
-- A modern browser
+- Node.js 20+ and a modern browser
+- **Monorepo checkout** (optional): fastest local dev when `CrowdyJS/` is a sibling directory
+- **Fork-only checkout** (fine): `npm install` auto-clones CrowdyJS and uses vendored GraphQL schemas
 
-## Monorepo layout
+## Layout options
+
+**Monorepo (CKS internal)**
 
 ```
 cks-project-root/
@@ -18,6 +20,11 @@ cks-project-root/
   simple-web-demo/    ← this app
   cks-docs/           ← tutorial docs
 ```
+
+**Fork / standalone** — only `simple-web-demo/` is required. Netlify and `npm install` use:
+
+- `vendor/schemas/` — committed copies of management + game API GraphQL SDL
+- `scripts/bootstrap-crowdyjs.sh` — clones a pinned CrowdyJS commit and builds the SDK
 
 ## Dev tier config
 
@@ -74,13 +81,29 @@ npm run demo:verify
 | 9 — Full game | `/chapter/9` | [09-full-game](https://docs.crowdedkingdoms.com/build-a-game/09-full-game) |
 | Play | `/play` | — |
 
-## Deploy (static site)
+## Deploy (Netlify / static fork)
 
-Build with direct API URLs (no `/mgmt-api` proxy):
+Forks deploy **without** the monorepo. Netlify runs `scripts/netlify-build.sh`, which:
+
+1. Clones CrowdyJS at a pinned commit (`CROWDYJS_REF`, overridable in Netlify env)
+2. Copies `vendor/schemas/*.gql` so GraphQL codegen succeeds
+3. Builds CrowdyJS, then this app
+
+**Commit `vendor/schemas/`** when you merge updates from upstream — that is what your fork’s Netlify build uses.
+
+CKS maintainers with the monorepo can refresh vendored schemas:
+
+```bash
+./scripts/sync-vendor-schemas.sh   # copies from ../cks-*-api/schema.gql
+```
+
+Optional Netlify env vars: `CROWDYJS_REPO`, `CROWDYJS_REF`.
+
+For non-Netlify static hosts, build with direct API URLs (no `/mgmt-api` proxy):
 
 ```bash
 cp .env.example .env
 npm run build
 ```
 
-The host must either allow `docs.crowdedkingdoms.com` (or your origin) on the dev Management API CORS list, or reverse-proxy `/mgmt-api` → `https://api.dev.crowdedkingdoms.com` like the Vite dev server does.
+The host must either allow your origin on the dev Management API CORS list, or reverse-proxy `/mgmt-api` → `https://api.dev.crowdedkingdoms.com` (see `netlify.toml`).
