@@ -7,7 +7,8 @@ import {
 import { hitShieldPhase, HIT_SHIELD_TOTAL_MS } from '@/game/battle/hitShieldFx';
 import { remoteDisplayPoint } from '@/game/battle/remoteSync';
 import { rivalBeaconScale, rivalVisualScale } from '@/game/battle/rivalHud';
-import type { BattleSceneSnapshot, HitFlash } from '@/game/battle/types';
+import { explosionPhase } from '@/game/battle/shipExplosionFx';
+import type { BattleSceneSnapshot, HitFlash, ShipExplosion } from '@/game/battle/types';
 import type { ShipState } from '@/game/battle/shipState';
 
 const N64_PALETTE = {
@@ -151,6 +152,85 @@ function createShieldFxMeshes(accent: number): ShieldFxMeshes {
   return { group, shell, absorb, ripple };
 }
 
+interface ExplosionFxMeshes {
+  group: THREE.Group;
+  flash: THREE.Mesh;
+  core: THREE.Mesh;
+  ring: THREE.Mesh;
+  sparks: THREE.Mesh[];
+}
+
+function createExplosionMeshes(accent: number): ExplosionFxMeshes {
+  const group = new THREE.Group();
+  const flashMat = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0,
+    fog: false,
+    toneMapped: false,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+  const flash = new THREE.Mesh(new THREE.SphereGeometry(1.2, 10, 8), flashMat);
+  group.add(flash);
+
+  const coreMat = new THREE.MeshBasicMaterial({
+    color: accent,
+    transparent: true,
+    opacity: 0,
+    fog: false,
+    toneMapped: false,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+  const core = new THREE.Mesh(new THREE.IcosahedronGeometry(1.1, 0), coreMat);
+  group.add(core);
+
+  const ringMat = new THREE.MeshBasicMaterial({
+    color: 0xffaa44,
+    transparent: true,
+    opacity: 0,
+    side: THREE.DoubleSide,
+    fog: false,
+    toneMapped: false,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.7, 1.35, 20), ringMat);
+  group.add(ring);
+
+  const sparkDirs = [
+    [1, 0.2, 0],
+    [-1, 0.15, 0.2],
+    [0.2, 1, 0.1],
+    [-0.3, -0.8, 0.25],
+    [0.4, -0.2, 1],
+    [-0.5, 0.1, -0.9],
+    [0.1, -0.5, -1],
+    [-0.2, 0.6, 0.7],
+  ];
+  const sparks: THREE.Mesh[] = [];
+  for (const [sx, sy, sz] of sparkDirs) {
+    const spark = new THREE.Mesh(
+      new THREE.BoxGeometry(0.35, 0.35, 0.35),
+      new THREE.MeshBasicMaterial({
+        color: 0xffee88,
+        transparent: true,
+        opacity: 0,
+        fog: false,
+        toneMapped: false,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      }),
+    );
+    spark.userData.dir = new THREE.Vector3(sx, sy, sz).normalize();
+    sparks.push(spark);
+    group.add(spark);
+  }
+
+  return { group, flash, core, ring, sparks };
+}
+
 function createStarfield(): THREE.Points {
   const count = 2400;
   const positions = new Float32Array(count * 3);
@@ -219,6 +299,7 @@ export class ThreeBattleScene {
   private readonly localFx: THREE.Group;
   private readonly localShieldFx: ShieldFxMeshes;
   private readonly remoteShieldFx = new Map<string, ShieldFxMeshes>();
+  private readonly explosionMeshes = new Map<string, ExplosionFxMeshes>();
   private readonly _euler = new THREE.Euler(0, 0, 0, 'YXZ');
   private readonly _quat = new THREE.Quaternion();
   private readonly _invQuat = new THREE.Quaternion();
@@ -545,12 +626,22 @@ export class ThreeBattleScene {
     this.zoneRing.position.set(zone.centerX, BATTLE_ARENA_FLOOR_Y + 0.5, zone.centerZ);
     this.zoneRing.scale.set(zone.radius, zone.radius, 1);
 
-    const thrust = 0.25 + throttle * 0.85;
-    this.boostGlow = thrust + Math.sin(performance.now() * 0.02) * 0.12 * throttle;
-    this.exhaust.scale.set(1, 1, this.boostGlow);
-    this.localShip.rotation.z = Math.sin(performance.now() * 0.008) * 0.04;
+    this.localShip.visible = localShip.alive;
+    if (localShip.alive) {
+      const thrust = 0.25 + throttle * 0.85;
+      this.boostGlow = thrust + Math.sin(performance.now() * 0.02) * 0.12 * throttle;
+      this.exhaust.scale.set(1, 1, this.boostGlow);
+      const rolling = Math.abs(localShip.roll) > 0.05;
+      this.localShip.rotation.z = rolling
+        ? localShip.roll
+        : Math.sin(performance.now() * 0.008) * 0.04;
+      if (rolling) {
+        this.exhaust.scale.set(1.15, 1.15, this.boostGlow * 1.4);
+      }
+    }
 
     this.syncRemotes(remoteShips, localShip, now);
+    this.syncExplosions(snapshot.explosions, now);
     const absorbed = this.syncHitShields(hitFlashes, localUuid, localShip, remoteShips, now);
     this.syncLasers(projectiles, localUuid, absorbed);
     this.syncLocalLasers(projectiles, localUuid, absorbed);
@@ -672,6 +763,7 @@ export class ThreeBattleScene {
       entry.rig.rotation.order = 'YXZ';
       entry.rig.rotation.y = s.yaw;
       entry.rig.rotation.x = s.pitch;
+      entry.ship.rotation.z = s.roll ?? 0;
       entry.ship.scale.setScalar(visualScale);
       const beaconScale = rivalBeaconScale(dist);
       entry.beacon.scale.setScalar(beaconScale);
@@ -687,6 +779,52 @@ export class ThreeBattleScene {
         this.arena.remove(entry.rig);
         this.remoteMeshes.delete(uuid);
         this.remoteShieldFx.delete(uuid);
+      }
+    }
+  }
+
+  private syncExplosions(explosions: ShipExplosion[], now: number): void {
+    const seen = new Set<string>();
+    for (const ex of explosions) {
+      const age = now - ex.startedAt;
+      const phase = explosionPhase(age);
+      if (!phase.active) continue;
+      seen.add(ex.id);
+
+      let fx = this.explosionMeshes.get(ex.id);
+      if (!fx) {
+        fx = createExplosionMeshes(hexColor(ex.color));
+        fx.group.position.set(ex.x, ex.y, ex.z);
+        this.arena.add(fx.group);
+        this.explosionMeshes.set(ex.id, fx);
+      }
+
+      fx.group.visible = true;
+      fx.flash.visible = phase.flash > 0.04;
+      fx.flash.scale.setScalar(0.8 + phase.flash * 2.4);
+      (fx.flash.material as THREE.MeshBasicMaterial).opacity = phase.flash;
+
+      fx.core.visible = phase.coreOpacity > 0.04;
+      fx.core.scale.setScalar(phase.coreScale);
+      (fx.core.material as THREE.MeshBasicMaterial).opacity = phase.coreOpacity;
+
+      fx.ring.visible = phase.ringOpacity > 0.04;
+      fx.ring.scale.setScalar(phase.ringScale);
+      (fx.ring.material as THREE.MeshBasicMaterial).opacity = phase.ringOpacity;
+
+      for (const spark of fx.sparks) {
+        const dir = spark.userData.dir as THREE.Vector3;
+        spark.visible = phase.sparkOpacity > 0.04;
+        spark.position.copy(dir).multiplyScalar(phase.sparkSpread);
+        spark.scale.setScalar(0.5 + (1 - phase.sparkOpacity) * 0.8);
+        (spark.material as THREE.MeshBasicMaterial).opacity = phase.sparkOpacity;
+      }
+    }
+
+    for (const [id, fx] of this.explosionMeshes) {
+      if (!seen.has(id)) {
+        this.arena.remove(fx.group);
+        this.explosionMeshes.delete(id);
       }
     }
   }

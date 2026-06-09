@@ -360,6 +360,20 @@ body {
   font-size: 0.75rem;
 }
 
+.battle-viewport--eliminated::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: 8px;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 35%,
+    rgba(8, 4, 18, 0.35) 100%
+  );
+}
+
 .battle-viewport {
   position: relative;
   width: 640px;

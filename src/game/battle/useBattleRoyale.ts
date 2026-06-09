@@ -27,7 +27,15 @@ import {
   BATTLE_YAW_RATE,
   BATTLE_ZONE_DAMAGE_PER_SEC,
   BATTLE_ACTOR_SYNC_INTERVAL_MS,
+  BATTLE_BARREL_ROLL_COOLDOWN_MS,
+  BATTLE_BARREL_ROLL_MS,
+  BATTLE_BARREL_ROLL_STRAFE_RATE,
 } from '@/config';
+import {
+  barrelRollAngle,
+  barrelRollStrafeFactor,
+  type BarrelRollDirection,
+} from '@/game/battle/barrelRoll';
 import { worldToChunkInput } from '@/game/world/coordinates';
 import {
   decodeShipState,
@@ -39,6 +47,7 @@ import {
   applyInvertRecovery,
   isShipInverted,
   shipForward,
+  shipRight,
   tamePitch,
 } from '@/game/battle/flight';
 import {
@@ -52,22 +61,28 @@ import { applyArenaCollisions } from '@/game/battle/arena';
 import { distanceToZoneEdge, getMatchStartMs, getZoneState } from '@/game/battle/zone';
 import { randomSpawn } from '@/game/battle/spawn';
 import {
+  listBattleDestroys,
   listBattleFires,
   listBattlePeers,
+  postBattleDestroy,
   postBattleFire,
   postBattlePresence,
 } from '@/game/battle/battlePresence';
 import {
+  EVENT_DESTROY,
   EVENT_FIRE,
   EVENT_HIT,
   type BattleSceneSnapshot,
+  type DestroyEventPayload,
   type FireEventPayload,
   type HitEventPayload,
   type HitFlash,
   type Projectile,
   type RemoteShip,
+  type ShipExplosion,
 } from '@/game/battle/types';
 import { HIT_SHIELD_TOTAL_MS } from '@/game/battle/hitShieldFx';
+import { SHIP_EXPLOSION_TOTAL_MS } from '@/game/battle/shipExplosionFx';
 
 function encodeJsonPayload(payload: unknown): string {
   return btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
@@ -109,12 +124,17 @@ export function useBattleRoyale() {
   const presencePostIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const projectilePrevPosRef = useRef(new Map<string, { x: number; y: number; z: number }>());
   const hitFlashesRef = useRef<HitFlash[]>([]);
+  const explosionsRef = useRef<ShipExplosion[]>([]);
   const matchStartRef = useRef(getMatchStartMs());
   const everHadOpponentRef = useRef(false);
   const matchStatusRef = useRef<'fighting' | 'victory' | 'eliminated'>('fighting');
   const outsideZoneRef = useRef(false);
   const invertedMsRef = useRef(0);
   const lastCrashAtRef = useRef(0);
+  const barrelRollEndsAtRef = useRef(0);
+  const lastBarrelRollAtRef = useRef(0);
+  const barrelRollDirectionRef = useRef<BarrelRollDirection>(-1);
+  const lastTurnSignRef = useRef<BarrelRollDirection>(-1);
 
   const [tick, setTick] = useState(0);
   const [events, setEvents] = useState<string[]>([]);
@@ -185,6 +205,100 @@ export function useBattleRoyale() {
     [session, bump, battleActorUuid],
   );
 
+  const registerExplosion = useCallback(
+    (targetUuid: string, x: number, y: number, z: number, color: string) => {
+      const now = performance.now();
+      explosionsRef.current = explosionsRef.current.filter(
+        (e) => now - e.startedAt < SHIP_EXPLOSION_TOTAL_MS + 80,
+      );
+      if (
+        explosionsRef.current.some(
+          (e) => e.targetUuid === targetUuid && now - e.startedAt < 1_800,
+        )
+      ) {
+        return;
+      }
+      explosionsRef.current.push({
+        id: `${targetUuid}-${Math.round(now)}`,
+        targetUuid,
+        x,
+        y,
+        z,
+        color,
+        startedAt: now,
+      });
+    },
+    [],
+  );
+
+  const broadcastDestroy = useCallback(
+    async (targetUuid: string, x: number, y: number, z: number, color: string) => {
+      const payload: DestroyEventPayload = { targetUuid, x, y, z };
+      const { chunk } = chunkAt(x, z);
+      void session.sendClientEvent({
+        chunk,
+        eventType: EVENT_DESTROY,
+        state: encodeJsonPayload(payload),
+        sequenceNumber: eventSeqRef.current++ % 256,
+        distance: 12,
+        decayRate: 0,
+        uuid: battleActorUuid,
+      });
+      void postBattleDestroy(payload, color);
+    },
+    [session, battleActorUuid],
+  );
+
+  const eliminateShip = useCallback(
+    (
+      targetUuid: string,
+      ship: ShipState,
+      color: string,
+      isLocal: boolean,
+      shouldBroadcast: boolean,
+    ) => {
+      if (!ship.alive) return;
+      registerExplosion(targetUuid, ship.worldX, ship.worldY, ship.worldZ, color);
+      ship.alive = false;
+      ship.hp = 0;
+      if (isLocal) {
+        clearBattleActorUuid();
+        setMatch('eliminated');
+        firingRef.current = false;
+      }
+      if (shouldBroadcast) {
+        void broadcastDestroy(targetUuid, ship.worldX, ship.worldY, ship.worldZ, color);
+      }
+      bump();
+    },
+    [broadcastDestroy, bump, registerExplosion, setMatch],
+  );
+
+  const applyDestroy = useCallback(
+    (payload: DestroyEventPayload, color: string) => {
+      registerExplosion(payload.targetUuid, payload.x, payload.y, payload.z, color);
+      if (payload.targetUuid === battleActorUuid) {
+        const ship = localShipRef.current;
+        if (ship.alive) {
+          ship.alive = false;
+          ship.hp = 0;
+          clearBattleActorUuid();
+          setMatch('eliminated');
+          firingRef.current = false;
+          bump();
+        }
+        return;
+      }
+      const remote = remoteRef.current.get(payload.targetUuid);
+      if (remote?.ship.alive) {
+        remote.ship.alive = false;
+        remote.ship.hp = 0;
+        bump();
+      }
+    },
+    [battleActorUuid, bump, registerExplosion, setMatch],
+  );
+
   const registerHitFlash = useCallback((payload: HitEventPayload) => {
     let x = payload.x;
     let y = payload.y;
@@ -235,11 +349,10 @@ export function useBattleRoyale() {
         if (!ship.alive) return;
         ship.hp = Math.max(0, ship.hp - payload.damage);
         if (ship.hp <= 0) {
-          ship.alive = false;
-          clearBattleActorUuid();
-          setMatch('eliminated');
+          eliminateShip(battleActorUuid, ship, localColor, true, true);
+        } else {
+          bump();
         }
-        bump();
         return;
       }
 
@@ -247,14 +360,15 @@ export function useBattleRoyale() {
       if (!remote || !remote.ship.alive) return;
       remote.ship.hp = Math.max(0, remote.ship.hp - payload.damage);
       if (remote.ship.hp <= 0) {
-        remote.ship.alive = false;
         if (payload.projectileId.startsWith(battleActorUuid.slice(0, 8))) {
           localShipRef.current.kills += 1;
         }
+        eliminateShip(payload.targetUuid, remote.ship, remote.color, false, true);
+      } else {
+        bump();
       }
-      bump();
     },
-    [battleActorUuid, bump, setMatch, registerHitFlash],
+    [battleActorUuid, bump, eliminateShip, localColor, registerHitFlash],
   );
 
   useEffect(() => {
@@ -279,11 +393,15 @@ export function useBattleRoyale() {
           const serverMs = Number(n.epochMillis);
           const prev = remoteRef.current.get(n.uuid);
           if (!shouldApplyRemoteUpdate(prev, seq, serverMs)) return;
+          const color = actorColorForUuid(ship.colorId ?? n.uuid);
+          if (prev?.ship.alive && !ship.alive) {
+            registerExplosion(n.uuid, ship.worldX, ship.worldY, ship.worldZ, color);
+          }
           upsertRemoteShip(
             remoteRef.current,
             n.uuid,
             ship,
-            actorColorForUuid(ship.colorId ?? n.uuid),
+            color,
             'udp',
             performance.now(),
             { seq, serverMs },
@@ -317,6 +435,14 @@ export function useBattleRoyale() {
             const payload = decodeJsonPayload<HitEventPayload>(n.state);
             if (!payload) return;
             void applyHit(payload);
+            return;
+          }
+          if (n.eventType === EVENT_DESTROY) {
+            const payload = decodeJsonPayload<DestroyEventPayload>(n.state);
+            if (!payload) return;
+            const remote = remoteRef.current.get(payload.targetUuid);
+            const color = remote?.color ?? actorColorForUuid(payload.targetUuid);
+            applyDestroy(payload, color);
           }
         }),
       );
@@ -373,6 +499,11 @@ export function useBattleRoyale() {
             );
           }
 
+          for (const destroy of await listBattleDestroys()) {
+            if (destroy.targetUuid === battleActorUuid) continue;
+            applyDestroy(destroy, destroy.color);
+          }
+
           for (const fire of await listBattleFires()) {
             if (fire.ownerUuid === battleActorUuid) continue;
             if (projectilesRef.current.some((p) => p.id === fire.id)) continue;
@@ -421,7 +552,22 @@ export function useBattleRoyale() {
         presenceIntervalRef.current = null;
       }
     };
-  }, [session, bump, applyHit, pilotColorId, battleActorUuid]);
+  }, [session, bump, applyHit, applyDestroy, registerExplosion, pilotColorId, battleActorUuid]);
+
+  const tryBarrelRoll = useCallback(() => {
+    const ship = localShipRef.current;
+    if (!ship.alive || matchStatusRef.current === 'eliminated') return;
+    const now = performance.now();
+    if (now < barrelRollEndsAtRef.current) return;
+    if (now - lastBarrelRollAtRef.current < BATTLE_BARREL_ROLL_COOLDOWN_MS) return;
+    const keys = keysRef.current;
+    let dir = lastTurnSignRef.current;
+    if (keys.has('d') || keys.has('right')) dir = 1;
+    else if (keys.has('a') || keys.has('left')) dir = -1;
+    lastBarrelRollAtRef.current = now;
+    barrelRollDirectionRef.current = dir;
+    barrelRollEndsAtRef.current = now + BATTLE_BARREL_ROLL_MS;
+  }, []);
 
   const trackKey = useCallback((e: KeyboardEvent, down: boolean) => {
     const codeMap: Record<string, string> = {
@@ -453,7 +599,11 @@ export function useBattleRoyale() {
         firingRef.current = false;
       }
     }
-  }, [fireProjectile]);
+    if (e.code === 'KeyZ' && down) {
+      e.preventDefault();
+      tryBarrelRoll();
+    }
+  }, [fireProjectile, tryBarrelRoll]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => trackKey(e, true);
@@ -480,9 +630,13 @@ export function useBattleRoyale() {
         outsideZoneRef.current = false;
         invertedMsRef.current = 0;
         lastCrashAtRef.current = 0;
+        barrelRollEndsAtRef.current = 0;
+        lastBarrelRollAtRef.current = 0;
         projectilesRef.current = [];
         projectilePrevPosRef.current.clear();
         hitProjectilesRef.current.clear();
+        hitFlashesRef.current = [];
+        explosionsRef.current = [];
         everHadOpponentRef.current = false;
         setMatch('fighting');
       }
@@ -497,8 +651,15 @@ export function useBattleRoyale() {
           void fireProjectile(ship);
         }
 
-        if (keys.has('a') || keys.has('left')) ship.yaw += BATTLE_YAW_RATE * dt;
-        if (keys.has('d') || keys.has('right')) ship.yaw -= BATTLE_YAW_RATE * dt;
+        let turnSign: BarrelRollDirection | 0 = 0;
+        if (keys.has('a') || keys.has('left')) {
+          ship.yaw += BATTLE_YAW_RATE * dt;
+          turnSign = -1;
+        }
+        if (keys.has('d') || keys.has('right')) {
+          ship.yaw -= BATTLE_YAW_RATE * dt;
+          turnSign = 1;
+        }
         if (keys.has('w') || keys.has('up')) {
           ship.pitch += BATTLE_PITCH_RATE * dt;
         }
@@ -514,9 +675,25 @@ export function useBattleRoyale() {
 
         const steer = steerRef.current;
         const pitchSteer = steer.pitch;
+        if (Math.abs(steer.yaw) > 0.0001) {
+          turnSign = steer.yaw < 0 ? 1 : -1;
+        }
         ship.yaw += steer.yaw;
         ship.pitch += pitchSteer;
         steerRef.current = { yaw: 0, pitch: 0 };
+
+        if (turnSign !== 0) {
+          lastTurnSignRef.current = turnSign;
+        }
+
+        const rollNow = performance.now();
+        if (rollNow < barrelRollEndsAtRef.current) {
+          const rollStart = barrelRollEndsAtRef.current - BATTLE_BARREL_ROLL_MS;
+          const rollDir = barrelRollDirectionRef.current;
+          ship.roll = barrelRollAngle(rollStart, rollNow, rollDir) ?? 0;
+        } else {
+          ship.roll = 0;
+        }
 
         const pitchingInput =
           keys.has('w') ||
@@ -550,6 +727,17 @@ export function useBattleRoyale() {
         ship.worldY += fwd.y * speed;
         ship.worldZ += fwd.z * speed;
 
+        if (rollNow < barrelRollEndsAtRef.current) {
+          const rollStart = barrelRollEndsAtRef.current - BATTLE_BARREL_ROLL_MS;
+          const strafeDir = turnSign !== 0 ? turnSign : barrelRollDirectionRef.current;
+          const strafe = barrelRollStrafeFactor(rollStart, rollNow);
+          const right = shipRight(ship);
+          const strafeSpeed = BATTLE_BARREL_ROLL_STRAFE_RATE * strafe * dt;
+          ship.worldX += right.x * strafeSpeed * strafeDir;
+          ship.worldY += right.y * strafeSpeed * strafeDir;
+          ship.worldZ += right.z * strafeSpeed * strafeDir;
+        }
+
         const crash = applyArenaCollisions(
           ship,
           zone,
@@ -558,9 +746,7 @@ export function useBattleRoyale() {
         );
         lastCrashAtRef.current = crash.crashAt;
         if (crash.damaged && ship.hp <= 0) {
-          ship.alive = false;
-          clearBattleActorUuid();
-          setMatch('eliminated');
+          eliminateShip(battleActorUuid, ship, localColor, true, true);
         }
 
         const edge = distanceToZoneEdge(ship.worldX, ship.worldZ, zone);
@@ -568,9 +754,7 @@ export function useBattleRoyale() {
         if (outsideZoneRef.current) {
           ship.hp = Math.max(0, ship.hp - (BATTLE_ZONE_DAMAGE_PER_SEC * dt) / 60);
           if (ship.hp <= 0) {
-            ship.alive = false;
-            clearBattleActorUuid();
-            setMatch('eliminated');
+            eliminateShip(battleActorUuid, ship, localColor, true, true);
           }
         }
       } else {
@@ -580,6 +764,9 @@ export function useBattleRoyale() {
       const flashNow = performance.now();
       hitFlashesRef.current = hitFlashesRef.current.filter(
         (f) => flashNow - f.startedAt < HIT_SHIELD_TOTAL_MS + 80,
+      );
+      explosionsRef.current = explosionsRef.current.filter(
+        (e) => flashNow - e.startedAt < SHIP_EXPLOSION_TOTAL_MS + 80,
       );
 
       const staleCutoff = performance.now() - BATTLE_REMOTE_ACTOR_TIMEOUT_MS;
@@ -672,7 +859,7 @@ export function useBattleRoyale() {
     };
     rafRef.current = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [battleActorUuid, bump, applyHit, setMatch]);
+  }, [battleActorUuid, bump, applyHit, eliminateShip, localColor, setMatch]);
 
   const getSnapshot = useCallback(
     (): BattleSceneSnapshot => ({
@@ -682,6 +869,7 @@ export function useBattleRoyale() {
       remoteShips: [...remoteRef.current.values()],
       projectiles: projectilesRef.current,
       hitFlashes: hitFlashesRef.current,
+      explosions: explosionsRef.current,
       zone: getZoneState(),
       throttle: throttleRef.current,
       tick,

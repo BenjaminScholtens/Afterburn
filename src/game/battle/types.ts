@@ -2,6 +2,7 @@ import type { ShipState } from '@/game/battle/shipState';
 
 export const EVENT_FIRE = 1;
 export const EVENT_HIT = 2;
+export const EVENT_DESTROY = 3;
 
 export interface RemoteShip {
   uuid: string;
@@ -54,6 +55,24 @@ export interface HitEventPayload {
   z?: number;
 }
 
+export interface DestroyEventPayload {
+  targetUuid: string;
+  x: number;
+  y: number;
+  z: number;
+}
+
+/** Ship destruction burst — visible to all pilots in the sector. */
+export interface ShipExplosion {
+  id: string;
+  targetUuid: string;
+  x: number;
+  y: number;
+  z: number;
+  color: string;
+  startedAt: number;
+}
+
 /** Brief shield bubble shown when a ship absorbs a laser hit. */
 export interface HitFlash {
   projectileId: string;
@@ -71,6 +90,7 @@ export interface BattleSceneSnapshot {
   remoteShips: RemoteShip[];
   projectiles: Projectile[];
   hitFlashes: HitFlash[];
+  explosions: ShipExplosion[];
   zone: import('@/game/battle/zone').ZoneState;
   throttle: number;
   tick: number;

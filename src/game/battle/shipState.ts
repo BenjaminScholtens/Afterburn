@@ -7,6 +7,8 @@ export interface ShipState {
   worldZ: number;
   yaw: number;
   pitch: number;
+  /** Visual bank angle (radians) — full barrel roll syncs over UDP. */
+  roll: number;
   hp: number;
   alive: boolean;
   kills: number;
@@ -15,7 +17,9 @@ export interface ShipState {
 }
 
 const COLOR_ID_BYTES = 36;
-const SHIP_STATE_WIRE_BYTES = 27 + COLOR_ID_BYTES;
+const ROLL_OFFSET = 27;
+const COLOR_ID_OFFSET = 31;
+const SHIP_STATE_WIRE_BYTES = COLOR_ID_OFFSET + COLOR_ID_BYTES;
 
 /** @deprecated Use yaw — kept for transitional reads */
 export function shipYaw(ship: ShipState): number {
@@ -52,7 +56,8 @@ export function encodeShipState(ship: ShipState, colorId?: string): string {
   view.setUint8(24, Math.max(0, Math.min(255, Math.round(ship.hp))));
   view.setUint8(25, ship.alive ? 1 : 0);
   view.setUint8(26, Math.max(0, Math.min(255, ship.kills)));
-  writeColorId(view, 27, colorId ?? ship.colorId);
+  view.setFloat32(ROLL_OFFSET, ship.roll, true);
+  writeColorId(view, COLOR_ID_OFFSET, colorId ?? ship.colorId);
   const bytes = new Uint8Array(buf, 0, SHIP_STATE_WIRE_BYTES);
   let binary = '';
   for (let i = 0; i < bytes.length; i++) {
@@ -71,7 +76,7 @@ export function decodeShipState(stateBase64: string): ShipState | null {
     }
     const view = new DataView(bytes.buffer);
 
-    if (binary.length >= 27) {
+    if (binary.length >= COLOR_ID_OFFSET) {
       return {
         worldX: view.getFloat64(0, true),
         worldY: view.getFloat32(8, true),
@@ -81,7 +86,11 @@ export function decodeShipState(stateBase64: string): ShipState | null {
         hp: view.getUint8(24),
         alive: view.getUint8(25) === 1,
         kills: view.getUint8(26),
-        colorId: readColorId(bytes, 27),
+        roll: binary.length >= SHIP_STATE_WIRE_BYTES ? view.getFloat32(ROLL_OFFSET, true) : 0,
+        colorId:
+          binary.length >= SHIP_STATE_WIRE_BYTES
+            ? readColorId(bytes, COLOR_ID_OFFSET)
+            : readColorId(bytes, ROLL_OFFSET),
       };
     }
 
@@ -93,6 +102,7 @@ export function decodeShipState(stateBase64: string): ShipState | null {
       worldZ: legacyY,
       yaw: view.getFloat32(16, true),
       pitch: 0,
+      roll: 0,
       hp: binary.length > 20 ? view.getUint8(20) : 100,
       alive: binary.length > 21 ? view.getUint8(21) === 1 : true,
       kills: binary.length > 22 ? view.getUint8(22) : 0,

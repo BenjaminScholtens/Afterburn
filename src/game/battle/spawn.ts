@@ -23,6 +23,7 @@ export function randomSpawn(seed: string): ShipState {
     worldZ: BATTLE_ARENA_CENTER_Z + Math.sin(angle) * dist,
     yaw: Math.atan2(Math.cos(angle), Math.sin(angle)),
     pitch: 0,
+    roll: 0,
     hp: BATTLE_SHIP_MAX_HP,
     alive: true,
     kills: 0,

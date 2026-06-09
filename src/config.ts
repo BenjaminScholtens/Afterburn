@@ -77,6 +77,11 @@ export const BATTLE_SHIP_CRUISE_SPEED = BATTLE_THROTTLE_MAX_SPEED;
 export const BATTLE_YAW_RATE = 0.05;
 export const BATTLE_PITCH_RATE = 0.038;
 export const BATTLE_MOUSE_SENSITIVITY = 0.0024;
+/** Star Fox 64 barrel roll — full spin duration and cooldown (ms). */
+export const BATTLE_BARREL_ROLL_MS = 520;
+export const BATTLE_BARREL_ROLL_COOLDOWN_MS = 900;
+/** Peak lateral strafe speed during a barrel roll (world units / frame @ 60fps). */
+export const BATTLE_BARREL_ROLL_STRAFE_RATE = 5.2;
 /** Ms upside-down without pitch input before gravity auto-level begins. */
 export const BATTLE_INVERT_RECOVER_DELAY_MS = 1_800;
 /** Pitch correction speed when auto-leveling (rad / frame @ 60fps). */

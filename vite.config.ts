@@ -55,6 +55,17 @@ interface DevBattleFire {
 
 const devBattleFires: DevBattleFire[] = [];
 
+interface DevBattleDestroy {
+  targetUuid: string;
+  x: number;
+  y: number;
+  z: number;
+  color: string;
+  destroyedAt: number;
+}
+
+const devBattleDestroys: DevBattleDestroy[] = [];
+
 function readJsonBody(req: IncomingMessage): Promise<unknown> {
   return new Promise((resolve, reject) => {
     let body = '';
@@ -229,6 +240,57 @@ function devPresencePlugin(): Plugin {
             });
             pruneFires();
             while (devBattleFires.length > 120) devBattleFires.shift();
+            sendJson(res, 200, { ok: true });
+          } catch (error) {
+            sendJson(res, 500, {
+              error: error instanceof Error ? error.message : String(error),
+            });
+          }
+          return;
+        }
+
+        sendJson(res, 405, { error: 'method not allowed' });
+      });
+
+      server.middlewares.use('/collab/battle-destroy', async (req, res) => {
+        const pruneDestroys = () => {
+          const now = Date.now();
+          while (
+            devBattleDestroys.length > 0 &&
+            now - devBattleDestroys[0]!.destroyedAt > 4_000
+          ) {
+            devBattleDestroys.shift();
+          }
+        };
+
+        if (req.method === 'GET') {
+          pruneDestroys();
+          sendJson(res, 200, devBattleDestroys);
+          return;
+        }
+
+        if (req.method === 'POST') {
+          try {
+            const body = (await readJsonBody(req)) as DevBattleDestroy;
+            if (
+              !body ||
+              typeof body.targetUuid !== 'string' ||
+              typeof body.x !== 'number' ||
+              typeof body.color !== 'string'
+            ) {
+              sendJson(res, 400, { error: 'invalid battle destroy' });
+              return;
+            }
+            devBattleDestroys.push({
+              targetUuid: body.targetUuid,
+              x: body.x,
+              y: body.y ?? 0,
+              z: body.z ?? 0,
+              color: body.color,
+              destroyedAt: body.destroyedAt ?? Date.now(),
+            });
+            pruneDestroys();
+            while (devBattleDestroys.length > 48) devBattleDestroys.shift();
             sendJson(res, 200, { ok: true });
           } catch (error) {
             sendJson(res, 500, {

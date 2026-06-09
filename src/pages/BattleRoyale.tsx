@@ -26,26 +26,31 @@ export function BattleRoyale() {
         <h1>Star Fox Royale</h1>
         <p>
           Star Fox flight: <strong>WASD</strong> or <strong>arrow keys</strong> steer ·{' '}
-          <strong>Shift/Ctrl</strong> throttle · optional <strong>mouse</strong> (click arena) · hold{' '}
-          <strong>Space</strong> or <strong>click</strong> to laser
+          <strong>Shift/Ctrl</strong> throttle · <strong>Z</strong> barrel roll · optional{' '}
+          <strong>mouse</strong> (click arena) · hold <strong>Space</strong> or <strong>click</strong>{' '}
+          to laser
         </p>
       </header>
       <div className="play-body">
         <div className="play-main">
-          <div className="battle-viewport">
+          <div
+            className={`battle-viewport${game.matchStatus === 'eliminated' ? ' battle-viewport--eliminated' : ''}`}
+          >
             <BattlePane
               getSnapshot={game.getSnapshot}
               setFiring={game.setFiring}
               applySteer={game.applySteer}
             />
-            <BattlePilotColor color={game.localColor} />
-            <BattleShieldOverlay
-              hp={game.localShip.hp}
-              maxHp={game.maxHp}
-              outsideZone={game.outsideZone}
-              alive={game.localShip.alive}
-            />
-            <BattleThrottle throttle={game.throttle} />
+            {game.localShip.alive && <BattlePilotColor color={game.localColor} />}
+            {game.localShip.alive && (
+              <BattleShieldOverlay
+                hp={game.localShip.hp}
+                maxHp={game.maxHp}
+                outsideZone={game.outsideZone}
+                alive={game.localShip.alive}
+              />
+            )}
+            {game.localShip.alive && <BattleThrottle throttle={game.throttle} />}
             <BattleRadar getSnapshot={game.getSnapshot} tick={game.tick} />
             <BattleRivalArrows getSnapshot={game.getSnapshot} tick={game.tick} />
           </div>
@@ -72,17 +77,15 @@ export function BattleRoyale() {
           {game.matchStatus === 'victory' && (
             <div className="battle-banner victory">Sector clear — you win!</div>
           )}
-          {game.matchStatus === 'eliminated' && (
-            <div className="battle-banner eliminated">Ship destroyed — respawn next round.</div>
-          )}
         </div>
         <aside className="battle-sidebar">
           <p className="battle-user">{session.user?.email ?? 'Connecting…'}</p>
           <p className="battle-hint">
             Your Arwing stays centered and always flies forward — the nebula scrolls past like Star
             Fox 64. Steer with WASD or arrows (W/↑ climb, S/↓ dive, A/← and D/→ bank). Throttle
-            with Shift (boost) and Ctrl (crawl). Mouse works when you click the arena to lock the
-            cursor. Use the sector radar (top-right) for rival bearings.
+            with Shift (boost) and Ctrl (crawl). Press <strong>Z</strong> for a Star Fox barrel roll.
+            Mouse works when you click the arena to lock the cursor. Use the sector radar
+            (top-right) for rival bearings.
           </p>
           <ol className="battle-log">
             {game.events.slice(-8).map((e) => (

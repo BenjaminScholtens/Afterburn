@@ -9,6 +9,7 @@ export interface Vec3 {
 
 const _euler = new THREE.Euler(0, 0, 0, 'YXZ');
 const _forward = new THREE.Vector3();
+const _right = new THREE.Vector3();
 
 /**
  * Unit forward vector — matches playerRig YXZ rotation with nose along local -Z.
@@ -17,6 +18,13 @@ export function shipForward(ship: Pick<ShipState, 'yaw' | 'pitch'>): Vec3 {
   _euler.set(ship.pitch, ship.yaw, 0, 'YXZ');
   _forward.set(0, 0, -1).applyEuler(_euler);
   return { x: _forward.x, y: _forward.y, z: _forward.z };
+}
+
+/** Unit right vector — perpendicular to forward (strafe axis). */
+export function shipRight(ship: Pick<ShipState, 'yaw' | 'pitch'>): Vec3 {
+  _euler.set(ship.pitch, ship.yaw, 0, 'YXZ');
+  _right.set(1, 0, 0).applyEuler(_euler);
+  return { x: _right.x, y: _right.y, z: _right.z };
 }
 
 /** True when the ship is past 90° — belly toward the sky (inverted). */

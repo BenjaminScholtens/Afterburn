@@ -1,4 +1,4 @@
-import type { FireEventPayload } from '@/game/battle/types';
+import type { DestroyEventPayload, FireEventPayload } from '@/game/battle/types';
 import type { ShipState } from '@/game/battle/shipState';
 
 export interface BattlePeer {
@@ -11,6 +11,11 @@ export interface BattlePeer {
 
 export interface RelayedFire extends FireEventPayload {
   firedAt: number;
+}
+
+export interface RelayedDestroy extends DestroyEventPayload {
+  color: string;
+  destroyedAt: number;
 }
 
 export async function postBattlePresence(
@@ -69,6 +74,35 @@ export async function listBattleFires(maxAgeMs = 2_500): Promise<RelayedFire[]> 
     const entries = (await res.json()) as RelayedFire[];
     const now = Date.now();
     return entries.filter((e) => now - e.firedAt <= maxAgeMs);
+  } catch {
+    return [];
+  }
+}
+
+export async function postBattleDestroy(
+  payload: DestroyEventPayload,
+  color: string,
+): Promise<void> {
+  if (!import.meta.env.DEV || typeof window === 'undefined') return;
+  try {
+    await fetch('/collab/battle-destroy', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ ...payload, color, destroyedAt: Date.now() }),
+    });
+  } catch {
+    // Dev relay only
+  }
+}
+
+export async function listBattleDestroys(maxAgeMs = 4_000): Promise<RelayedDestroy[]> {
+  if (!import.meta.env.DEV || typeof window === 'undefined') return [];
+  try {
+    const res = await fetch('/collab/battle-destroy');
+    if (!res.ok) return [];
+    const entries = (await res.json()) as RelayedDestroy[];
+    const now = Date.now();
+    return entries.filter((e) => now - e.destroyedAt <= maxAgeMs);
   } catch {
     return [];
   }
