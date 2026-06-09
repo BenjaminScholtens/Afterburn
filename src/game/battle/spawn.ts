@@ -1,7 +1,10 @@
 import {
   BATTLE_ARENA_CENTER_X,
   BATTLE_ARENA_CENTER_Z,
+  BATTLE_ARENA_FLOOR_Y,
+  BATTLE_ARENA_SCALE,
   BATTLE_INITIAL_ZONE_RADIUS,
+  BATTLE_SHIP_HULL_RADIUS,
   BATTLE_SHIP_MAX_HP,
 } from '@/config';
 import type { ShipState } from '@/game/battle/shipState';
@@ -12,10 +15,11 @@ export function randomSpawn(seed: string): ShipState {
     hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
   }
   const angle = ((hash % 360) * Math.PI) / 180;
-  const dist = 28 + (hash % 52);
+  const dist = (28 + (hash % 52)) * BATTLE_ARENA_SCALE;
+  const altitude = BATTLE_ARENA_FLOOR_Y + BATTLE_SHIP_HULL_RADIUS + (40 + ((hash >> 8) % 160)) * BATTLE_ARENA_SCALE;
   return {
     worldX: BATTLE_ARENA_CENTER_X + Math.cos(angle) * dist,
-    worldY: ((hash >> 8) % 120) - 60,
+    worldY: altitude,
     worldZ: BATTLE_ARENA_CENTER_Z + Math.sin(angle) * dist,
     yaw: Math.atan2(Math.cos(angle), Math.sin(angle)),
     pitch: 0,

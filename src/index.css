@@ -364,6 +364,269 @@ body {
   position: relative;
   width: 640px;
   max-width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.battle-rival-arrows {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.battle-rival-arrow {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: var(--rival-color, #66ccff);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--rival-color) 70%, transparent));
+  animation: battle-rival-arrow-pulse 1.4s ease-in-out infinite;
+}
+
+.battle-rival-arrow--track {
+  animation: none;
+  opacity: 0.92;
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--rival-color) 85%, transparent));
+  transition: left 40ms linear, top 40ms linear;
+}
+
+.battle-rival-track-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: transform 60ms ease-out;
+}
+
+.battle-rival-arrow-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.battle-rival-shield {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 6px 3px;
+  border-radius: 4px;
+  background: rgba(6, 8, 22, 0.78);
+  border: 1px solid color-mix(in srgb, var(--rival-color) 55%, transparent);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+.battle-rival-shield-bar {
+  width: 44px;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.battle-rival-shield-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--rival-color) 80%, #ffffff),
+    var(--rival-color)
+  );
+  transition: width 120ms ease-out;
+}
+
+.battle-rival-shield.low .battle-rival-shield-fill {
+  background: linear-gradient(90deg, #ffaa44, #ff6622);
+}
+
+.battle-rival-shield.critical .battle-rival-shield-fill {
+  background: linear-gradient(90deg, #ff4444, #cc1111);
+  animation: battle-rival-shield-critical 0.7s ease-in-out infinite;
+}
+
+.battle-rival-shield-value {
+  font-family: ui-monospace, 'Courier New', monospace;
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: rgba(235, 245, 255, 0.95);
+  min-width: 1.4rem;
+  text-align: right;
+}
+
+@keyframes battle-rival-shield-critical {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.battle-rival-arrow-icon {
+  display: block;
+}
+
+.battle-rival-arrow-dist {
+  font-family: ui-monospace, 'Courier New', monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: rgba(230, 240, 255, 0.92);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+  letter-spacing: 0.04em;
+}
+
+@keyframes battle-rival-arrow-pulse {
+  0%,
+  100% {
+    opacity: 0.88;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.battle-shield-hud {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.65rem;
+  background: rgba(8, 6, 24, 0.72);
+  border: 1px solid rgba(85, 170, 255, 0.45);
+  border-radius: 6px;
+  font-family: ui-monospace, 'Courier New', monospace;
+  min-width: 200px;
+}
+
+.battle-shield-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #88ccff;
+  text-transform: uppercase;
+}
+
+.battle-shield-bar {
+  flex: 1;
+  height: 10px;
+  background: rgba(20, 20, 40, 0.9);
+  border: 1px solid rgba(100, 140, 200, 0.35);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.battle-shield-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3388ff, #66eeff);
+  border-radius: 2px;
+  transition: width 0.12s linear;
+}
+
+.battle-shield-hud.low .battle-shield-fill {
+  background: linear-gradient(90deg, #cc8800, #ffcc44);
+}
+
+.battle-shield-hud.critical .battle-shield-fill {
+  background: linear-gradient(90deg, #cc2222, #ff6644);
+}
+
+.battle-shield-value {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #e8f0ff;
+  min-width: 2ch;
+  text-align: right;
+}
+
+.battle-shield-hud.dead {
+  opacity: 0.45;
+}
+
+.battle-damage-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  opacity: 0;
+  border-radius: 8px;
+  background:
+    linear-gradient(to bottom, rgba(220, 30, 30, 0.75) 0%, transparent 22%),
+    linear-gradient(to top, rgba(220, 30, 30, 0.75) 0%, transparent 22%),
+    linear-gradient(to right, rgba(220, 30, 30, 0.75) 0%, transparent 18%),
+    linear-gradient(to left, rgba(220, 30, 30, 0.75) 0%, transparent 18%);
+  box-shadow: inset 0 0 0 0 rgba(255, 50, 50, 0);
+}
+
+.battle-damage-vignette.active {
+  animation: battle-zone-heartbeat 1.05s ease-in-out infinite;
+}
+
+@keyframes battle-zone-heartbeat {
+  0%,
+  100% {
+    opacity: 0.2;
+    box-shadow: inset 0 0 48px 12px rgba(255, 40, 40, 0.15);
+  }
+  10% {
+    opacity: 0.92;
+    box-shadow: inset 0 0 90px 28px rgba(255, 60, 60, 0.55);
+  }
+  18% {
+    opacity: 0.35;
+    box-shadow: inset 0 0 52px 14px rgba(255, 40, 40, 0.2);
+  }
+  28% {
+    opacity: 0.78;
+    box-shadow: inset 0 0 72px 22px rgba(255, 50, 50, 0.45);
+  }
+  40%,
+  100% {
+    opacity: 0.22;
+    box-shadow: inset 0 0 48px 12px rgba(255, 40, 40, 0.15);
+  }
+}
+
+.battle-pilot-color {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 5;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.55rem;
+  background: rgba(8, 6, 24, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  font-family: ui-monospace, 'Courier New', monospace;
+  font-size: 0.68rem;
+  color: #dce8ff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.battle-pilot-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 0 8px currentColor;
+  flex-shrink: 0;
+}
+
+.battle-pilot-text strong {
+  color: #fff;
+  font-weight: 700;
 }
 
 .battle-throttle {
@@ -475,11 +738,11 @@ body {
 }
 
 .battle-radar-legend .swatch.you {
-  background: #fff;
   clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
   border-radius: 0;
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
 .battle-radar-legend .swatch.rival {

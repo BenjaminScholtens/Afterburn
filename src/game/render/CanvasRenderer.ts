@@ -19,14 +19,27 @@ export interface RenderOptions {
   selectedColor?: string;
 }
 
-const ACTOR_COLORS = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c'];
+export const PILOT_COLORS = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c'] as const;
+
+export const PILOT_COLOR_NAMES: Record<(typeof PILOT_COLORS)[number], string> = {
+  '#e74c3c': 'Crimson',
+  '#3498db': 'Azure',
+  '#2ecc71': 'Jade',
+  '#f39c12': 'Amber',
+  '#9b59b6': 'Violet',
+  '#1abc9c': 'Teal',
+};
 
 export function actorColorForUuid(uuid: string): string {
   let hash = 0;
   for (let i = 0; i < uuid.length; i++) {
-    hash = (hash + uuid.charCodeAt(i) * (i + 1)) % ACTOR_COLORS.length;
+    hash = (hash + uuid.charCodeAt(i) * (i + 1)) % PILOT_COLORS.length;
   }
-  return ACTOR_COLORS[hash]!;
+  return PILOT_COLORS[hash]!;
+}
+
+export function pilotColorLabel(hex: string): string {
+  return PILOT_COLOR_NAMES[hex as (typeof PILOT_COLORS)[number]] ?? 'Pilot';
 }
 
 export class CanvasRenderer {

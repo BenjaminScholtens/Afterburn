@@ -1,15 +1,13 @@
 import { useEffect, useRef } from 'react';
-import type { ShipState } from '@/game/battle/shipState';
-import type { RemoteShip } from '@/game/battle/types';
-import type { ZoneState } from '@/game/battle/zone';
+import { remoteDisplayPoint } from '@/game/battle/remoteSync';
+import type { BattleSceneSnapshot } from '@/game/battle/types';
+import { BATTLE_RADAR_RANGE } from '@/config';
 
 const RADAR_PX = 148;
-const RADAR_RANGE = 650;
 
 interface BattleRadarProps {
-  localShip: ShipState;
-  remoteShips: RemoteShip[];
-  zone: ZoneState;
+  getSnapshot: () => BattleSceneSnapshot;
+  tick: number;
 }
 
 function hexToRgb(hex: string): string {
@@ -20,14 +18,19 @@ function hexToRgb(hex: string): string {
   return `rgb(${r},${g},${b})`;
 }
 
-export function BattleRadar({ localShip, remoteShips, zone }: BattleRadarProps) {
+export function BattleRadar({ getSnapshot, tick }: BattleRadarProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const snapshotRef = useRef(getSnapshot);
+  snapshotRef.current = getSnapshot;
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    const { localShip, localColor, remoteShips, zone } = snapshotRef.current();
+    const now = performance.now();
 
     const cx = RADAR_PX / 2;
     const cy = RADAR_PX / 2;
@@ -40,11 +43,15 @@ export function BattleRadar({ localShip, remoteShips, zone }: BattleRadarProps) 
     ctx.arc(cx, cy, r + 6, 0, Math.PI * 2);
     ctx.fill();
 
+    const zoneDx = zone.centerX - localShip.worldX;
+    const zoneDz = zone.centerZ - localShip.worldZ;
+    const scale = r / BATTLE_RADAR_RANGE;
+
     ctx.strokeStyle = 'rgba(85, 170, 255, 0.45)';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    const zoneR = Math.min(r, (zone.radius / RADAR_RANGE) * r);
-    ctx.arc(cx, cy, zoneR, 0, Math.PI * 2);
+    const zoneR = Math.min(r, zone.radius * scale);
+    ctx.arc(cx + zoneDx * scale, cy + zoneDz * scale, zoneR, 0, Math.PI * 2);
     ctx.stroke();
 
     ctx.strokeStyle = 'rgba(120, 180, 255, 0.25)';
@@ -65,23 +72,26 @@ export function BattleRadar({ localShip, remoteShips, zone }: BattleRadarProps) 
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(nose);
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = hexToRgb(localColor);
     ctx.beginPath();
     ctx.moveTo(0, -9);
     ctx.lineTo(-5, 6);
     ctx.lineTo(5, 6);
     ctx.closePath();
     ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+    ctx.lineWidth = 1.25;
+    ctx.stroke();
     ctx.restore();
 
     for (const remote of remoteShips) {
       if (!remote.ship.alive) continue;
-      const dx = remote.ship.worldX - localShip.worldX;
-      const dz = remote.ship.worldZ - localShip.worldZ;
+      const pos = remoteDisplayPoint(remote, now);
+      const dx = pos.x - localShip.worldX;
+      const dz = pos.z - localShip.worldZ;
       const dist = Math.hypot(dx, dz);
       const bearing = Math.atan2(dx, -dz);
 
-      const scale = r / RADAR_RANGE;
       const mx = cx + dx * scale;
       const my = cy + dz * scale;
       const onMap = Math.hypot(mx - cx, my - cy) <= r - 4;
@@ -119,7 +129,7 @@ export function BattleRadar({ localShip, remoteShips, zone }: BattleRadarProps) 
         ctx.fillText(`${Math.round(dist)}m`, labelX, labelY);
       }
     }
-  }, [localShip, remoteShips, zone]);
+  }, [tick]);
 
   return (
     <div className="battle-radar" aria-label="Sector radar">
@@ -129,7 +139,7 @@ export function BattleRadar({ localShip, remoteShips, zone }: BattleRadarProps) 
           <span className="swatch you" /> You
         </li>
         <li>
-          <span className="swatch rival" /> Rival
+          <span className="swatch rival" /> Other pilots
         </li>
         <li>
           <span className="swatch arrow" /> ▲ Bearing

@@ -13,8 +13,27 @@ export class ActorSender {
   private sequenceNumber = 0;
   private provider: PoseProvider | null = null;
   private stateEncoder: (pose: ActorPose) => string = encodeActorState;
+  private actorUuid: string | null = null;
+  private syncIntervalMs = ACTOR_SYNC_INTERVAL_MS;
 
-  constructor(private readonly session: CrowdySession) {}
+  constructor(
+    private readonly session: CrowdySession,
+    syncIntervalMs = ACTOR_SYNC_INTERVAL_MS,
+  ) {
+    this.syncIntervalMs = syncIntervalMs;
+  }
+
+  setSyncIntervalMs(ms: number): void {
+    this.syncIntervalMs = ms;
+    if (this.intervalId) {
+      this.stop();
+      this.start();
+    }
+  }
+
+  setActorUuid(uuid: string | null): void {
+    this.actorUuid = uuid;
+  }
 
   setStateEncoder(encoder: (pose: ActorPose) => string): void {
     this.stateEncoder = encoder;
@@ -28,7 +47,7 @@ export class ActorSender {
     if (this.intervalId) return;
     this.intervalId = setInterval(() => {
       void this.sendOnce();
-    }, ACTOR_SYNC_INTERVAL_MS);
+    }, this.syncIntervalMs);
   }
 
   stop(): void {
@@ -52,7 +71,8 @@ export class ActorSender {
       state: this.stateEncoder(pose),
       sequenceNumber: seq,
       distance: 8,
-      decayRate: 1,
+      decayRate: 0,
+      uuid: this.actorUuid ?? undefined,
     });
   }
 

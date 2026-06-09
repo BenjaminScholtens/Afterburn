@@ -7,6 +7,18 @@ export interface RemoteShip {
   uuid: string;
   ship: ShipState;
   color: string;
+  /** Local monotonic time of last pose update (performance.now()). */
+  lastSeenAt?: number;
+  /** Previous sample for velocity extrapolation. */
+  prevShip?: ShipState;
+  prevSeenAt?: number;
+  positionSource?: 'udp' | 'relay';
+  /** Last accepted UDP sequence (uint8, wraps). */
+  lastSequence?: number;
+  lastServerMs?: number;
+  prevServerMs?: number;
+  /** Maps performance.now() → server epoch for symmetric interpolation. */
+  serverClockOffset?: number;
 }
 
 export interface Projectile {
@@ -36,13 +48,29 @@ export interface HitEventPayload {
   projectileId: string;
   targetUuid: string;
   damage: number;
+  /** World-space impact point for shield VFX. */
+  x?: number;
+  y?: number;
+  z?: number;
+}
+
+/** Brief shield bubble shown when a ship absorbs a laser hit. */
+export interface HitFlash {
+  projectileId: string;
+  targetUuid: string;
+  x: number;
+  y: number;
+  z: number;
+  startedAt: number;
 }
 
 export interface BattleSceneSnapshot {
   localUuid: string;
+  localColor: string;
   localShip: ShipState;
   remoteShips: RemoteShip[];
   projectiles: Projectile[];
+  hitFlashes: HitFlash[];
   zone: import('@/game/battle/zone').ZoneState;
   throttle: number;
   tick: number;

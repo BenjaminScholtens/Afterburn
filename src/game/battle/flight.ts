@@ -19,6 +19,41 @@ export function shipForward(ship: Pick<ShipState, 'yaw' | 'pitch'>): Vec3 {
   return { x: _forward.x, y: _forward.y, z: _forward.z };
 }
 
+/** True when the ship is past 90° — belly toward the sky (inverted). */
+export function isShipInverted(pitch: number): boolean {
+  const p = ((pitch % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+  return p > Math.PI / 2 + 0.1 && p < Math.PI * 1.5 - 0.1;
+}
+
+/** Nearest level-flight pitch (multiple of 2π). */
+export function nearestUprightPitch(pitch: number): number {
+  const twoPi = Math.PI * 2;
+  return Math.round(pitch / twoPi) * twoPi;
+}
+
+/** Gentle pull toward upright when stuck inverted. Returns updated pitch. */
+export function applyInvertRecovery(
+  pitch: number,
+  invertedMs: number,
+  delayMs: number,
+  rate: number,
+  dt: number,
+): number {
+  if (invertedMs < delayMs) return pitch;
+  const target = nearestUprightPitch(pitch);
+  const delta = target - pitch;
+  if (Math.abs(delta) < 0.015) return target;
+  const step = rate * dt;
+  return pitch + Math.sign(delta) * Math.min(Math.abs(delta), step);
+}
+
+/** Prevent runaway float drift on marathon loops. */
+export function tamePitch(pitch: number): number {
+  const twoPi = Math.PI * 2;
+  if (Math.abs(pitch) <= twoPi * 6) return pitch;
+  return pitch % twoPi;
+}
+
 export function addScaled(out: Vec3, dir: Vec3, scale: number): Vec3 {
   return {
     x: out.x + dir.x * scale,

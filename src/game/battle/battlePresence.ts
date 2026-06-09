@@ -4,6 +4,8 @@ import type { ShipState } from '@/game/battle/shipState';
 export interface BattlePeer {
   uuid: string;
   ship: ShipState;
+  /** Browser-local color seed — peers send this so rivals see the same hue. */
+  colorId?: string;
   updatedAt: number;
 }
 
@@ -11,13 +13,17 @@ export interface RelayedFire extends FireEventPayload {
   firedAt: number;
 }
 
-export async function postBattlePresence(uuid: string, ship: ShipState): Promise<void> {
+export async function postBattlePresence(
+  uuid: string,
+  ship: ShipState,
+  colorId?: string,
+): Promise<void> {
   if (!import.meta.env.DEV || typeof window === 'undefined') return;
   try {
     await fetch('/collab/battle', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ uuid, ship, updatedAt: Date.now() }),
+      body: JSON.stringify({ uuid, ship, colorId, updatedAt: Date.now() }),
     });
   } catch {
     // Dev relay only

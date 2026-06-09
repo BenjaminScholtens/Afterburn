@@ -7,10 +7,12 @@ import {
 } from '@crowdedkingdomstudios/crowdyjs';
 import {
   APP_ID,
+  ENV_HANDLE,
   GAME_HTTP_URL,
   GAME_WS_URL,
   MANAGEMENT_GRAPHQL_URL,
 } from '@/config';
+import { ensureEnvScope, envScopedKey } from '@/game/envScope';
 import { voxelToCell } from '@/game/world/coordinates';
 import { voxelStateToRgba } from '@/game/world/VoxelStore';
 import type { ActorPose } from '@/game/world/actorState';
@@ -49,7 +51,9 @@ export interface ConnectivityStatus {
   gameError?: string;
 }
 
-const GUEST_CREDS_KEY = 'cks-canvas-guest-creds';
+function guestCredsKey(): string {
+  return envScopedKey('cks-canvas-guest-creds');
+}
 
 export interface GuestCredentials {
   email: string;
@@ -58,6 +62,7 @@ export interface GuestCredentials {
 
 export class CrowdySession {
   private static instance: CrowdySession | null = null;
+  private static activeEnvHandle: string | null = null;
   readonly client: CrowdyClient;
   readonly actorUuid: string;
   private _user: SessionUser | null = null;
@@ -68,6 +73,7 @@ export class CrowdySession {
   private notificationHandlers = new Map<string, Set<(n: UdpNotification) => void>>();
 
   private constructor() {
+    ensureEnvScope();
     // GitHub CrowdyJS (Netlify build) resolves endpoint as httpUrl || graphqlEndpoint,
     // so managementUrl must include /graphql — not just the root /mgmt-api path.
     this.client = createCrowdyClient({
@@ -75,15 +81,20 @@ export class CrowdySession {
       managementGraphqlEndpoint: MANAGEMENT_GRAPHQL_URL,
       httpUrl: GAME_HTTP_URL,
       wsUrl: GAME_WS_URL,
-      tokenStore: new BrowserLocalStorageTokenStore('cks-canvas-token'),
+      tokenStore: new BrowserLocalStorageTokenStore(envScopedKey('cks-canvas-token')),
       realtime: { retryAttempts: 8, waitTimeoutMs: 5000 },
     });
     this.actorUuid = generateCrowdyUuid();
   }
 
   static getInstance(): CrowdySession {
-    if (!CrowdySession.instance) {
+    ensureEnvScope();
+    if (
+      !CrowdySession.instance ||
+      CrowdySession.activeEnvHandle !== ENV_HANDLE
+    ) {
       CrowdySession.instance = new CrowdySession();
+      CrowdySession.activeEnvHandle = ENV_HANDLE;
     }
     return CrowdySession.instance;
   }
@@ -145,7 +156,7 @@ export class CrowdySession {
 
   private loadGuestCreds(): GuestCredentials | null {
     try {
-      const raw = localStorage.getItem(GUEST_CREDS_KEY);
+      const raw = localStorage.getItem(guestCredsKey());
       if (!raw) return null;
       return JSON.parse(raw) as GuestCredentials;
     } catch {
@@ -154,7 +165,7 @@ export class CrowdySession {
   }
 
   private saveGuestCreds(creds: GuestCredentials): void {
-    localStorage.setItem(GUEST_CREDS_KEY, JSON.stringify(creds));
+    localStorage.setItem(guestCredsKey(), JSON.stringify(creds));
   }
 
   private generateGuestCreds(): GuestCredentials {
@@ -168,15 +179,21 @@ export class CrowdySession {
   async ensureGuestAuth(): Promise<SessionUser> {
     await this.client.session.restore();
     if (this.client.session.getToken()) {
-      const me = await this.client.users.me();
-      if (!me) throw new Error('Session token invalid');
-      this._user = {
-        userId: String(me.userId),
-        email: me.email ?? undefined,
-        gamertag: me.gamertag ?? undefined,
-      };
-      this.log(`Restored session for ${this._user.email ?? this._user.userId}`);
-      return this._user;
+      try {
+        const me = await this.client.users.me();
+        if (me) {
+          this._user = {
+            userId: String(me.userId),
+            email: me.email ?? undefined,
+            gamertag: me.gamertag ?? undefined,
+          };
+          this.log(`Restored session for ${this._user.email ?? this._user.userId}`);
+          return this._user;
+        }
+      } catch {
+        this.log('Stale session token — re-authenticating');
+      }
+      await this.client.auth.logout();
     }
 
     let creds = this.loadGuestCreds();
@@ -214,7 +231,7 @@ export class CrowdySession {
       } catch {
         // Stale creds saved when mgmt-api proxy was unavailable on first visit.
         this.log('Guest auth failed — regenerating credentials');
-        localStorage.removeItem(GUEST_CREDS_KEY);
+        localStorage.removeItem(guestCredsKey());
         creds = this.generateGuestCreds();
         this.saveGuestCreds(creds);
         const retry = await this.client.auth.register({
@@ -234,7 +251,7 @@ export class CrowdySession {
   }
 
   resetGuest(): void {
-    localStorage.removeItem(GUEST_CREDS_KEY);
+    localStorage.removeItem(guestCredsKey());
     void this.client.auth.logout();
     this._user = null;
     this.log('Guest credentials cleared');
@@ -304,11 +321,12 @@ export class CrowdySession {
     sequenceNumber: number;
     distance?: number;
     decayRate?: number;
+    uuid?: string;
   }): Promise<boolean> {
     return this.client.udp.sendActorUpdate({
       appId: APP_ID,
       chunk: input.chunk,
-      uuid: this.actorUuid,
+      uuid: input.uuid ?? this.actorUuid,
       state: input.state,
       sequenceNumber: input.sequenceNumber,
       distance: input.distance,
@@ -416,11 +434,12 @@ export class CrowdySession {
     sequenceNumber: number;
     distance?: number;
     decayRate?: number;
+    uuid?: string;
   }): Promise<boolean> {
     return this.client.udp.sendClientEvent({
       appId: APP_ID,
       chunk: input.chunk,
-      uuid: this.actorUuid,
+      uuid: input.uuid ?? this.actorUuid,
       eventType: input.eventType,
       state: input.state,
       sequenceNumber: input.sequenceNumber,

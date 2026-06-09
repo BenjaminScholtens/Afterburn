@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom';
 import { BattlePane } from '@/components/BattlePane';
 import { BattleRadar } from '@/components/BattleRadar';
+import { BattleRivalArrows } from '@/components/BattleRivalArrows';
+import { BattlePilotColor } from '@/components/BattlePilotColor';
+import { BattleShieldOverlay } from '@/components/BattleShieldOverlay';
 import { BattleThrottle } from '@/components/BattleThrottle';
 import { useBattleRoyale } from '@/game/battle/useBattleRoyale';
 import { CrowdySession } from '@/game/session/CrowdySession';
@@ -22,9 +25,9 @@ export function BattleRoyale() {
         <Link to="/">← Tutorial</Link>
         <h1>Star Fox Royale</h1>
         <p>
-          Star Fox flight: <strong>mouse</strong> or <strong>A/D · ←/→</strong> steer ·{' '}
-          <strong>W/S · ↑/↓</strong> throttle · hold <strong>Space</strong> or <strong>click</strong>{' '}
-          to laser (Esc unlocks mouse)
+          Star Fox flight: <strong>WASD</strong> or <strong>arrow keys</strong> steer ·{' '}
+          <strong>Shift/Ctrl</strong> throttle · optional <strong>mouse</strong> (click arena) · hold{' '}
+          <strong>Space</strong> or <strong>click</strong> to laser
         </p>
       </header>
       <div className="play-body">
@@ -35,12 +38,16 @@ export function BattleRoyale() {
               setFiring={game.setFiring}
               applySteer={game.applySteer}
             />
-            <BattleThrottle throttle={game.throttle} />
-            <BattleRadar
-              localShip={game.localShip}
-              remoteShips={game.remoteShips}
-              zone={game.zone}
+            <BattlePilotColor color={game.localColor} />
+            <BattleShieldOverlay
+              hp={game.localShip.hp}
+              maxHp={game.maxHp}
+              outsideZone={game.outsideZone}
+              alive={game.localShip.alive}
             />
+            <BattleThrottle throttle={game.throttle} />
+            <BattleRadar getSnapshot={game.getSnapshot} tick={game.tick} />
+            <BattleRivalArrows getSnapshot={game.getSnapshot} tick={game.tick} />
           </div>
           <div className="battle-hud n64-hud">
             <div className="hud-stat">
@@ -73,8 +80,9 @@ export function BattleRoyale() {
           <p className="battle-user">{session.user?.email ?? 'Connecting…'}</p>
           <p className="battle-hint">
             Your Arwing stays centered and always flies forward — the nebula scrolls past like Star
-            Fox 64. Steer with the mouse (click arena to lock cursor) or A/D. Throttle with W/S or
-            ↑/↓ down to a crawl. Use the sector radar (top-right) for rival bearings.
+            Fox 64. Steer with WASD or arrows (W/↑ climb, S/↓ dive, A/← and D/→ bank). Throttle
+            with Shift (boost) and Ctrl (crawl). Mouse works when you click the arena to lock the
+            cursor. Use the sector radar (top-right) for rival bearings.
           </p>
           <ol className="battle-log">
             {game.events.slice(-8).map((e) => (

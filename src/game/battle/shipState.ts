@@ -10,7 +10,12 @@ export interface ShipState {
   hp: number;
   alive: boolean;
   kills: number;
+  /** Stable browser color id — replicated over UDP for consistent rival hues. */
+  colorId?: string;
 }
+
+const COLOR_ID_BYTES = 36;
+const SHIP_STATE_WIRE_BYTES = 27 + COLOR_ID_BYTES;
 
 /** @deprecated Use yaw — kept for transitional reads */
 export function shipYaw(ship: ShipState): number {
@@ -21,7 +26,22 @@ export function shipStateToPose(ship: ShipState): ActorPose {
   return { worldX: ship.worldX, worldY: ship.worldZ, pushFlags: ship.alive ? 1 : 0 };
 }
 
-export function encodeShipState(ship: ShipState): string {
+function writeColorId(view: DataView, offset: number, colorId?: string): void {
+  const raw = (colorId ?? '').slice(0, COLOR_ID_BYTES);
+  for (let i = 0; i < COLOR_ID_BYTES; i++) {
+    view.setUint8(offset + i, i < raw.length ? raw.charCodeAt(i) : 0);
+  }
+}
+
+function readColorId(bytes: Uint8Array, offset: number): string | undefined {
+  if (bytes.length < offset + COLOR_ID_BYTES) return undefined;
+  let end = offset + COLOR_ID_BYTES;
+  while (end > offset && bytes[end - 1] === 0) end--;
+  if (end <= offset) return undefined;
+  return String.fromCharCode(...bytes.slice(offset, end));
+}
+
+export function encodeShipState(ship: ShipState, colorId?: string): string {
   const buf = new ArrayBuffer(ACTOR_STATE_BYTES);
   const view = new DataView(buf);
   view.setFloat64(0, ship.worldX, true);
@@ -32,7 +52,8 @@ export function encodeShipState(ship: ShipState): string {
   view.setUint8(24, Math.max(0, Math.min(255, Math.round(ship.hp))));
   view.setUint8(25, ship.alive ? 1 : 0);
   view.setUint8(26, Math.max(0, Math.min(255, ship.kills)));
-  const bytes = new Uint8Array(buf);
+  writeColorId(view, 27, colorId ?? ship.colorId);
+  const bytes = new Uint8Array(buf, 0, SHIP_STATE_WIRE_BYTES);
   let binary = '';
   for (let i = 0; i < bytes.length; i++) {
     binary += String.fromCharCode(bytes[i]!);
@@ -60,6 +81,7 @@ export function decodeShipState(stateBase64: string): ShipState | null {
         hp: view.getUint8(24),
         alive: view.getUint8(25) === 1,
         kills: view.getUint8(26),
+        colorId: readColorId(bytes, 27),
       };
     }
 

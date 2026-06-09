@@ -25,6 +25,7 @@ const devPaint = new Map<string, DevPaintCell>();
 
 interface DevBattlePeer {
   uuid: string;
+  colorId?: string;
   ship: {
     worldX: number;
     worldY: number;

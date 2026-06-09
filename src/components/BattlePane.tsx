@@ -21,7 +21,6 @@ export function BattlePane({
   const sceneRef = useRef<ThreeBattleScene | null>(null);
   const snapshotRef = useRef(getSnapshot);
   const steerRef = useRef(applySteer);
-  const lastPointerRef = useRef<{ x: number; y: number } | null>(null);
   snapshotRef.current = getSnapshot;
   steerRef.current = applySteer;
 
@@ -41,23 +40,13 @@ export function BattlePane({
     };
 
     const onPointerMove = (e: PointerEvent) => {
-      if (document.pointerLockElement === host) {
-        steerFromDelta(e.movementX, e.movementY);
-        return;
-      }
-      if (lastPointerRef.current) {
-        steerFromDelta(
-          e.clientX - lastPointerRef.current.x,
-          e.clientY - lastPointerRef.current.y,
-        );
-      }
-      lastPointerRef.current = { x: e.clientX, y: e.clientY };
+      if (document.pointerLockElement !== host) return;
+      steerFromDelta(e.movementX, e.movementY);
     };
 
     const onPointerDown = (e: PointerEvent) => {
       if (e.button !== 0) return;
       host.focus();
-      lastPointerRef.current = { x: e.clientX, y: e.clientY };
       setFiring?.(true);
       void host.requestPointerLock();
     };
@@ -68,21 +57,13 @@ export function BattlePane({
     };
 
     const onPointerLeave = () => {
-      lastPointerRef.current = null;
       setFiring?.(false);
-    };
-
-    const onPointerLockChange = () => {
-      if (document.pointerLockElement !== host) {
-        lastPointerRef.current = null;
-      }
     };
 
     host.addEventListener('pointermove', onPointerMove);
     host.addEventListener('pointerdown', onPointerDown);
     host.addEventListener('pointerup', onPointerUp);
     host.addEventListener('pointerleave', onPointerLeave);
-    document.addEventListener('pointerlockchange', onPointerLockChange);
 
     return () => {
       window.removeEventListener('resize', onResize);
@@ -90,7 +71,6 @@ export function BattlePane({
       host.removeEventListener('pointerdown', onPointerDown);
       host.removeEventListener('pointerup', onPointerUp);
       host.removeEventListener('pointerleave', onPointerLeave);
-      document.removeEventListener('pointerlockchange', onPointerLockChange);
       scene.dispose();
       sceneRef.current = null;
     };
