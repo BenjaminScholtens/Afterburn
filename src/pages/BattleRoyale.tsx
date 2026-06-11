@@ -2,9 +2,10 @@ import { Link } from 'react-router-dom';
 import { BattlePane } from '@/components/BattlePane';
 import { BattleRadar } from '@/components/BattleRadar';
 import { BattleRivalArrows } from '@/components/BattleRivalArrows';
-import { BattlePilotColor } from '@/components/BattlePilotColor';
+import { BattleStatsHud } from '@/components/BattleStatsHud';
 import { BattleShieldOverlay } from '@/components/BattleShieldOverlay';
 import { BattleThrottle } from '@/components/BattleThrottle';
+import { BattleMobileControls } from '@/components/BattleMobileControls';
 import { useBattleRoyale } from '@/game/battle/useBattleRoyale';
 import { CrowdySession } from '@/game/session/CrowdySession';
 
@@ -18,21 +19,24 @@ function formatTime(ms: number): string {
 export function BattleRoyale() {
   const session = CrowdySession.getInstance();
   const game = useBattleRoyale();
+  const throttlePct = Math.round(Math.max(0, Math.min(1, game.throttle)) * 100);
+  const controlsDisabled = game.matchStatus !== 'fighting' || !game.localShip.alive;
 
   return (
-    <div className="play-layout battle-layout">
-      <header className="play-header">
-        <Link to="/">← Tutorial</Link>
+    <div className="play-layout battle-layout battle-layout--play">
+      <header className="play-header battle-play-header">
+        <Link to="/" className="battle-back-link">
+          ← Tutorial
+        </Link>
         <h1>Star Fox Royale</h1>
-        <p>
-          Star Fox flight: <strong>WASD</strong> or <strong>arrow keys</strong> steer ·{' '}
-          <strong>Shift/Ctrl</strong> throttle · <strong>Z</strong> barrel roll · optional{' '}
-          <strong>mouse</strong> (click arena) · hold <strong>Space</strong> or <strong>click</strong>{' '}
-          to laser
+        <p className="battle-desktop-controls-hint">
+          <strong>WASD</strong> steer · <strong>Shift/Ctrl</strong> throttle · <strong>Z</strong>{' '}
+          barrel roll · <strong>Space</strong> or click to fire
         </p>
       </header>
-      <div className="play-body">
-        <div className="play-main">
+
+      <div className="play-body battle-play-body">
+        <div className="play-main battle-play-main">
           <div
             className={`battle-viewport${game.matchStatus === 'eliminated' ? ' battle-viewport--eliminated' : ''}`}
           >
@@ -41,51 +45,57 @@ export function BattleRoyale() {
               setFiring={game.setFiring}
               applySteer={game.applySteer}
             />
-            {game.localShip.alive && <BattlePilotColor color={game.localColor} />}
+
             {game.localShip.alive && (
-              <BattleShieldOverlay
+              <BattleStatsHud
+                color={game.localColor}
                 hp={game.localShip.hp}
                 maxHp={game.maxHp}
-                outsideZone={game.outsideZone}
+                kills={game.localShip.kills}
+                aliveCount={game.aliveCount}
+                sectorLabel={formatTime(game.zone.remainingMs)}
+                throttlePct={throttlePct}
                 alive={game.localShip.alive}
               />
             )}
-            {game.localShip.alive && <BattleThrottle throttle={game.throttle} />}
-            <BattleRadar getSnapshot={game.getSnapshot} tick={game.tick} />
+
+            {game.localShip.alive && (
+              <BattleShieldOverlay outsideZone={game.outsideZone} alive={game.localShip.alive} />
+            )}
+
+            {game.localShip.alive && (
+              <BattleThrottle throttle={game.throttle} className="battle-throttle--desktop" />
+            )}
+
+            <BattleRadar getSnapshot={game.getSnapshot} tick={game.tick} compactOnMobile />
             <BattleRivalArrows getSnapshot={game.getSnapshot} tick={game.tick} />
+
+            <BattleMobileControls
+              setControlKey={game.setControlKey}
+              setFiring={game.setFiring}
+              applySteer={game.applySteer}
+              onBarrelRoll={game.tryBarrelRoll}
+              disabled={controlsDisabled}
+            />
+
+            {game.matchStatus === 'victory' && (
+              <div className="battle-banner victory battle-banner--overlay">
+                Sector clear — you win!
+              </div>
+            )}
+            {game.matchStatus === 'eliminated' && (
+              <div className="battle-banner eliminated battle-banner--overlay">
+                Ship destroyed — eliminated
+              </div>
+            )}
           </div>
-          <div className="battle-hud n64-hud">
-            <div className="hud-stat">
-              <span className="label">Shield</span>
-              <span className="value">{game.localShip.hp}</span>
-            </div>
-            <div className="hud-stat">
-              <span className="label">Kills</span>
-              <span className="value">{game.localShip.kills}</span>
-            </div>
-            <div className="hud-stat">
-              <span className="label">Pilots</span>
-              <span className="value" data-testid="alive-count">
-                {game.aliveCount}
-              </span>
-            </div>
-            <div className="hud-stat">
-              <span className="label">Sector</span>
-              <span className="value">{formatTime(game.zone.remainingMs)}</span>
-            </div>
-          </div>
-          {game.matchStatus === 'victory' && (
-            <div className="battle-banner victory">Sector clear — you win!</div>
-          )}
         </div>
-        <aside className="battle-sidebar">
+
+        <aside className="battle-sidebar battle-sidebar--desktop">
           <p className="battle-user">{session.user?.email ?? 'Connecting…'}</p>
           <p className="battle-hint">
-            Your Arwing stays centered and always flies forward — the nebula scrolls past like Star
-            Fox 64. Steer with WASD or arrows (W/↑ climb, S/↓ dive, A/← and D/→ bank). Throttle
-            with Shift (boost) and Ctrl (crawl). Press <strong>Z</strong> for a Star Fox barrel roll.
-            Mouse works when you click the arena to lock the cursor. Use the sector radar
-            (top-right) for rival bearings.
+            Your Arwing stays centered and always flies forward. On mobile, use the on-screen
+            controls; on desktop use WASD, Shift/Ctrl, Z, and Space.
           </p>
           <ol className="battle-log">
             {game.events.slice(-8).map((e) => (

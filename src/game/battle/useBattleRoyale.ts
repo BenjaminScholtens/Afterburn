@@ -22,6 +22,9 @@ import {
   BATTLE_THROTTLE_MAX_SPEED,
   BATTLE_THROTTLE_MIN_SPEED,
   BATTLE_THROTTLE_RATE,
+  BATTLE_STEER_RAMP_MS,
+  BATTLE_THROTTLE_INPUT_RAMP_MS,
+  BATTLE_CONTROL_RELEASE_DECAY,
   BATTLE_SHIP_MAX_HP,
   BATTLE_SHOT_DAMAGE,
   BATTLE_YAW_RATE,
@@ -44,7 +47,9 @@ import {
   type ShipState,
 } from '@/game/battle/shipState';
 import {
+  advanceControlHold,
   applyInvertRecovery,
+  controlInputStrength,
   isShipInverted,
   shipForward,
   shipRight,
@@ -135,6 +140,7 @@ export function useBattleRoyale() {
   const lastBarrelRollAtRef = useRef(0);
   const barrelRollDirectionRef = useRef<BarrelRollDirection>(-1);
   const lastTurnSignRef = useRef<BarrelRollDirection>(-1);
+  const controlHoldRef = useRef({ yaw: 0, pitch: 0, boost: 0, brake: 0 });
 
   const [tick, setTick] = useState(0);
   const [events, setEvents] = useState<string[]>([]);
@@ -376,9 +382,13 @@ export function useBattleRoyale() {
     let cancelled = false;
 
     void (async () => {
-      await session.ensureGuestAuth();
-      await session.bootstrap();
-      await session.connectUdp();
+      try {
+        await session.connectGameSession();
+      } catch (error) {
+        console.error('Battle royale connection failed:', error);
+        bump();
+        return;
+      }
       if (cancelled) return;
 
       actorSenderRef.current.setActorUuid(battleActorUuid);
@@ -632,6 +642,7 @@ export function useBattleRoyale() {
         lastCrashAtRef.current = 0;
         barrelRollEndsAtRef.current = 0;
         lastBarrelRollAtRef.current = 0;
+        controlHoldRef.current = { yaw: 0, pitch: 0, boost: 0, brake: 0 };
         projectilesRef.current = [];
         projectilePrevPosRef.current.clear();
         hitProjectilesRef.current.clear();
@@ -652,25 +663,75 @@ export function useBattleRoyale() {
         }
 
         let turnSign: BarrelRollDirection | 0 = 0;
-        if (keys.has('a') || keys.has('left')) {
-          ship.yaw += BATTLE_YAW_RATE * dt;
+        const frameMs = dt * 16.67;
+        const hold = controlHoldRef.current;
+        const releaseDecay = BATTLE_CONTROL_RELEASE_DECAY;
+
+        const yawLeft = keys.has('a') || keys.has('left');
+        const yawRight = keys.has('d') || keys.has('right');
+        hold.yaw = advanceControlHold(
+          hold.yaw,
+          yawLeft || yawRight,
+          frameMs,
+          BATTLE_STEER_RAMP_MS,
+          releaseDecay,
+        );
+        const yawStrength = controlInputStrength(hold.yaw, BATTLE_STEER_RAMP_MS);
+        if (yawLeft) {
+          ship.yaw += BATTLE_YAW_RATE * yawStrength * dt;
           turnSign = -1;
         }
-        if (keys.has('d') || keys.has('right')) {
-          ship.yaw -= BATTLE_YAW_RATE * dt;
+        if (yawRight) {
+          ship.yaw -= BATTLE_YAW_RATE * yawStrength * dt;
           turnSign = 1;
         }
-        if (keys.has('w') || keys.has('up')) {
-          ship.pitch += BATTLE_PITCH_RATE * dt;
+
+        const pitchUp = keys.has('w') || keys.has('up');
+        const pitchDown = keys.has('s') || keys.has('down');
+        hold.pitch = advanceControlHold(
+          hold.pitch,
+          pitchUp || pitchDown,
+          frameMs,
+          BATTLE_STEER_RAMP_MS,
+          releaseDecay,
+        );
+        const pitchStrength = controlInputStrength(hold.pitch, BATTLE_STEER_RAMP_MS);
+        if (pitchUp) {
+          ship.pitch += BATTLE_PITCH_RATE * pitchStrength * dt;
         }
-        if (keys.has('s') || keys.has('down')) {
-          ship.pitch -= BATTLE_PITCH_RATE * dt;
+        if (pitchDown) {
+          ship.pitch -= BATTLE_PITCH_RATE * pitchStrength * dt;
         }
-        if (keys.has('shift')) {
-          throttleRef.current = Math.min(1, throttleRef.current + BATTLE_THROTTLE_RATE * dt);
+
+        const boosting = keys.has('shift');
+        const braking = keys.has('ctrl');
+        hold.boost = advanceControlHold(
+          hold.boost,
+          boosting,
+          frameMs,
+          BATTLE_THROTTLE_INPUT_RAMP_MS,
+          releaseDecay,
+        );
+        hold.brake = advanceControlHold(
+          hold.brake,
+          braking,
+          frameMs,
+          BATTLE_THROTTLE_INPUT_RAMP_MS,
+          releaseDecay,
+        );
+        if (boosting) {
+          const boostStrength = controlInputStrength(hold.boost, BATTLE_THROTTLE_INPUT_RAMP_MS);
+          throttleRef.current = Math.min(
+            1,
+            throttleRef.current + BATTLE_THROTTLE_RATE * boostStrength * dt,
+          );
         }
-        if (keys.has('ctrl')) {
-          throttleRef.current = Math.max(0, throttleRef.current - BATTLE_THROTTLE_RATE * dt);
+        if (braking) {
+          const brakeStrength = controlInputStrength(hold.brake, BATTLE_THROTTLE_INPUT_RAMP_MS);
+          throttleRef.current = Math.max(
+            0,
+            throttleRef.current - BATTLE_THROTTLE_RATE * brakeStrength * dt,
+          );
         }
 
         const steer = steerRef.current;
@@ -893,6 +954,11 @@ export function useBattleRoyale() {
     (localShipRef.current.alive ? 1 : 0) +
     remoteShips.filter((r) => r.ship.alive).length;
 
+  const setControlKey = useCallback((key: string, down: boolean) => {
+    if (down) keysRef.current.add(key);
+    else keysRef.current.delete(key);
+  }, []);
+
   return {
     getSnapshot,
     localShip: localShipRef.current,
@@ -905,6 +971,8 @@ export function useBattleRoyale() {
     events,
     setFiring,
     applySteer,
+    setControlKey,
+    tryBarrelRoll,
     throttle: throttleRef.current,
     outsideZone: outsideZoneRef.current,
     maxHp: BATTLE_SHIP_MAX_HP,

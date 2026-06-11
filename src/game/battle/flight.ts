@@ -62,6 +62,27 @@ export function tamePitch(pitch: number): number {
   return pitch % twoPi;
 }
 
+/** Ease-in cubic — short taps stay gentle, held input ramps to full strength. */
+export function controlInputStrength(holdMs: number, rampMs: number): number {
+  if (rampMs <= 0) return 1;
+  const t = Math.min(1, Math.max(0, holdMs / rampMs));
+  return t * t * t;
+}
+
+/** Accumulate hold time while active; decay quickly on release for crisp stop. */
+export function advanceControlHold(
+  holdMs: number,
+  active: boolean,
+  frameMs: number,
+  rampMs: number,
+  releaseDecay = 2.8,
+): number {
+  if (active) {
+    return Math.min(rampMs * 1.05, holdMs + frameMs);
+  }
+  return Math.max(0, holdMs - frameMs * releaseDecay);
+}
+
 export function addScaled(out: Vec3, dir: Vec3, scale: number): Vec3 {
   return {
     x: out.x + dir.x * scale,

@@ -1,12 +1,16 @@
 interface BattleThrottleProps {
   throttle: number;
+  className?: string;
 }
 
-export function BattleThrottle({ throttle }: BattleThrottleProps) {
+export function BattleThrottle({ throttle, className }: BattleThrottleProps) {
   const pct = Math.round(Math.max(0, Math.min(1, throttle)) * 100);
 
   return (
-    <div className="battle-throttle" aria-label={`Throttle ${pct} percent`}>
+    <div
+      className={`battle-throttle${className ? ` ${className}` : ''}`}
+      aria-label={`Throttle ${pct} percent`}
+    >
       <span className="battle-throttle-label">SPD</span>
       <div className="battle-throttle-track">
         <div

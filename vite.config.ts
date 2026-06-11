@@ -1,4 +1,4 @@
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import type { IncomingMessage, ServerResponse } from 'node:http';
@@ -306,7 +306,16 @@ function devPresencePlugin(): Plugin {
   };
 }
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  const envHandle = env.VITE_ENV_HANDLE?.trim();
+  const mgmtProxyTarget =
+    env.MANAGEMENT_API_PROXY_TARGET?.trim() ||
+    (envHandle
+      ? `https://api.${envHandle}.dev.cks-env.com`
+      : 'https://api.dev.crowdedkingdoms.com');
+
+  return {
   plugins: [react(), devPresencePlugin()],
   resolve: {
     alias: {
@@ -316,10 +325,10 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
-    // Dev proxy: remote mgmt-api CORS only allows app.dev.*, not localhost.
+    // Dev proxy: mgmt must match the same CKS env as VITE_GAME_API_* (see README).
     proxy: {
       '/mgmt-api': {
-        target: 'https://api.e-zt0psk82q3bi.dev.cks-env.com',
+        target: mgmtProxyTarget,
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/mgmt-api/, ''),
         secure: true,
@@ -331,4 +340,5 @@ export default defineConfig({
     environment: 'node',
     exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**'],
   },
+};
 });

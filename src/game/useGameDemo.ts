@@ -77,9 +77,7 @@ export function useGameDemo(mode: GameMode) {
     if (mode === 'coords') return;
 
     void (async () => {
-      await session.ensureGuestAuth();
-      await session.bootstrap();
-      await session.connectUdp();
+      await session.connectGameSession();
 
       session.onNotification('ActorUpdateNotification', (n) => {
         if (n.__typename !== 'ActorUpdateNotification') return;

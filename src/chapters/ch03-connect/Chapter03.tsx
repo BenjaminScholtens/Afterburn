@@ -15,11 +15,9 @@ export function Chapter03() {
   const connect = useCallback(async () => {
     setError('');
     try {
-      await session.ensureGuestAuth();
-      const boot = await session.bootstrap();
+      const { udpConnected } = await session.connectGameSession();
       setBootOk(true);
-      const connected = await session.connectUdp();
-      setUdpOk(connected || boot.udpConnected);
+      setUdpOk(udpConnected);
       setEvents([...session.events]);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));

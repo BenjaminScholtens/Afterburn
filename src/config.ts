@@ -72,6 +72,12 @@ export const BATTLE_THROTTLE_MIN_SPEED = 0.35;
 export const BATTLE_THROTTLE_MAX_SPEED = 5.5;
 export const BATTLE_THROTTLE_DEFAULT = 0.55;
 export const BATTLE_THROTTLE_RATE = 0.022;
+/** Ms holding steer keys before yaw/pitch reach full rate (tap = gentle nudge). */
+export const BATTLE_STEER_RAMP_MS = 300;
+/** Ms holding boost/brake before throttle change reaches full rate. */
+export const BATTLE_THROTTLE_INPUT_RAMP_MS = 350;
+/** How fast steer/throttle input strength falls after release (× frame ms). */
+export const BATTLE_CONTROL_RELEASE_DECAY = 2.8;
 /** @deprecated Use BATTLE_THROTTLE_MAX_SPEED */
 export const BATTLE_SHIP_CRUISE_SPEED = BATTLE_THROTTLE_MAX_SPEED;
 export const BATTLE_YAW_RATE = 0.05;

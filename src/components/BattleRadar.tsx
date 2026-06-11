@@ -8,6 +8,7 @@ const RADAR_PX = 148;
 interface BattleRadarProps {
   getSnapshot: () => BattleSceneSnapshot;
   tick: number;
+  compactOnMobile?: boolean;
 }
 
 function hexToRgb(hex: string): string {
@@ -18,7 +19,7 @@ function hexToRgb(hex: string): string {
   return `rgb(${r},${g},${b})`;
 }
 
-export function BattleRadar({ getSnapshot, tick }: BattleRadarProps) {
+export function BattleRadar({ getSnapshot, tick, compactOnMobile }: BattleRadarProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const snapshotRef = useRef(getSnapshot);
   snapshotRef.current = getSnapshot;
@@ -132,7 +133,10 @@ export function BattleRadar({ getSnapshot, tick }: BattleRadarProps) {
   }, [tick]);
 
   return (
-    <div className="battle-radar" aria-label="Sector radar">
+    <div
+      className={`battle-radar${compactOnMobile ? ' battle-radar--compact-mobile' : ''}`}
+      aria-label="Sector radar"
+    >
       <canvas ref={canvasRef} width={RADAR_PX} height={RADAR_PX} />
       <ul className="battle-radar-legend">
         <li>

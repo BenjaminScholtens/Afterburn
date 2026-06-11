@@ -193,7 +193,11 @@ export class CrowdySession {
       } catch {
         this.log('Stale session token — re-authenticating');
       }
-      await this.client.auth.logout();
+      try {
+        await this.client.auth.logout();
+      } catch {
+        this.client.session.setToken(null);
+      }
     }
 
     let creds = this.loadGuestCreds();
@@ -258,14 +262,44 @@ export class CrowdySession {
   }
 
   async bootstrap(): Promise<{ udpConnected: boolean; minVersion?: string }> {
-    const boot = await this.client.serverStatus.gameClientBootstrap(APP_ID);
-    const connected = boot.udpProxyConnectionStatus?.connected ?? false;
-    this.log(`Bootstrap OK — UDP connected: ${connected}`);
-    const min = boot.versionInfo?.minimumClientVersion;
-    const minVersion = min
-      ? `${min.major}.${min.minor}.${min.patch}.${min.build}`
-      : undefined;
-    return { udpConnected: connected, minVersion };
+    try {
+      const boot = await this.client.serverStatus.gameClientBootstrap(APP_ID);
+      const connected = boot.udpProxyConnectionStatus?.connected ?? false;
+      this.log(`Bootstrap OK — UDP connected: ${connected}`);
+      const min = boot.versionInfo?.minimumClientVersion;
+      const minVersion = min
+        ? `${min.major}.${min.minor}.${min.patch}.${min.build}`
+        : undefined;
+      return { udpConnected: connected, minVersion };
+    } catch (error) {
+      if (isForbiddenError(error)) {
+        this.log(
+          'gameClientBootstrap forbidden — bearer token from Management API is not valid on this Game API. Point both APIs at the same CKS environment (api.<env-handle>.dev.cks-env.com + game.<env-handle>.dev.cks-env.com).',
+        );
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Guest auth → bootstrap → UDP. Retries once with fresh credentials when the
+   * Game API returns Forbidden (stale token from a mismatched mgmt endpoint).
+   */
+  async connectGameSession(): Promise<{ udpConnected: boolean; minVersion?: string }> {
+    await this.ensureGuestAuth();
+    try {
+      const boot = await this.bootstrap();
+      const udpConnected = await this.connectUdp();
+      return { udpConnected, minVersion: boot.minVersion };
+    } catch (error) {
+      if (!isForbiddenError(error)) throw error;
+      this.log('Clearing cached guest credentials and retrying game connection…');
+      this.resetGuest();
+      await this.ensureGuestAuth();
+      const boot = await this.bootstrap();
+      const udpConnected = await this.connectUdp();
+      return { udpConnected, minVersion: boot.minVersion };
+    }
   }
 
   async connectUdp(): Promise<boolean> {
@@ -603,4 +637,19 @@ function randomHex(length: number): string {
     .map((byte) => byte.toString(16).padStart(2, '0'))
     .join('')
     .slice(0, length);
+}
+
+function isForbiddenError(error: unknown): boolean {
+  if (error && typeof error === 'object' && 'graphqlErrors' in error) {
+    const gqlErr = error as {
+      graphqlErrors?: Array<{ message?: string; extensions?: { code?: string } }>;
+    };
+    return (
+      gqlErr.graphqlErrors?.some(
+        (e) => e.extensions?.code === 'FORBIDDEN' || e.message?.includes('Forbidden'),
+      ) ?? false
+    );
+  }
+  const msg = error instanceof Error ? error.message : String(error);
+  return msg.includes('Forbidden') || msg.includes('FORBIDDEN');
 }

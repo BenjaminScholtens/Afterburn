@@ -6,17 +6,13 @@ interface BattlePaneProps {
   getSnapshot: () => BattleSceneSnapshot;
   setFiring?: (active: boolean) => void;
   applySteer?: (dx: number, dy: number) => void;
-  width?: number;
-  height?: number;
 }
 
-export function BattlePane({
-  getSnapshot,
-  setFiring,
-  applySteer,
-  width = 640,
-  height = 480,
-}: BattlePaneProps) {
+const COARSE_POINTER =
+  typeof window !== 'undefined' &&
+  window.matchMedia('(pointer: coarse)').matches;
+
+export function BattlePane({ getSnapshot, setFiring, applySteer }: BattlePaneProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<ThreeBattleScene | null>(null);
   const snapshotRef = useRef(getSnapshot);
@@ -34,6 +30,9 @@ export function BattlePane({
     const onResize = () => scene.resize();
     window.addEventListener('resize', onResize);
 
+    const resizeObserver = new ResizeObserver(() => scene.resize());
+    resizeObserver.observe(host);
+
     const steerFromDelta = (dx: number, dy: number) => {
       if (dx === 0 && dy === 0) return;
       steerRef.current?.(dx, dy);
@@ -46,6 +45,7 @@ export function BattlePane({
 
     const onPointerDown = (e: PointerEvent) => {
       if (e.button !== 0) return;
+      if (COARSE_POINTER) return;
       host.focus();
       setFiring?.(true);
       void host.requestPointerLock();
@@ -53,10 +53,12 @@ export function BattlePane({
 
     const onPointerUp = (e: PointerEvent) => {
       if (e.button !== 0) return;
+      if (COARSE_POINTER) return;
       setFiring?.(false);
     };
 
     const onPointerLeave = () => {
+      if (COARSE_POINTER) return;
       setFiring?.(false);
     };
 
@@ -67,6 +69,7 @@ export function BattlePane({
 
     return () => {
       window.removeEventListener('resize', onResize);
+      resizeObserver.disconnect();
       host.removeEventListener('pointermove', onPointerMove);
       host.removeEventListener('pointerdown', onPointerDown);
       host.removeEventListener('pointerup', onPointerUp);
@@ -77,7 +80,7 @@ export function BattlePane({
   }, [setFiring]);
 
   return (
-    <div className="battle-pane demo-pane" style={{ width, height }}>
+    <div className="battle-pane demo-pane">
       <div ref={hostRef} className="battle-3d-host" tabIndex={0} aria-label="Star Fox 3D arena" />
     </div>
   );
