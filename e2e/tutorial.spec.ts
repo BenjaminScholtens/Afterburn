@@ -81,24 +81,58 @@ test.describe('Battle royale route', () => {
     const pageA = await contextA.newPage();
     const pageB = await contextB.newPage();
 
-    await Promise.all([pageA.goto('/play'), pageB.goto('/play')]);
+    await pageA.goto('/play');
+    await expect(pageA.locator('.battle-canvas')).toBeVisible();
+    await pageB.goto('/play');
+    await expect(pageB.locator('.battle-canvas')).toBeVisible();
 
+    await expect
+      .poll(async () => Number(await pageA.getByTestId('alive-count').textContent()), {
+        timeout: 30_000,
+      })
+      .toBeGreaterThanOrEqual(2);
+    await expect
+      .poll(async () => Number(await pageB.getByTestId('alive-count').textContent()), {
+        timeout: 30_000,
+      })
+      .toBeGreaterThanOrEqual(2);
+
+    await contextA.close();
+    await contextB.close();
+  });
+
+  test('late joiner is visible to existing pilots', async ({ browser }) => {
+    const contextA = await browser.newContext();
+    const contextB = await browser.newContext();
+    const contextC = await browser.newContext();
+    const pageA = await contextA.newPage();
+    const pageB = await contextB.newPage();
+    const pageC = await contextC.newPage();
+
+    await Promise.all([pageA.goto('/play'), pageB.goto('/play')]);
     await expect(pageA.locator('.battle-canvas')).toBeVisible();
     await expect(pageB.locator('.battle-canvas')).toBeVisible();
 
     await expect
       .poll(async () => Number(await pageA.getByTestId('alive-count').textContent()), {
-        timeout: 25_000,
+        timeout: 30_000,
       })
-      .toBeGreaterThanOrEqual(1);
-    await expect
-      .poll(async () => Number(await pageB.getByTestId('alive-count').textContent()), {
-        timeout: 25_000,
-      })
-      .toBeGreaterThanOrEqual(1);
+      .toBeGreaterThanOrEqual(2);
+
+    await pageC.goto('/play');
+    await expect(pageC.locator('.battle-canvas')).toBeVisible();
+
+    for (const page of [pageA, pageB, pageC]) {
+      await expect
+        .poll(async () => Number(await page.getByTestId('alive-count').textContent()), {
+          timeout: 30_000,
+        })
+        .toBeGreaterThanOrEqual(3);
+    }
 
     await contextA.close();
     await contextB.close();
+    await contextC.close();
   });
 });
 

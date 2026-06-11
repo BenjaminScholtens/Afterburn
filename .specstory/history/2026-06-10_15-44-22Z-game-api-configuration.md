@@ -14490,3 +14490,1632 @@ _**Agent (composer-2.5)**_
 <summary>Tool use: **read_file_v2**</summary>
 
 </details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/spawn.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/netlify.toml</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/config.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/scripts/netlify-build.sh</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+The Netlify deployment uses environment variables VITE_ENV_HANDLE and VITE_APP_ID. These values might explain why other players aren't appearing.
+
+Local development used app 67 with a different handle. The recent changes likely broke UDP on production. The fixed chunk {0,0,0} may be incorrect because player spawn coordinates fall outside that chunk.
+
+Previously, each player replicated updates to its own chunk. Now all players target chunk (0,0,0). The key question is whether the UDP subscription delivers notifications for every chunk in the app or only chunks the client has interest in.
+
+The UDP notification subscription appears global rather than scoped to specific chunks. The decay rate of zero was already hardcoded before these changes, so it is not the regression. The replication distance of eight remains unchanged.
+
+The ship state payload retains correct world coordinates. The chunk override does not corrupt position data. The next step is to inspect how CrowdyJS routes actor replication and whether bootstrap grants grid permissions for specific chunks.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="search" data-tool-name="glob_file_search">
+<details>
+<summary>Tool use: **glob_file_search** • Searched codebase "" • **0** results in **1** directory</summary>
+
+Directory: **/Users/benjaminscholtens/Documents/personal_projects/Afterburn** (0 files)
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="search" data-tool-name="glob_file_search"><details>
+<summary>Tool use: **glob_file_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "glob": "**/*udp*",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn/node_modules/@crowdedkingdoms",
+  "pattern": "subscribe|connect"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn/node_modules/@crowdedkingdoms",
+  "pattern": "subscribe|connect",
+  "topFiles": [],
+  "totalFiles": 0,
+  "totalMatches": 0
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/useGameDemo.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="search" data-tool-name="glob_file_search">
+<details>
+<summary>Tool use: **glob_file_search** • Searched codebase "" • **0** results in **1** directory</summary>
+
+Directory: **/Users/benjaminscholtens/Documents/personal_projects/Afterburn** (0 files)
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="search" data-tool-name="glob_file_search"><details>
+<summary>Tool use: **glob_file_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn",
+  "pattern": "udp\\.(connect|subscribe)"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn",
+  "pattern": "udp\\.(connect|subscribe)",
+  "topFiles": [
+    {
+      "matchCount": 2,
+      "uri": "src/chapters/ch03-connect/Chapter03.tsx"
+    },
+    {
+      "matchCount": 2,
+      "uri": ".specstory/history/2026-06-10_15-44-22Z-game-api-configuration.md"
+    },
+    {
+      "matchCount": 2,
+      "uri": "src/game/session/CrowdySession.ts"
+    }
+  ],
+  "totalFiles": 3,
+  "totalMatches": 6
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: cd /Users/benjaminscholtens/Documents/personal_projects/Afterburn && git log --oneline -5 && git diff HEAD~3 -- src/game/battle/useBattleRoyale.ts src/game/session/ActorSender.ts src/game/session/CrowdySession.ts src/config.ts 2>/dev/null | head -200</summary>
+
+```bash
+cd /Users/benjaminscholtens/Documents/personal_projects/Afterburn && git log --oneline -5 && git diff HEAD~3 -- src/game/battle/useBattleRoyale.ts src/game/session/ActorSender.ts src/game/session/CrowdySession.ts src/config.ts 2>/dev/null | head -200
+```
+
+```
+6d097e7 Update battle presence and configuration for improved gameplay synchronization
+be38da8 Enhance battle gameplay with new game menu and joystick controls
+00dfc9b Add SpecStory configuration files and enhance mobile controls for battle mechanics
+fdc06c0 Update Netlify configuration and README to reflect new game API proxy setup. Changed VITE_GAME_API_HTTP_URL to use a relative path and updated redirect rules to include /game-api. Enhanced build script to generate redirects for both management and game APIs. Updated README to clarify environment variable usage and proxy behavior.
+30aaff4 Update Netlify configuration and README for multiplayer environment setup. Added required environment variables for game and management APIs in netlify.toml and README. Adjusted redirect rules to point to the correct API endpoints for the new development environment. Enhanced build script to ensure proper generation of Netlify redirects.
+diff --git a/src/config.ts b/src/config.ts
+index 512d865..42ac062 100644
+--- a/src/config.ts
++++ b/src/config.ts
+@@ -72,6 +72,16 @@ export const BATTLE_THROTTLE_MIN_SPEED = 0.35;
+ export const BATTLE_THROTTLE_MAX_SPEED = 5.5;
+ export const BATTLE_THROTTLE_DEFAULT = 0.55;
+ export const BATTLE_THROTTLE_RATE = 0.022;
++/** Ms holding steer keys before yaw/pitch reach full rate (tap = gentle nudge). */
++export const BATTLE_STEER_RAMP_MS = 300;
++/** Ms holding boost/brake before throttle change reaches full rate. */
++export const BATTLE_THROTTLE_INPUT_RAMP_MS = 350;
++/** How fast steer/throttle input strength falls after release (× frame ms). */
++export const BATTLE_CONTROL_RELEASE_DECAY = 2.8;
++/** On-screen joystick turn scale (analog, separate from keyboard ramp). */
++export const BATTLE_JOYSTICK_SENSITIVITY = 0.48;
++/** Inner deadzone before joystick affects steering (0–1). */
++export const BATTLE_JOYSTICK_DEADZONE = 0.24;
+ /** @deprecated Use BATTLE_THROTTLE_MAX_SPEED */
+ export const BATTLE_SHIP_CRUISE_SPEED = BATTLE_THROTTLE_MAX_SPEED;
+ export const BATTLE_YAW_RATE = 0.05;
+@@ -93,6 +103,11 @@ export const BATTLE_PROJECTILE_LIFETIME_MS = 1800;
+ export const BATTLE_LASER_MUZZLE_OFFSET = 3.5;
+ /** Drop remote ships with no UDP update for this long (ms). */
+ export const BATTLE_REMOTE_ACTOR_TIMEOUT_MS = 4_000;
++/** All battle actors register in one chunk so UDP fanout reaches every pilot. */
++export const BATTLE_ACTOR_CHUNK = { x: '0', y: '0', z: '0' } as const;
++export const BATTLE_ACTOR_REPLICATION_DISTANCE = 8;
++/** Dev relay + UDP: refresh relay snapshot when UDP is quiet this long (ms). */
++export const BATTLE_RELAY_UDP_STALE_MS = 900;
+ /** Collision hull radius for floor / dome impacts. */
+ export const BATTLE_SHIP_HULL_RADIUS = 4;
+ export const BATTLE_FLOOR_CRASH_DAMAGE = 15;
+diff --git a/src/game/battle/useBattleRoyale.ts b/src/game/battle/useBattleRoyale.ts
+index 78b4b6a..5872495 100644
+--- a/src/game/battle/useBattleRoyale.ts
++++ b/src/game/battle/useBattleRoyale.ts
+@@ -22,11 +22,17 @@ import {
+   BATTLE_THROTTLE_MAX_SPEED,
+   BATTLE_THROTTLE_MIN_SPEED,
+   BATTLE_THROTTLE_RATE,
++  BATTLE_STEER_RAMP_MS,
++  BATTLE_THROTTLE_INPUT_RAMP_MS,
++  BATTLE_CONTROL_RELEASE_DECAY,
++  BATTLE_JOYSTICK_SENSITIVITY,
+   BATTLE_SHIP_MAX_HP,
+   BATTLE_SHOT_DAMAGE,
+   BATTLE_YAW_RATE,
+   BATTLE_ZONE_DAMAGE_PER_SEC,
+   BATTLE_ACTOR_SYNC_INTERVAL_MS,
++  BATTLE_ACTOR_CHUNK,
++  BATTLE_RELAY_UDP_STALE_MS,
+   BATTLE_BARREL_ROLL_COOLDOWN_MS,
+   BATTLE_BARREL_ROLL_MS,
+   BATTLE_BARREL_ROLL_STRAFE_RATE,
+@@ -36,7 +42,6 @@ import {
+   barrelRollStrafeFactor,
+   type BarrelRollDirection,
+ } from '@/game/battle/barrelRoll';
+-import { worldToChunkInput } from '@/game/world/coordinates';
+ import {
+   decodeShipState,
+   encodeShipState,
+@@ -44,7 +49,9 @@ import {
+   type ShipState,
+ } from '@/game/battle/shipState';
+ import {
++  advanceControlHold,
+   applyInvertRecovery,
++  controlInputStrength,
+   isShipInverted,
+   shipForward,
+   shipRight,
+@@ -96,8 +103,8 @@ function decodeJsonPayload&lt;T&gt;(state: string): T | null {
+   }
+ }
+ 
+-function chunkAt(x: number, z: number) {
+-  return worldToChunkInput(x, z);
++function battleChunk() {
++  return { chunk: BATTLE_ACTOR_CHUNK };
+ }
+ 
+ export function useBattleRoyale() {
+@@ -135,6 +142,8 @@ export function useBattleRoyale() {
+   const lastBarrelRollAtRef = useRef(0);
+   const barrelRollDirectionRef = useRef&lt;BarrelRollDirection&gt;(-1);
+   const lastTurnSignRef = useRef&lt;BarrelRollDirection&gt;(-1);
++  const controlHoldRef = useRef({ yaw: 0, pitch: 0, boost: 0, brake: 0 });
++  const stickSteerRef = useRef({ x: 0, y: 0 });
+ 
+   const [tick, setTick] = useState(0);
+   const [events, setEvents] = useState&lt;string[]&gt;([]);
+@@ -189,7 +198,7 @@ export function useBattleRoyale() {
+         bornAt: now,
+       });
+       projectilePrevPosRef.current.set(id, { x: px, y: py, z: pz });
+-      const { chunk } = chunkAt(px, pz);
++      const { chunk } = battleChunk();
+       void session.sendClientEvent({
+         chunk,
+         eventType: EVENT_FIRE,
+@@ -234,7 +243,7 @@ export function useBattleRoyale() {
+   const broadcastDestroy = useCallback(
+     async (targetUuid: string, x: number, y: number, z: number, color: string) =&gt; {
+       const payload: DestroyEventPayload = { targetUuid, x, y, z };
+-      const { chunk } = chunkAt(x, z);
++      const { chunk } = battleChunk();
+       void session.sendClientEvent({
+         chunk,
+         eventType: EVENT_DESTROY,
+@@ -376,76 +385,83 @@ export function useBattleRoyale() {
+     let cancelled = false;
+ 
+     void (async () =&gt; {
+-      await session.ensureGuestAuth();
+-      await session.bootstrap();
+-      await session.connectUdp();
+-      if (cancelled) return;
+-
+       actorSenderRef.current.setActorUuid(battleActorUuid);
++      actorSenderRef.current.setChunkOverride(BATTLE_ACTOR_CHUNK);
++
++      const registerUdpHandlers = () =&gt; {
++        unsubs.push(
++          session.onNotification('ActorUpdateNotification', (n) =&gt; {
++            if (n.__typename !== 'ActorUpdateNotification') return;
++            if (n.uuid === battleActorUuid) return;
++            const ship = decodeShipState(n.state);
++            if (!ship) return;
++            const seq = Number(n.sequenceNumber);
++            const serverMs = Number(n.epochMillis);
++            const prev = remoteRef.current.get(n.uuid);
++            if (!shouldApplyRemoteUpdate(prev, seq, serverMs)) return;
++            const color = actorColorForUuid(ship.colorId ?? n.uuid);
++            if (prev?.ship.alive &amp;&amp; !ship.alive) {
++              registerExplosion(n.uuid, ship.worldX, ship.worldY, ship.worldZ, color);
++            }
++            upsertRemoteShip(
++              remoteRef.current,
++              n.uuid,
++              ship,
++              color,
++              'udp',
++              performance.now(),
++              { seq, serverMs },
++            );
++            bump();
++          }),
++        );
+ 
+-      unsubs.push(
+-        session.onNotification('ActorUpdateNotification', (n) =&gt; {
+-          if (n.__typename !== 'ActorUpdateNotification') return;
+-          if (n.uuid === battleActorUuid) return;
+-          const ship = decodeShipState(n.state);
+-          if (!ship) return;
+-          const seq = Number(n.sequenceNumber);
+-          const serverMs = Number(n.epochMillis);
+-          const prev = remoteRef.current.get(n.uuid);
+-          if (!shouldApplyRemoteUpdate(prev, seq, serverMs)) return;
+-          const color = actorColorForUuid(ship.colorId ?? n.uuid);
+-          if (prev?.ship.alive &amp;&amp; !ship.alive) {
+-            registerExplosion(n.uuid, ship.worldX, ship.worldY, ship.worldZ, color);
+-          }
+-          upsertRemoteShip(
+-            remoteRef.current,
+-            n.uuid,
+-            ship,
+-            color,
+-            'udp',
+-            performance.now(),
+-            { seq, serverMs },
+-          );
+-          bump();
+-        }),
+-      );
++        unsubs.push(
++          session.onNotification('ClientEventNotification', (n) =&gt; {
++            if (n.__typename !== 'ClientEventNotification') return;
++            if (n.eventType === EVENT_FIRE) {
++              const payload = decodeJsonPayload&lt;FireEventPayload&gt;(n.state);
++              if (!payload || payload.ownerUuid === battleActorUuid) return;
++              if (projectilesRef.current.some((p) =&gt; p.id === payload.id)) return;
++              projectilesRef.current.push({
++                id: payload.id,
++                ownerUuid: payload.ownerUuid,
++                x: payload.x,
++                y: payload.y ?? 0,
++                z: payload.z ?? 0,
++                vx: payload.vx,
++                vy: payload.vy ?? 0,
++                vz: payload.vz ?? 0,
++                bornAt: performance.now(),
++              });
++              bump();
++              return;
++            }
++            if (n.eventType === EVENT_HIT) {
++              const payload = decodeJsonPayload&lt;HitEventPayload&gt;(n.state);
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+The diff reveals that before the recent changes, `useBattleRoyale` called `session.connectUdp()` instead of `connectGameSession()`. This likely explains why other players are missing from the Netlify deploy.
+
+`connectGameSession` appears sound. The real culprit may be `BATTLE_ACTOR_CHUNK` being fixed at `0,0,0`, which could break server replication.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="search" data-tool-name="glob_file_search">
+<details>
+<summary>Tool use: **glob_file_search** • Searched codebase "" • **0** results in **1** directory</summary>
+
+Directory: **/Users/benjaminscholtens/Documents/personal_projects/Afterburn/.crowdyjs** (0 files)
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="search" data-tool-name="glob_file_search"><details>
+<summary>Tool use: **glob_file_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/scripts/bootstrap-crowdyjs.sh</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "glob": "**/*.{ts,tsx,md}",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn",
+  "pattern": "chunk.*0.*0.*0|sendActorUpdate|ActorUpdate"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn",
+  "pattern": "chunk.*0.*0.*0|sendActorUpdate|ActorUpdate",
+  "topFiles": [
+    {
+      "matchCount": 2,
+      "uri": "src/game/battle/useBattleRoyale.ts"
+    },
+    {
+      "matchCount": 51,
+      "uri": ".specstory/history/2026-06-10_15-44-22Z-game-api-configuration.md"
+    },
+    {
+      "matchCount": 2,
+      "uri": "src/chapters/ch05-actors/Chapter05.tsx"
+    },
+    {
+      "matchCount": 2,
+      "uri": "src/game/useGameDemo.ts"
+    },
+    {
+      "matchCount": 1,
+      "uri": "src/game/session/ActorSender.ts"
+    },
+    {
+      "matchCount": 4,
+      "uri": "src/game/session/CrowdySession.ts"
+    }
+  ],
+  "totalFiles": 6,
+  "totalMatches": 62
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="search" data-tool-name="glob_file_search">
+<details>
+<summary>Tool use: **glob_file_search** • Searched codebase "" • **1** result in **1** directory</summary>
+
+Directory: **/Users/benjaminscholtens/Documents/personal_projects/CrowdyJS** (1 file)
+
+| File |
+|------|
+| `src/domains/udp.ts` |
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="search" data-tool-name="glob_file_search"><details>
+<summary>Tool use: **glob_file_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/scripts/generate-netlify-redirects.sh</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/CrowdySession.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS/src/domains/udp.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "glob": "**/*.{ts,md,graphql}",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/CrowdyJS",
+  "pattern": "chunk|replication|actorUpdate"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/CrowdyJS",
+  "pattern": "chunk|replication|actorUpdate",
+  "topFiles": [
+    {
+      "matchCount": 60,
+      "uri": "../CrowdyJS/src/generated/graphql.ts"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 274
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+Glob pattern "**/*" matches every file and is not allowed. Use a more specific glob or no glob.
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/CrowdySession.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/battleActorUuid.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/CrowdySession.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts",
+  "pattern": "prune|REMOTE_ACTOR|remoteRef"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts",
+  "pattern": "prune|REMOTE_ACTOR|remoteRef",
+  "topFiles": [
+    {
+      "matchCount": 18,
+      "uri": "src/game/battle/useBattleRoyale.ts"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 18
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+Investigating why the Netlify deployment stopped showing other players. The recent changes likely broke the connection point. Two production-affecting changes are being considered: fixing BATTLE_ACTOR_CHUNK to {0,0,0} and another change.
+
+The handler registration order is probably not the cause. The fixed BATTLE_ACTOR_CHUNK to {0,0,0} is the more likely culprit. Previously, players spawned near the arena center, so their chunks overlapped. Now they spawn at zero, likely outside each other's chunk range.
+
+The server may validate chunk positions against each actor's last known location and drop mismatched updates. This would explain why every player now fails to see others instead of just late joiners.
+
+Netlify runs only over UDP, so a broken chunk at zero would block all multiplayer entirely. Local development still works because the dev relay compensates for partial UDP failures. The plan is to revert the fixed chunk and return to position-based chunks for actor updates and client events. Late joiners can be fixed by sending duplicate actor updates to both their position chunk and a shared battle chunk.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn",
+  "pattern": "listActor|actors\\.|hydrateActor|bootstrap"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn",
+  "pattern": "listActor|actors\\.|hydrateActor|bootstrap",
+  "topFiles": [
+    {
+      "matchCount": 5,
+      "uri": "src/game/session/CrowdySession.ts"
+    },
+    {
+      "matchCount": 1,
+      "uri": "e2e/tutorial.spec.ts"
+    },
+    {
+      "matchCount": 50,
+      "uri": ".specstory/history/2026-06-10_15-44-22Z-game-api-configuration.md"
+    },
+    {
+      "matchCount": 2,
+      "uri": "scripts/ensure-crowdyjs.mjs"
+    },
+    {
+      "matchCount": 2,
+      "uri": "README.md"
+    },
+    {
+      "matchCount": 1,
+      "uri": "src/chapters/ch09-full/Chapter09.tsx"
+    },
+    {
+      "matchCount": 2,
+      "uri": "vendor/schemas/game.gql"
+    },
+    {
+      "matchCount": 1,
+      "uri": "scripts/netlify-build.sh"
+    },
+    {
+      "matchCount": 2,
+      "uri": "src/chapters/registry.ts"
+    }
+  ],
+  "totalFiles": 9,
+  "totalMatches": 66
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/CrowdySession.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+The server only creates actor rows when a player enters a chunk. This likely explains why other players aren't appearing on the Netlify deploy.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn/vendor/schemas/game.gql",
+  "pattern": "Buddy|chunk entry|sendActorUpdate|actor.*chunk"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn/vendor/schemas/game.gql",
+  "pattern": "Buddy|chunk entry|sendActorUpdate|actor.*chunk",
+  "topFiles": [
+    {
+      "matchCount": 6,
+      "uri": "vendor/schemas/game.gql"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 6
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "glob": "**/*test*",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/CrowdyJS",
+  "pattern": "chunk.*0|sendActorUpdate|battle"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/CrowdyJS",
+  "pattern": "chunk.*0|sendActorUpdate|battle",
+  "topFiles": [
+    {
+      "matchCount": 4,
+      "uri": "../CrowdyJS/test/two-client-actor.test.mjs"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 4
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS/test/two-client-actor.test.mjs</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+The CrowdyJS test registers both clients in chunk 0,0,0. This confirms distance-based fanout includes both clients. The Netlify deployment likely broke this shared chunk registration.
+
+The test subscribes first, waits two seconds, then registers both clients with minimal state. The battle code instead registers handlers, ensures subscription, connects UDP, and starts the actor sender immediately. The test does not call connectUdp directly; it appears subscribing opens the UDP proxy through WebSocket. This suggests the battle code may be missing an implicit step.
+
+The test waits two seconds after subscribing before sending updates. Our code calls connectUdp immediately after subscribing. This lack of delay may let the first actor update fire before the WebSocket connection is fully ready on Netlify.
+
+The test sends a minimal initial update before the burst, while the battle code sends full state immediately. The forbidden retry path in beforeUdpConnect might duplicate handlers, causing double registration. The test also registers both actors with minimal state before the burst, unlike the immediate full-state send.
+
+The old battle code used raw `bootstrap` and `connectUdp` without the forbidden retry logic. The new `connectGameSession` wrapper adds that retry but registers UDP handlers before connecting. This ordering change likely broke Netlify.
+
+The working `useGameDemo` pattern registers handlers after `connectGameSession`, not before. The old battle code also connected UDP before subscribing. The regression likely stems from registering UDP handlers inside `beforeUdpConnect` rather than after `connectUdp`. Reverting to the original order—registering handlers after `connectGameSession` completes—should restore Netlify multiplayer.
+
+The fixed chunk 0,0,0 should not break Netlify on its own, since the test already proves it works. The handler registration order is the more likely culprit. Reverting to the original handler-after-connect order is the safest fix. A brief delay before the first send could help too. The 3-player late-joiner fix can stay, but the handler sequence needs to be restored.
+
+Dynamic chunking should replace the fixed chunk again, since all spawns sit near the center and dynamic worked on Netlify. The connectGameSession wrapper with forbidden retry stays. For the third player, dual-chunk publishing, an arena anchor chunk, or increased replication should fix the gap. The 3rd player bug likely came from a race condition or a dev-only relay port split.
+
+The maximum chunk distance between any two spawns is only about seven chunks. With a replication distance of eight, all players should receive every update. The third player bug is therefore unlikely to be caused by chunk boundaries. It probably stems from a race condition or an intermittent UDP timing issue instead.
+
+The concrete plan is now clear. Revert battleChunk() to position-based chunks for client events and remove setChunkOverride from ActorSender. Register UDP handlers after connectGameSession completes rather than inside beforeUdpConnect. Keep connectGameSession for its forbidden retry logic. Optionally add a 200 ms delay after connect before the first sendNow to match the working test pattern. Preserve the dev relay sync improvements.</details></think>
+
+_**Agent (composer-2.5)**_
+
+Likely regression: UDP handlers were registered before `connectUdp`, reversing the order that worked on Netlify. Reverting that and restoring position-based chunks (arena spawns are already within replication distance).
+
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+I'll restore the `worldToChunkInput` import and `chunkAt` function. I'll remove `BATTLE_ACTOR_CHUNK` usage from `useBattleRoyale` and delete the `setChunkOverride` calls. This should fix the connection point issue.
+
+I'll move handler registration to run after `connectGameSession`. A short delay before `sendNow` should let the connection settle. I'll switch `CrowdySession` to `afterUdpConnect` so handlers attach after UDP connects.
+
+I'll drop `beforeUdpConnect` entirely and rely only on `afterUdpConnect` or inline handler registration. For the production 3rd player, arena spawns are within ~7 chunks, so a distance 8 chunk check should still catch them.
+
+I'll add an initial registration burst: three `sendNow` calls spaced 100 ms apart. This should fix the race condition. I'll also strip out unused config constants like `BATTLE_ACTOR_CHUNK` and `BATTLE_ACTOR_REPLICATION_DISTANCE`, and remove the battle-specific `chunkOverride` from `ActorSender`.
+
+ActorSender will hardcode its replication distance to 8 and drop the `BATTLE_ACTOR_REPLICATION_DISTANCE` import. The `afterUdpConnect` hook will fire right after `connectUdp` finishes but before `connectGameSession` returns, ensuring handlers are attached before the caller sends its first update.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/config.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/ActorSender.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/ActorSender.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/CrowdySession.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+The model provided an ambiguous search string to replace
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+The model provided an ambiguous search string to replace
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts",
+  "pattern": "battleChunk|BATTLE_ACTOR|setChunkOverride|beforeUdpConnect"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts",
+  "pattern": "battleChunk|BATTLE_ACTOR|setChunkOverride|beforeUdpConnect",
+  "topFiles": [
+    {
+      "matchCount": 5,
+      "uri": "src/game/battle/useBattleRoyale.ts"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 5
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: cd /Users/benjaminscholtens/Documents/personal_projects/Afterburn && npm run build 2>&1 | tail -20</summary>
+
+```bash
+cd /Users/benjaminscholtens/Documents/personal_projects/Afterburn && npm run build 2>&1 | tail -20
+```
+
+```
+&gt; node scripts/ensure-crowdyjs.mjs
+
+
+&gt; simple-web-demo@0.1.0 build
+&gt; tsc -b &amp;&amp; vite build
+
+vite v6.4.2 building for production...
+transforming...
+✓ 247 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.56 kB │ gzip:   0.35 kB
+dist/assets/index-CZWYS0hp.css   19.44 kB │ gzip:   4.62 kB
+dist/assets/index-DEP0tOv9.js   937.73 kB │ gzip: 249.19 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 2.02s
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+The build passes. A recent change broke the connection point. Redeploying to Netlify will apply the fix.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn",
+  "pattern": "setChunkOverride|chunkOverride"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn",
+  "pattern": "setChunkOverride|chunkOverride",
+  "topFiles": [
+    {
+      "matchCount": 4,
+      "uri": "./src/game/session/ActorSender.ts"
+    },
+    {
+      "matchCount": 11,
+      "uri": "./.specstory/history/2026-06-10_15-44-22Z-game-api-configuration.md"
+    }
+  ],
+  "totalFiles": 2,
+  "totalMatches": 15
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+Removing unused `chunkOverride` from `ActorSender` since we're no longer using it.
+
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/ActorSender.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/ActorSender.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/ActorSender.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: cd /Users/benjaminscholtens/Documents/personal_projects/Afterburn && npm run build 2>&1 | tail -8</summary>
+
+```bash
+cd /Users/benjaminscholtens/Documents/personal_projects/Afterburn && npm run build 2>&1 | tail -8
+```
+
+```
+dist/assets/index-CZWYS0hp.css   19.44 kB │ gzip:   4.62 kB
+dist/assets/index-7oxZy3zS.js   937.64 kB │ gzip: 249.15 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.40s
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+You're right — the last multiplayer fix broke production on Netlify. Here's what happened and what we changed.
+
+## What broke
+
+The previous fix made two changes that don't work on Netlify:
+
+1. **Fixed chunk `{0,0,0}` for all actor updates** — Netlify has no dev relay (`/collab/battle` only exists locally), so multiplayer depends entirely on UDP. Pinning every ship to chunk `0,0,0` broke fanout on the deployed game server.
+
+2. **UDP handlers registered before `connectUdp()`** — The `beforeUdpConnect` hook subscribed to notifications before the UDP proxy was connected. The collaborative canvas (`useGameDemo`) and the pre-fix battle code both connect first, then register handlers — that order works on Netlify.
+
+Locally you might still have seen other players via the dev HTTP relay, which masked the UDP regression.
+
+## What we reverted
+
+- **Position-based chunks again** — Actor updates and events use each ship's world position (`worldToChunkInput`). Arena spawns are all near center, within replication distance 8.
+- **Connect → subscribe → send** — `connectGameSession()` → register handlers → 300ms settle delay → start sending actor updates (matches CrowdyJS integration test pattern).
+- Removed the fixed-chunk override from `ActorSender`.
+
+Dev relay improvements (better `syncPeers` fallback, burst sync on join) are unchanged — they only help local dev.
+
+## Next step
+
+**Redeploy to Netlify** with these changes, then test with two browser tabs on the same deploy URL. Both players should see each other again via UDP.
+
+If the original 3rd-player issue comes back after redeploy, we can address it without breaking production — e.g. a short registration burst after connect, or a server-side actor query if the API supports it — without forcing everyone into chunk `0,0,0`.
+
+---
+
+_**User**_
+
+can we test this locally to ensure things are working
+
+---
+
+_**Agent (composer-2.5)**_
+
+Checking the dev setup and running local multiplayer verification.
+
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="search" data-tool-name="glob_file_search">
+<details>
+<summary>Tool use: **glob_file_search** • Searched codebase "" • **4** results in **1** directory</summary>
+
+Directory: **/Users/benjaminscholtens/.cursor/projects/Users-benjaminscholtens-Documents-personal-projects-Afterburn** (4 files)
+
+| File |
+|------|
+| `terminals/364807.txt` |
+| `terminals/23952.txt` |
+| `terminals/4.txt` |
+| `terminals/3.txt` |
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="search" data-tool-name="glob_file_search"><details>
+<summary>Tool use: **glob_file_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/package.json</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "glob": "**/*.{ts,spec.ts,mjs}",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn",
+  "pattern": "battle|play|multiplayer|collab"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn",
+  "pattern": "battle|play|multiplayer|collab",
+  "topFiles": [
+    {
+      "matchCount": 7,
+      "uri": "e2e/tutorial.spec.ts"
+    },
+    {
+      "matchCount": 5,
+      "uri": "src/game/session/CrowdySession.ts"
+    },
+    {
+      "matchCount": 2,
+      "uri": "src/game/battle/battleActorUuid.ts"
+    },
+    {
+      "matchCount": 6,
+      "uri": "src/game/battle/rivalHud.ts"
+    },
+    {
+      "matchCount": 2,
+      "uri": "src/game/useGameDemo.ts"
+    },
+    {
+      "matchCount": 3,
+      "uri": "src/game/envScope.ts"
+    },
+    {
+      "matchCount": 1,
+      "uri": "src/game/world/Viewport.ts"
+    },
+    {
+      "matchCount": 17,
+      "uri": "src/game/render/ThreeBattleScene.ts"
+    },
+    {
+      "matchCount": 10,
+      "uri": "src/game/battle/remoteSync.ts"
+    },
+    {
+      "matchCount": 47,
+      "uri": "src/game/battle/useBattleRoyale.ts"
+    },
+    {
+      "matchCount": 1,
+      "uri": "playwright.config.ts"
+    },
+    {
+      "matchCount": 3,
+      "uri": "src/game/battle/arena.ts"
+    },
+    {
+      "matchCount": 3,
+      "uri": "src/chapters/registry.ts"
+    },
+    {
+      "matchCount": 8,
+      "uri": "src/game/battle/battlePresence.ts"
+    },
+    {
+      "matchCount": 8,
+      "uri": "vite.config.ts"
+    },
+    {
+      "matchCount": 1,
+      "uri": "src/game/battle/spawn.ts"
+    },
+    {
+      "matchCount": 2,
+      "uri": "src/game/battle/flight.ts"
+    },
+    {
+      "matchCount": 2,
+      "uri": "src/game/battle/types.ts"
+    },
+    {
+      "matchCount": 3,
+      "uri": "src/config.ts"
+    }
+  ],
+  "totalFiles": 19,
+  "totalMatches": 131
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
