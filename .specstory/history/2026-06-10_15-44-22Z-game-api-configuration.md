@@ -7340,3 +7340,7153 @@ Status: **completed**
 <summary>Tool use: **ripgrep_raw_search**</summary>
 
 </details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+A critical bug was found in `useBattleRoyale.ts`. `ActorSender` inside `useBattleRoyale.ts` captures `localShipRef.current` in its `setProvider` callback. This creates a stale closure. Later updates to the local ship state are ignored by the provider. New players therefore fail to appear to existing ones.
+
+The pose mapping is correct. `shipStateToPose` properly maps `worldZ` to `pose.worldY` for the horizontal plane. Chunk computation from `(worldX, worldZ)` is also accurate. The stale closure remains the root cause.
+
+Spawn positions can be up to 320 units apart. Players may land in different chunks. The 8-chunk replication threshold should cover these distances. Chunk boundaries are unlikely to be the cause.
+
+The stale closure theory is being reconsidered. The 8-chunk replication radius should easily cover the entire arena. The real culprit may be a late-joiner UDP subscription issue. Player 3 might fail to receive notifications when connecting via UDP.
+
+CrowdyJS tests explicitly register both clients in chunk {0,0,0} before spawning actors. Battle Royale assigns each player to their actual spawn chunk instead. Player 3 likely lands in a distant chunk. Existing players may not subscribe to that chunk. Player 3 therefore fails to reach the others through UDP.
+
+Chunk distance calculations confirm that all players stay within the eight-chunk replication radius. The focus is shifting to whether `worldToChunkInput` handles battle arena coordinates correctly.
+
+The syncPeers relay logic is now under scrutiny. It adds peers from listBattlePeers but never removes stale relay entries. UDP timeouts handle removal after four seconds. A separate bug exists when an existing UDP peer and a relay return the same peer with an updated position.
+
+The syncPeers relay logic is sound. Fresh UDP peers correctly overwrite stale relay entries, and new peers are added from the relay list. Existing players poll the relay every 250 milliseconds, so they should discover the late joiner. The relay path is not the culprit.
+
+The stale-closure theory is being reconsidered. A known CKS pub/sub issue between sendActorUpdate and subscription may block actor updates from reaching existing players. The dev relay runs on a single Vite server instance, so cross-server subscription failures are unlikely.
+
+The intermittent failures may stem from a race condition during client startup. The connection sequence runs `connectGameSession`, then `sendNow`, then `postPresence`, then `syncPeers`. Because the relay is disabled in production builds, the client depends entirely on UDP subscriptions. A timing gap between sending updates and receiving the peer list could explain why the third player sometimes appears and sometimes does not.
+
+The notification handler is registered after `connectGameSession()` begins the UDP subscription. Early ActorUpdateNotification messages may arrive before the handler is attached. This race condition could explain why the third player sometimes appears and sometimes does not.
+
+The UDP subscription is confirmed to start before the actor sender begins, so the notification race condition is ruled out. A new bug was identified: `ActorSender` encodes its state using `this.stateEncoder`, but the encoder function is set to `encodeShipState` with a stale snapshot of `localShipRef.current` captured at initialization. This means every actor update sent to the server carries outdated position and color data, which would break visibility for other players.
+
+A fixed chunk for all battle actors is being considered. All players would share the same replication chunk regardless of world position. This would guarantee UDP fanout reaches every player. The CrowdyJS tutorial uses this pattern successfully.
+
+The third player may be missing from the relay list entirely. `postBattlePresence` only runs when the actor sender is active and the presence interval is set. If either is delayed, the late joiner never appears in `listBattlePeers`. `syncPeers` then cannot merge that peer into the local peer set, so the third player stays invisible to existing players.
+
+Multiple Vite dev server instances were suspected. If players landed on different ports, each would run its own in-memory relay store and remain isolated from the others. UDP should still deliver updates across the same game API regardless.
+
+For UDP late joiners, the server may only forward actor updates to peers who were already present when that chunk was activated. Existing clients might not receive a new player's updates unless they first send an update that registers interest in that chunk.
+
+A concrete fix plan is forming. All battle actors should share a single fixed replication chunk so every player routes through the same UDP group. Relay synchronization needs to always upsert newer or missing peers from the relay list, bypassing UDP staleness checks. Local state should be pushed to the relay immediately when a new peer is discovered during sync. The relay publication frequency and maximum age should be increased. Finally, the initialization order must be reversed so UDP notification handlers attach before the UDP socket connects.
+
+The hybrid fix in syncPeers is being refined. A peer should be upserted whenever it is missing from the local map, its relay timestamp is newer than the last seen time, it originates from the relay alone, or its UDP state is stale. Under this rule, a late joiner discovered only through the relay will still be merged into the local peer set even if existing UDP peers remain fresh. This means the third player should become visible to existing clients once the relay entry updates.
+
+The relay store is only active in development, so production deployments would lack it entirely. The `listBattlePeers` alive filter is correct. A fixed `BATTLE_ACTOR_CHUNK` constant will be added, and the actor sender will be updated to use it.
+
+The implementation will add a `chunkOverride` field to `ActorSender` so `useBattleRoyale` can force every battle actor into the same fixed replication chunk. This replaces the dynamic chunk derived from each player's world position.
+
+remoteRef.current.set(peer.uuid, { ...existing, color });
+  }
+}</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/CrowdySession.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/battleActorUuid.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/config.ts",
+  "pattern": "BATTLE_REMOTE|REMOTE_ACTOR"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/config.ts",
+  "pattern": "BATTLE_REMOTE|REMOTE_ACTOR",
+  "topFiles": [
+    {
+      "matchCount": 1,
+      "uri": "src/config.ts"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 1
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+The root cause appears to be that battle actors were placed in separate UDP replication chunks, isolating late-joining players from earlier ones. I'm fixing this by assigning all battle actors to the same chunk and moving world positions into the state payload.
+
+I'm also overriding ActorSender to place battle actors in the same chunk. The connection flow needs refactoring so notification handlers register before UDP connects, but authentication must happen first since subscriptions require a valid token.
+
+The connection sequence is now: authenticate, register handlers, bootstrap, then connect UDP. syncPeers will always pull new peers from the relay and refresh stale entries, using a 500ms UDP staleness threshold. Relay fallback is being improved, though the immediate focus remains the UDP chunk fix. Ghost peer pruning is acceptable as-is.
+
+A relay fallback bug was identified. When a peer is initially tracked via relay, the system only overwrites its entry if the UDP timestamp is stale or the update came from the relay itself. This prevents the peer from ever switching to UDP once that packet arrives, leaving them stuck on slow relay updates.
+
+The relay fallback is actually working correctly for most cases. A peer added via relay continues receiving updates from the relay indefinitely. If a peer never reaches the client through UDP, the client keeps updating them from the relay every 250 milliseconds. The only remaining failure path is when a peer never arrives through the relay either, which points to a postPresence bug or cross-server issues.
+
+Enabling relay in production is problematic because the battle endpoint only exists in Vite dev middleware and returns 404 on production builds. A Netlify-specific solution would be needed. The user is likely running locally, so a port split issue should be mentioned in the response.
+
+A race condition during late-joiner sync is possible. If a new player connects and posts presence after sendNow, the first syncPeers cycle may miss them. They should appear in the next 250ms cycle instead.
+
+There is also a potential bug in shouldApplyRemoteUpdate. If a peer's existing record comes from the relay with an undefined sequence number, valid updates from late joiners could be rejected.
+
+The sequence conflict theory was ruled out. Updates from late joiners are correctly accepted even when the existing record has no sequence number. Client events such as fire and hit should probably also use the fixed chunk to stay consistent with battle actors.
+
+The connection sequence is confirmed correct: authentication must finish before UDP connects, because WebSocket subscriptions require the auth token. The current order—authenticate, connect UDP, register handlers, then send—already satisfies this. I am also reviewing the syncPeers loop for a potential bug when processing existing peer records.
+
+The syncPeers loop is confirmed correct. New peers are added properly, and stale timeouts handle UDP-only entries without needing explicit removal. Peers present in the UDP map but missing from the relay list are also handled fine.
+
+Vite HMR module reloads clear the devBattle Map, which would intermittently disconnect players in development. This is unrelated to the third-player isolation bug.
+
+I am refining the syncPeers logic to merge relay data whenever a peer record is missing, stale, or outdated compared to the server timestamp. Initial peer discovery will be sped up by calling syncPeers immediately on the 250 ms interval and repeating three rapid bursts at startup. I will also trigger postPresence on connect and raise the relay peer list maxAge to reduce latency.</details></think>
+
+_**Agent (composer-2.5)**_
+
+Identifying likely causes: dynamic chunk routing splitting players across replication groups, and relay sync skipping updates when UDP is considered fresh. Fixing with a shared battle chunk and more robust peer discovery.
+
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/config.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/ActorSender.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/ActorSender.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/ActorSender.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/battlePresence.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn",
+  "pattern": "worldToChunkInput"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn",
+  "pattern": "worldToChunkInput",
+  "topFiles": [
+    {
+      "matchCount": 2,
+      "uri": "./src/game/session/ActorSender.ts"
+    },
+    {
+      "matchCount": 2,
+      "uri": "./src/game/battle/useBattleRoyale.ts"
+    },
+    {
+      "matchCount": 2,
+      "uri": "./src/game/useGameDemo.ts"
+    },
+    {
+      "matchCount": 1,
+      "uri": "./src/game/world/coordinates.ts"
+    }
+  ],
+  "totalFiles": 4,
+  "totalMatches": 7
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts",
+  "pattern": "syncPeers|chunkAt|connectGameSession|setChunkOverride"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts",
+  "pattern": "syncPeers|chunkAt|connectGameSession|setChunkOverride",
+  "topFiles": [
+    {
+      "matchCount": 8,
+      "uri": "src/game/battle/useBattleRoyale.ts"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 8
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/ActorSender.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/world/actorState.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/CrowdySession.ts",
+  "pattern": "connectGameSession|connectUdp|ensureUdpSubscription|onNotification"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/CrowdySession.ts",
+  "pattern": "connectGameSession|connectUdp|ensureUdpSubscription|onNotification",
+  "topFiles": [
+    {
+      "matchCount": 7,
+      "uri": "src/game/session/CrowdySession.ts"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 7
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/CrowdySession.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn",
+  "pattern": "sendActorUpdate|ActorUpdate"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn",
+  "pattern": "sendActorUpdate|ActorUpdate",
+  "topFiles": [
+    {
+      "matchCount": 2,
+      "uri": "src/game/useGameDemo.ts"
+    },
+    {
+      "matchCount": 2,
+      "uri": "src/chapters/ch05-actors/Chapter05.tsx"
+    },
+    {
+      "matchCount": 1,
+      "uri": "src/game/session/ActorSender.ts"
+    },
+    {
+      "matchCount": 2,
+      "uri": "src/game/battle/useBattleRoyale.ts"
+    },
+    {
+      "matchCount": 5,
+      "uri": "vendor/schemas/game.gql"
+    },
+    {
+      "matchCount": 17,
+      "uri": ".specstory/history/2026-06-10_15-44-22Z-game-api-configuration.md"
+    },
+    {
+      "matchCount": 4,
+      "uri": "src/game/session/CrowdySession.ts"
+    }
+  ],
+  "totalFiles": 7,
+  "totalMatches": 33
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+I'm investigating the intermittent connection bug. I'll review `sendActorUpdate` in `CrowdySession` and check `CrowdyJS` tests for the fixed chunk pattern. I also plan to refactor the connect flow to register handlers before calling `connectUdp`, likely by splitting `connectGameSession`.
+
+The root cause is clear: `connectGameSession` authenticates and bootstraps before handlers are registered. I'll either add a `skipUdp` option or move handler registration earlier, since `ensureUdpSubscription` may not require authentication.
+
+Messages can arrive between UDP connection and handler registration. I'll add a `prepareGameSession` method to `CrowdySession` that handles authentication and bootstrapping first, then registers handlers before connecting UDP.
+
+I realized splitting `prepareGameSession` out would duplicate the retry logic. A better approach is adding an optional callback hook directly to `connectGameSession`. This lets the caller register handlers before UDP connects while keeping the existing retry logic intact.
+
+I've added a `beforeUdpConnect` callback to `connectGameSession`. The caller passes handler registration and chunk overrides through this hook. This keeps the existing retry logic intact while ensuring handlers are ready before UDP connects.
+
+I also need to set the actor UUID and state encoder before `sendNow`. Both can be configured before `connectGameSession` entirely. The battle replication distance matches the hardcoded value in `ActorSender`, so no change is needed there. Next I'll update `useBattleRoyale` to import the battle-specific constants.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn",
+  "pattern": "chunk.*0.*0.*0|replication"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn",
+  "pattern": "chunk.*0.*0.*0|replication",
+  "topFiles": [
+    {
+      "matchCount": 6,
+      "uri": ".specstory/history/2026-06-10_15-44-22Z-game-api-configuration.md"
+    },
+    {
+      "matchCount": 11,
+      "uri": "vendor/schemas/management.gql"
+    },
+    {
+      "matchCount": 18,
+      "uri": "vendor/schemas/game.gql"
+    }
+  ],
+  "totalFiles": 3,
+  "totalMatches": 35
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/CrowdySession.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+CrowdyJS tests use chunk {0,0,0}, suggesting PRESENCE_CHUNK may be fixed. Checking useGameDemo for chunk usage before implementing.
+
+Planning three implementation steps: adding a `beforeUdpConnect` callback to `CrowdySession.connectGameSession`, updating `useBattleRoyale`, and checking if `ActorSender` should use `BATTLE_ACTOR_REPLICATION_DISTANCE` when chunk overrides are set. Also refining `syncPeers` logic so fresh UDP peers aren't overwritten by stale relay data.
+
+Refined `syncPeers` so fresh UDP peers only receive color updates, preventing stale relay positions from overwriting live data. Added a burst sync after connect by posting presence and syncing peers immediately.
+
+A four-step burst sync will post presence and sync peers every 80 milliseconds right after connect. Handlers registered inside `beforeUdpConnect` must guard against duplicate subscriptions and cancellation flags. `actorSenderRef` setup can run before `connectGameSession`. `ActorSender` will also call `setReplicationDistance` using the config constant whenever a chunk override is active.</details></think>
+
+_**Agent (composer-2.5)**_
+
+Implementing the connect hook and updating battle sync logic.
+
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/CrowdySession.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/ActorSender.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/ActorSender.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts",
+  "pattern": "chunkAt"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts",
+  "pattern": "chunkAt",
+  "topFiles": [
+    {
+      "matchCount": 3,
+      "uri": "src/game/battle/useBattleRoyale.ts"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 3
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/battlePresence.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="read_lints">
+<details>
+<summary>Tool use: **read_lints**</summary>
+
+
+Parameters:
+
+```json
+{
+  "paths": [
+    "/Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts",
+    "/Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/ActorSender.ts",
+    "/Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/config.ts"
+  ]
+}
+```
+Result:
+
+```json
+{
+  "linterErrorsByFile": [
+    {
+      "relativeWorkspacePath": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts"
+    },
+    {
+      "relativeWorkspacePath": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/ActorSender.ts"
+    },
+    {
+      "relativeWorkspacePath": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/config.ts"
+    }
+  ]
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="read_lints"><details>
+<summary>Tool use: **read_lints**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: cd /Users/benjaminscholtens/Documents/personal_projects/Afterburn && npm run build 2>&1 | tail -30</summary>
+
+```bash
+cd /Users/benjaminscholtens/Documents/personal_projects/Afterburn && npm run build 2>&1 | tail -30
+```
+
+```
+
+&gt; simple-web-demo@0.1.0 prebuild
+&gt; node scripts/ensure-crowdyjs.mjs
+
+
+&gt; simple-web-demo@0.1.0 build
+&gt; tsc -b &amp;&amp; vite build
+
+vite v6.4.2 building for production...
+transforming...
+✓ 247 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.56 kB │ gzip:   0.35 kB
+dist/assets/index-CZWYS0hp.css   19.44 kB │ gzip:   4.62 kB
+dist/assets/index-C1cdGPb0.js   937.96 kB │ gzip: 249.24 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.72s
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+Build passed. Adding cleanup for setChunkOverride(null) on unmount. Checking whether glance shards are required by the user rule.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="search" data-tool-name="glob_file_search">
+<details>
+<summary>Tool use: **glob_file_search** • Searched codebase "" • **0** results in **1** directory</summary>
+
+Directory: **** (0 files)
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="search" data-tool-name="glob_file_search"><details>
+<summary>Tool use: **glob_file_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="search" data-tool-name="glob_file_search">
+<details>
+<summary>Tool use: **glob_file_search** • Searched codebase "" • **7** results in **1** directory</summary>
+
+Directory: **/Users/benjaminscholtens/.cursor/projects/Users-benjaminscholtens-Documents-personal-projects-Afterburn/mcps/user-glance** (7 files)
+
+| File |
+|------|
+| `SERVER_METADATA.json` |
+| `INSTRUCTIONS.md` |
+| `resources/tags_resource.json` |
+| `tools/delete_tag.json` |
+| `tools/search_tags.json` |
+| `tools/view_shards.json` |
+| `tools/create_shard.json` |
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="search" data-tool-name="glob_file_search"><details>
+<summary>Tool use: **glob_file_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/.cursor/projects/Users-benjaminscholtens-Documents-personal-projects-Afterburn/mcps/user-glance/tools/create_shard.json</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="mcp-glance-create_shard">
+<details>
+<summary>Tool use: **mcp-glance-create_shard**</summary>
+
+
+Parameters:
+
+```json
+{
+  "tools": [
+    {
+      "name": "create_shard",
+      "parameters": "{\"file\":\"src/config.ts\",\"from_text\":\"/** All battle actors register in one chunk\",\"to_text\":\"export const BATTLE_RELAY_UDP_STALE_MS = 900;\",\"tags\":[\"battle\",\"multiplayer\",\"udp\"],\"summary\":\"Battle royale uses fixed chunk (0,0,0) for all actor/event UDP messages so every pilot shares one replication group. Relay fallback kicks in when UDP is stale for 900ms.\"}",
+      "serverName": "glance"
+    }
+  ]
+}
+```
+Additional data:
+
+```json
+{
+  "status": "success"
+}
+```
+Result:
+
+```json
+{
+  "result": "{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"error\\\": \\\"File not found: src/config.ts\\\"}\"}],\"structuredContent\":{\"result\":\"{\\\"error\\\": \\\"File not found: src/config.ts\\\"}\"}}"
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="mcp-glance-create_shard"><details>
+<summary>Tool use: **mcp-glance-create_shard**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="mcp-glance-create_shard">
+<details>
+<summary>Tool use: **mcp-glance-create_shard**</summary>
+
+
+Parameters:
+
+```json
+{
+  "tools": [
+    {
+      "name": "create_shard",
+      "parameters": "{\"file\":\"src/game/battle/useBattleRoyale.ts\",\"from_text\":\"actorSenderRef.current.setChunkOverride(BATTLE_ACTOR_CHUNK);\",\"to_text\":\"await session.connectGameSession({ beforeUdpConnect: registerUdpHandlers });\",\"tags\":[\"battle\",\"multiplayer\",\"connection\"],\"summary\":\"UDP handlers register before connectUdp via beforeUdpConnect hook. ActorSender pins updates to BATTLE_ACTOR_CHUNK. syncPeers uses relay unless UDP is fresh (\u003c900ms). Burst sync runs 4x after connect for late joiners.\"}",
+      "serverName": "glance"
+    }
+  ]
+}
+```
+Additional data:
+
+```json
+{
+  "status": "success"
+}
+```
+Result:
+
+```json
+{
+  "result": "{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"error\\\": \\\"File not found: src/game/battle/useBattleRoyale.ts\\\"}\"}],\"structuredContent\":{\"result\":\"{\\\"error\\\": \\\"File not found: src/game/battle/useBattleRoyale.ts\\\"}\"}}"
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="mcp-glance-create_shard"><details>
+<summary>Tool use: **mcp-glance-create_shard**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+The third-player invisibility bug came from how battle multiplayer discovery works. Here’s what was wrong and what we changed.
+
+## Root cause
+
+Battle was publishing each ship’s UDP actor updates in **whatever world chunk they spawned in**. The CKS replication system fans out updates by chunk — so players 1 and 2 could see each other if they landed in nearby chunks, but a late joiner in a different chunk would never receive their updates (and vice versa).
+
+The dev HTTP relay helped sometimes, but only as a fallback and with a 220ms “UDP is fresh” window that could block relay updates for players who never got UDP at all.
+
+## Fixes applied
+
+1. **Fixed battle chunk `{0,0,0}`** — All actor updates and client events (fire/hit/destroy) now use one shared chunk. Actual position stays in the ship state payload.
+
+2. **Register UDP handlers before `connectUdp`** — Handlers are registered via a new `beforeUdpConnect` hook on `connectGameSession()`, so the first fanout isn’t missed during connect.
+
+3. **Stronger dev relay fallback** — Relay updates apply unless UDP is actively fresh (< 900ms). New/relay-only peers always get positions from the relay.
+
+4. **Burst peer sync on join** — After connect, presence is posted and peers synced 4 extra times (80ms apart) to help late joiners show up quickly in dev.
+
+## How to verify
+
+Open **3 browser tabs** to the **same dev server URL and port** (e.g. all on `http://localhost:5180/play` — different ports = separate relay stores):
+
+1. Tab 1 joins → wait ~2s  
+2. Tab 2 joins → both should see each other  
+3. Tab 3 joins → all three should see each other within ~1 second  
+
+In production (no dev relay), visibility relies entirely on the fixed-chunk UDP path — that’s the important fix for the intermittent 3-player issue.
+
+If player 3 is still invisible after a hard refresh in all tabs, check the game menu event log for `ActorUpdateNotification` entries when the third tab connects — that would point to a server-side fanout issue rather than client chunk routing.
+
+---
+
+_**User**_
+
+After the last changes, I'm not seeing other players on the netlify deploy. I think we did something to break the connection point.
+
+---
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+The user reports that other players are missing from the Netlify deploy after recent changes. They suspect the connection point was broken.
+
+Production multiplayer uses UDP directly rather than the dev relay. The fixed chunk assignment, the beforeUdpConnect hook, and the ActorSender chunk override are being checked as potential causes.</details></think>
+
+_**Agent (composer-2.5)**_
+
+Investigating production multiplayer — Netlify has no dev relay, so UDP must work. Tracing connect flow and chunk/replication logic for regressions.
+
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="semantic_search_full">
+<details>
+<summary>Tool use: **semantic_search_full**</summary>
+
+
+Parameters:
+
+```json
+{
+  "explanation": "",
+  "query": "How does UDP chunk subscription work for actor updates?",
+  "topK": 10
+}
+```
+Result:
+
+```json
+{
+  "codeResults": [
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "isSignature": true,
+            "lineNumber": 63,
+            "text": "export class CrowdySession {"
+          },
+          {
+            "lineNumber": 328
+          },
+          {
+            "lineNumber": 329
+          },
+          {
+            "lineNumber": 330,
+            "text": "  private async ensureUdpSubscription(): Promise\u003cvoid\u003e {"
+          },
+          {
+            "lineNumber": 331,
+            "text": "    if (this.udpSubscribed) return;"
+          },
+          {
+            "lineNumber": 332,
+            "text": "    this.udpSubscribed = true;"
+          },
+          {
+            "lineNumber": 333,
+            "text": "    this.client.udp.subscribe({"
+          },
+          {
+            "lineNumber": 334,
+            "text": "      actorUpdate: (n) =\u003e this.dispatch('ActorUpdateNotification', n),"
+          },
+          {
+            "lineNumber": 335,
+            "text": "      voxelUpdate: (n) =\u003e this.dispatch('VoxelUpdateNotification', n),"
+          },
+          {
+            "lineNumber": 336,
+            "text": "      clientEvent: (n) =\u003e this.dispatch('ClientEventNotification', n),"
+          },
+          {
+            "lineNumber": 337,
+            "text": "      connectionEvent: (n) =\u003e {"
+          },
+          {
+            "lineNumber": 338,
+            "text": "        this.dispatch('RealtimeConnectionEvent', n);"
+          },
+          {
+            "lineNumber": 339,
+            "text": "        this.log(&#96;Connection event: ${n.status ?? 'unknown'}&#96;);"
+          },
+          {
+            "lineNumber": 340,
+            "text": "      },"
+          },
+          {
+            "lineNumber": 341,
+            "text": "      genericError: (n) =\u003e {"
+          },
+          {
+            "lineNumber": 342,
+            "text": "        this.dispatch('GenericErrorResponse', n);"
+          },
+          {
+            "lineNumber": 343,
+            "text": "        this.log(&#96;UDP error: code ${n.errorCode}&#96;);"
+          },
+          {
+            "lineNumber": 344,
+            "text": "      },"
+          },
+          {
+            "lineNumber": 345,
+            "text": "      actorUpdateResponse: (n) =\u003e this.dispatch('ActorUpdateResponse', n),"
+          },
+          {
+            "lineNumber": 346,
+            "text": "      voxelUpdateResponse: (n) =\u003e this.dispatch('VoxelUpdateResponse', n),"
+          },
+          {
+            "lineNumber": 347,
+            "text": "    });"
+          },
+          {
+            "lineNumber": 348,
+            "text": "    this.log('UDP subscription active');"
+          },
+          {
+            "lineNumber": 349,
+            "text": "  }"
+          },
+          {
+            "lineNumber": 350
+          },
+          {
+            "lineNumber": 351,
+            "text": "  private dispatch(typename: string, notification: UdpNotification): void {"
+          },
+          {
+            "lineNumber": 352,
+            "text": "    this.log(&#96;← ${typename}&#96;);"
+          },
+          {
+            "lineNumber": 357,
+            "text": "  }"
+          },
+          {
+            "isSignature": true,
+            "lineNumber": 521,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "column": 1,
+            "line": 520
+          },
+          "startPosition": {
+            "line": 62
+          }
+        },
+        "relativeWorkspacePath": "./src/game/session/CrowdySession.ts",
+        "signatures": {
+          "ranges": [
+            {
+              "endPosition": {
+                "column": 8,
+                "line": 63
+              },
+              "startPosition": {
+                "column": 1,
+                "line": 63
+              }
+            },
+            {
+              "endPosition": {
+                "column": 3,
+                "line": 64
+              },
+              "startPosition": {
+                "column": 8,
+                "line": 63
+              }
+            }
+          ]
+        }
+      },
+      "score": 0.5439451932907104
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "isSignature": true,
+            "lineNumber": 110,
+            "text": "export function useBattleRoyale() {"
+          },
+          {
+            "lineNumber": 381
+          },
+          {
+            "lineNumber": 382
+          },
+          {
+            "lineNumber": 383,
+            "text": "  useEffect(() =\u003e {"
+          },
+          {
+            "lineNumber": 384,
+            "text": "    const unsubs: Array\u003c() =\u003e void\u003e = [];"
+          },
+          {
+            "lineNumber": 385,
+            "text": "    let cancelled = false;"
+          },
+          {
+            "lineNumber": 386
+          },
+          {
+            "lineNumber": 387,
+            "text": "    void (async () =\u003e {"
+          },
+          {
+            "lineNumber": 388,
+            "text": "      actorSenderRef.current.setActorUuid(battleActorUuid);"
+          },
+          {
+            "lineNumber": 389,
+            "text": "      actorSenderRef.current.setChunkOverride(BATTLE_ACTOR_CHUNK);"
+          },
+          {
+            "lineNumber": 390
+          },
+          {
+            "lineNumber": 391,
+            "text": "      const registerUdpHandlers = () =\u003e {"
+          },
+          {
+            "lineNumber": 392,
+            "text": "        unsubs.push("
+          },
+          {
+            "lineNumber": 393,
+            "text": "          session.onNotification('ActorUpdateNotification', (n) =\u003e {"
+          },
+          {
+            "lineNumber": 394,
+            "text": "            if (n.__typename !== 'ActorUpdateNotification') return;"
+          },
+          {
+            "lineNumber": 395,
+            "text": "            if (n.uuid === battleActorUuid) return;"
+          },
+          {
+            "lineNumber": 396,
+            "text": "            const ship = decodeShipState(n.state);"
+          },
+          {
+            "lineNumber": 397,
+            "text": "            if (!ship) return;"
+          },
+          {
+            "lineNumber": 398,
+            "text": "            const seq = Number(n.sequenceNumber);"
+          },
+          {
+            "lineNumber": 399,
+            "text": "            const serverMs = Number(n.epochMillis);"
+          },
+          {
+            "lineNumber": 400,
+            "text": "            const prev = remoteRef.current.get(n.uuid);"
+          },
+          {
+            "lineNumber": 401,
+            "text": "            if (!shouldApplyRemoteUpdate(prev, seq, serverMs)) return;"
+          },
+          {
+            "lineNumber": 402,
+            "text": "            const color = actorColorForUuid(ship.colorId ?? n.uuid);"
+          },
+          {
+            "lineNumber": 403,
+            "text": "            if (prev?.ship.alive \u0026\u0026 !ship.alive) {"
+          },
+          {
+            "lineNumber": 404,
+            "text": "              registerExplosion(n.uuid, ship.worldX, ship.worldY, ship.worldZ, color);"
+          },
+          {
+            "lineNumber": 405,
+            "text": "            }"
+          },
+          {
+            "lineNumber": 406,
+            "text": "            upsertRemoteShip("
+          },
+          {
+            "lineNumber": 407,
+            "text": "              remoteRef.current,"
+          },
+          {
+            "lineNumber": 408,
+            "text": "              n.uuid,"
+          },
+          {
+            "lineNumber": 409,
+            "text": "              ship,"
+          },
+          {
+            "lineNumber": 410,
+            "text": "              color,"
+          },
+          {
+            "lineNumber": 411,
+            "text": "              'udp',"
+          },
+          {
+            "lineNumber": 412,
+            "text": "              performance.now(),"
+          },
+          {
+            "lineNumber": 413,
+            "text": "              { seq, serverMs },"
+          },
+          {
+            "lineNumber": 414,
+            "text": "            );"
+          },
+          {
+            "lineNumber": 415,
+            "text": "            bump();"
+          },
+          {
+            "lineNumber": 416,
+            "text": "          }),"
+          },
+          {
+            "lineNumber": 417,
+            "text": "        );"
+          },
+          {
+            "lineNumber": 418
+          },
+          {
+            "lineNumber": 419,
+            "text": "        unsubs.push("
+          },
+          {
+            "lineNumber": 420,
+            "text": "          session.onNotification"
+          },
+          {
+            "lineNumber": 453
+          },
+          {
+            "lineNumber": 454
+          },
+          {
+            "lineNumber": 455,
+            "text": ";"
+          },
+          {
+            "lineNumber": 551,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 568,
+            "text": "  }"
+          },
+          {
+            "isSignature": true,
+            "lineNumber": 1002,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "column": 1,
+            "line": 1001
+          },
+          "startPosition": {
+            "line": 109
+          }
+        },
+        "relativeWorkspacePath": "./src/game/battle/useBattleRoyale.ts",
+        "signatures": {
+          "ranges": [
+            {
+              "endPosition": {
+                "column": 8,
+                "line": 110
+              },
+              "startPosition": {
+                "column": 1,
+                "line": 110
+              }
+            },
+            {
+              "endPosition": {
+                "column": 3,
+                "line": 111
+              },
+              "startPosition": {
+                "column": 8,
+                "line": 110
+              }
+            }
+          ]
+        }
+      },
+      "score": 0.5044984817504883
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 1205,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1206,
+            "text": "union UdpNotification = ActorUpdateResponse | ActorUpdateNotification | VoxelUpdateResponse | VoxelUpdateNotification | ClientAudioNotification | ClientTextNotification | ClientEventNotification | ServerEventNotification | GenericErrorResponse | RealtimeConnectionEvent"
+          },
+          {
+            "lineNumber": 1207
+          },
+          {
+            "lineNumber": 1208,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1209,
+            "text": "Response from the UDP game server for an actor update request. Received via the udpNotifications subscription."
+          },
+          {
+            "lineNumber": 1210,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1211,
+            "text": "type ActorUpdateResponse {"
+          },
+          {
+            "lineNumber": 1212,
+            "text": "  \"\"\"The ID of the app where the actor update was processed.\"\"\""
+          },
+          {
+            "lineNumber": 1213,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 1214
+          },
+          {
+            "lineNumber": 1215,
+            "text": "  \"\"\"The X coordinate of the chunk where the actor is located.\"\"\""
+          },
+          {
+            "lineNumber": 1216,
+            "text": "  chunkX: BigInt!"
+          },
+          {
+            "lineNumber": 1217
+          },
+          {
+            "lineNumber": 1218,
+            "text": "  \"\"\"The Y coordinate of the chunk where the actor is located.\"\"\""
+          },
+          {
+            "lineNumber": 1219,
+            "text": "  chunkY: BigInt!"
+          },
+          {
+            "lineNumber": 1220
+          },
+          {
+            "lineNumber": 1221,
+            "text": "  \"\"\"The Z coordinate of the chunk where the actor is located.\"\"\""
+          },
+          {
+            "lineNumber": 1222,
+            "text": "  chunkZ: BigInt!"
+          },
+          {
+            "lineNumber": 1223
+          },
+          {
+            "lineNumber": 1224,
+            "text": "  \"\"\"Chunk replication distance (0-8) from the original message.\"\"\""
+          },
+          {
+            "lineNumber": 1225,
+            "text": "  distance: Int!"
+          },
+          {
+            "lineNumber": 1226
+          },
+          {
+            "lineNumber": 1227,
+            "text": "  \"\"\"Decay algorithm (0-5) from the original message.\"\"\""
+          },
+          {
+            "lineNumber": 1228,
+            "text": "  decayRate: Int!"
+          },
+          {
+            "lineNumber": 1229
+          },
+          {
+            "lineNumber": 1230,
+            "text": "  \"\"\"The unique identifier of the actor that was updated.\"\"\""
+          },
+          {
+            "lineNumber": 1231,
+            "text": "  uuid: String!"
+          },
+          {
+            "lineNumber": 1232
+          },
+          {
+            "lineNumber": 1233,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1234,
+            "text": "  The sequence number echoed back from the request, used to correlate responses."
+          },
+          {
+            "lineNumber": 1235,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1236,
+            "text": "  sequenceNumber: Int!"
+          },
+          {
+            "lineNumber": 1237
+          },
+          {
+            "lineNumber": 1238,
+            "text": "  \"\"\"Server-generated epoch milliseconds timestamp.\"\"\""
+          },
+          {
+            "lineNumber": 1239,
+            "text": "  epochMillis: BigInt!"
+          },
+          {
+            "lineNumber": 1240,
+            "text": "}"
+          },
+          {
+            "lineNumber": 1241
+          },
+          {
+            "lineNumber": 1242,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1243,
+            "text": "Notification received when an actor (player or NPC) state is updated by another client or the server. Received via the udpNotifications subscription."
+          },
+          {
+            "lineNumber": 1244,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1245,
+            "text": "type ActorUpdateNotification {"
+          },
+          {
+            "lineNumber": 1246,
+            "text": "  \"\"\"The ID of the app where the actor is located.\"\"\""
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 1246
+          },
+          "startPosition": {
+            "line": 1204
+          }
+        },
+        "relativeWorkspacePath": "./vendor/schemas/game.gql",
+        "signatures": {}
+      },
+      "score": 0.4959065020084381
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 1244,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1245,
+            "text": "type ActorUpdateNotification {"
+          },
+          {
+            "lineNumber": 1246,
+            "text": "  \"\"\"The ID of the app where the actor is located.\"\"\""
+          },
+          {
+            "lineNumber": 1247,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 1248
+          },
+          {
+            "lineNumber": 1249,
+            "text": "  \"\"\"The X coordinate of the chunk where the actor is located.\"\"\""
+          },
+          {
+            "lineNumber": 1250,
+            "text": "  chunkX: BigInt!"
+          },
+          {
+            "lineNumber": 1251
+          },
+          {
+            "lineNumber": 1252,
+            "text": "  \"\"\"The Y coordinate of the chunk where the actor is located.\"\"\""
+          },
+          {
+            "lineNumber": 1253,
+            "text": "  chunkY: BigInt!"
+          },
+          {
+            "lineNumber": 1254
+          },
+          {
+            "lineNumber": 1255,
+            "text": "  \"\"\"The Z coordinate of the chunk where the actor is located.\"\"\""
+          },
+          {
+            "lineNumber": 1256,
+            "text": "  chunkZ: BigInt!"
+          },
+          {
+            "lineNumber": 1257
+          },
+          {
+            "lineNumber": 1258,
+            "text": "  \"\"\"Chunk replication distance (0-8) from the original message.\"\"\""
+          },
+          {
+            "lineNumber": 1259,
+            "text": "  distance: Int!"
+          },
+          {
+            "lineNumber": 1260
+          },
+          {
+            "lineNumber": 1261,
+            "text": "  \"\"\"Decay algorithm (0-5) from the original message.\"\"\""
+          },
+          {
+            "lineNumber": 1262,
+            "text": "  decayRate: Int!"
+          },
+          {
+            "lineNumber": 1263
+          },
+          {
+            "lineNumber": 1264,
+            "text": "  \"\"\"The unique identifier of the actor that was updated.\"\"\""
+          },
+          {
+            "lineNumber": 1265,
+            "text": "  uuid: String!"
+          },
+          {
+            "lineNumber": 1266
+          },
+          {
+            "lineNumber": 1267,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1268,
+            "text": "  The actor state data, base64-encoded. Decode this to get the full ActorState containing position, rotation, velocity, animation flags, etc."
+          },
+          {
+            "lineNumber": 1269,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1270,
+            "text": "  state: String!"
+          },
+          {
+            "lineNumber": 1271
+          },
+          {
+            "lineNumber": 1272,
+            "text": "  \"\"\"The sender's sequence number for this message (0-255).\"\"\""
+          },
+          {
+            "lineNumber": 1273,
+            "text": "  sequenceNumber: Int!"
+          },
+          {
+            "lineNumber": 1274
+          },
+          {
+            "lineNumber": 1275,
+            "text": "  \"\"\"Server-generated epoch milliseconds timestamp.\"\"\""
+          },
+          {
+            "lineNumber": 1276,
+            "text": "  epochMillis: BigInt!"
+          },
+          {
+            "lineNumber": 1277,
+            "text": "}"
+          },
+          {
+            "lineNumber": 1278
+          },
+          {
+            "lineNumber": 1279,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1280,
+            "text": "Response from the UDP game server for a voxel update request. Received via the udpNotifications subscription."
+          },
+          {
+            "lineNumber": 1281,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1282,
+            "text": "type VoxelUpdateResponse {"
+          },
+          {
+            "lineNumber": 1283,
+            "text": "  \"\"\"The ID of the app where the voxel update was processed.\"\"\""
+          },
+          {
+            "lineNumber": 1284,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 1285
+          },
+          {
+            "lineNumber": 1286,
+            "text": "  \"\"\"The X coordinate of the chunk containing the voxel.\"\"\""
+          },
+          {
+            "lineNumber": 1287,
+            "text": "  chunkX: BigInt!"
+          },
+          {
+            "lineNumber": 1288
+          },
+          {
+            "lineNumber": 1289,
+            "text": "  \"\"\"The Y coordinate of the chunk containing the voxel.\"\"\""
+          },
+          {
+            "lineNumber": 1290,
+            "text": "  chunkY: BigInt!"
+          },
+          {
+            "lineNumber": 1291
+          },
+          {
+            "lineNumber": 1292,
+            "text": "  \"\"\"The Z coordinate of the chunk containing the voxel.\"\"\""
+          },
+          {
+            "lineNumber": 1293,
+            "text": "  chunkZ: BigInt!"
+          },
+          {
+            "lineNumber": 1294
+          },
+          {
+            "lineNumber": 1295,
+            "text": "  \"\"\"Chunk replication distance (0-8) from the original message.\"\"\""
+          },
+          {
+            "lineNumber": 1296,
+            "text": "  distance: Int!"
+          },
+          {
+            "lineNumber": 1297
+          },
+          {
+            "lineNumber": 1298,
+            "text": "  \"\"\"Decay algorithm (0-5) from the original message.\"\"\""
+          },
+          {
+            "lineNumber": 1299,
+            "text": "  decayRate: Int!"
+          },
+          {
+            "lineNumber": 1300
+          },
+          {
+            "lineNumber": 1301,
+            "text": "  \"\"\"The unique identifier for this voxel update.\"\"\""
+          },
+          {
+            "lineNumber": 1302,
+            "text": "  uuid: String!"
+          },
+          {
+            "lineNumber": 1303
+          },
+          {
+            "lineNumber": 1304,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1305,
+            "text": "  The sequence number echoed back from the request, used to correlate responses."
+          },
+          {
+            "lineNumber": 1306,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1307,
+            "text": "  sequenceNumber: Int!"
+          },
+          {
+            "lineNumber": 1308
+          },
+          {
+            "lineNumber": 1309,
+            "text": "  \"\"\"Server-generated epoch milliseconds timestamp.\"\"\""
+          },
+          {
+            "lineNumber": 1310,
+            "text": "  epochMillis: BigInt!"
+          },
+          {
+            "lineNumber": 1311,
+            "text": "}"
+          },
+          {
+            "lineNumber": 1312
+          },
+          {
+            "lineNumber": 1313,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1314,
+            "text": "Notification received when a voxel (block) is updated by another client or the server. Received via the udpNotifications subscription."
+          },
+          {
+            "lineNumber": 1315,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1316,
+            "text": "type VoxelUpdateNotification {"
+          },
+          {
+            "lineNumber": 1317,
+            "text": "  \"\"\"The ID of the app where the voxel is located.\"\"\""
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 1317
+          },
+          "startPosition": {
+            "line": 1243
+          }
+        },
+        "relativeWorkspacePath": "./vendor/schemas/game.gql",
+        "signatures": {}
+      },
+      "score": 0.4577920436859131
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "isSignature": true,
+            "lineNumber": 63,
+            "text": "export class CrowdySession {"
+          },
+          {
+            "lineNumber": 357
+          },
+          {
+            "lineNumber": 358
+          },
+          {
+            "lineNumber": 359,
+            "text": "  async sendActorUpdate(input: {"
+          },
+          {
+            "lineNumber": 360,
+            "text": "    chunk: { x: string; y: string; z: string };"
+          },
+          {
+            "lineNumber": 361,
+            "text": "    state: string;"
+          },
+          {
+            "lineNumber": 362,
+            "text": "    sequenceNumber: number;"
+          },
+          {
+            "lineNumber": 363,
+            "text": "    distance?: number;"
+          },
+          {
+            "lineNumber": 364,
+            "text": "    decayRate?: number;"
+          },
+          {
+            "lineNumber": 365,
+            "text": "    uuid?: string;"
+          },
+          {
+            "lineNumber": 366,
+            "text": "  }): Promise\u003cboolean\u003e {"
+          },
+          {
+            "lineNumber": 367,
+            "text": "    return this.client.udp.sendActorUpdate({"
+          },
+          {
+            "lineNumber": 368,
+            "text": "      appId: APP_ID,"
+          },
+          {
+            "lineNumber": 369,
+            "text": "      chunk: input.chunk,"
+          },
+          {
+            "lineNumber": 370,
+            "text": "      uuid: input.uuid ?? this.actorUuid,"
+          },
+          {
+            "lineNumber": 371,
+            "text": "      state: input.state,"
+          },
+          {
+            "lineNumber": 372,
+            "text": "      sequenceNumber: input.sequenceNumber,"
+          },
+          {
+            "lineNumber": 373,
+            "text": "      distance: input.distance,"
+          },
+          {
+            "lineNumber": 374,
+            "text": "      decayRate: input.decayRate,"
+          },
+          {
+            "lineNumber": 375,
+            "text": "    });"
+          },
+          {
+            "lineNumber": 376,
+            "text": "  }"
+          },
+          {
+            "lineNumber": 377
+          },
+          {
+            "lineNumber": 378,
+            "text": "  async upsertPresenceActor("
+          },
+          {
+            "lineNumber": 379,
+            "text": "    pose: ActorPose,"
+          },
+          {
+            "lineNumber": 380,
+            "text": "  ): Promise\u003cvoid\u003e {"
+          },
+          {
+            "lineNumber": 381,
+            "text": "    const publicState = encodePresenceState(pose);"
+          },
+          {
+            "lineNumber": 399,
+            "text": "  }"
+          },
+          {
+            "isSignature": true,
+            "lineNumber": 521,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "column": 1,
+            "line": 520
+          },
+          "startPosition": {
+            "line": 62
+          }
+        },
+        "relativeWorkspacePath": "./src/game/session/CrowdySession.ts",
+        "signatures": {
+          "ranges": [
+            {
+              "endPosition": {
+                "column": 8,
+                "line": 63
+              },
+              "startPosition": {
+                "column": 1,
+                "line": 63
+              }
+            },
+            {
+              "endPosition": {
+                "column": 3,
+                "line": 64
+              },
+              "startPosition": {
+                "column": 8,
+                "line": 63
+              }
+            }
+          ]
+        }
+      },
+      "score": 0.45283758640289307
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 971,
+            "text": "  membershipPolicy: String"
+          },
+          {
+            "lineNumber": 972,
+            "text": "}"
+          },
+          {
+            "lineNumber": 973
+          },
+          {
+            "lineNumber": 974,
+            "text": "input UpdateTeamInput {"
+          },
+          {
+            "lineNumber": 975,
+            "text": "  groupId: BigInt!"
+          },
+          {
+            "lineNumber": 976,
+            "text": "  name: String"
+          },
+          {
+            "lineNumber": 977,
+            "text": "  description: String"
+          },
+          {
+            "lineNumber": 978,
+            "text": "  membershipPolicy: String"
+          },
+          {
+            "lineNumber": 979,
+            "text": "}"
+          },
+          {
+            "lineNumber": 980
+          },
+          {
+            "lineNumber": 981,
+            "text": "input SetMemberRolesInput {"
+          },
+          {
+            "lineNumber": 982,
+            "text": "  groupId: BigInt!"
+          },
+          {
+            "lineNumber": 983,
+            "text": "  userId: BigInt!"
+          },
+          {
+            "lineNumber": 984,
+            "text": "  roleIds: [BigInt!]!"
+          },
+          {
+            "lineNumber": 985,
+            "text": "}"
+          },
+          {
+            "lineNumber": 986
+          },
+          {
+            "lineNumber": 987,
+            "text": "input CreateGroupRoleInput {"
+          },
+          {
+            "lineNumber": 988,
+            "text": "  groupId: BigInt!"
+          },
+          {
+            "lineNumber": 989,
+            "text": "  roleName: String!"
+          },
+          {
+            "lineNumber": 990,
+            "text": "  permissions: [String!]"
+          },
+          {
+            "lineNumber": 991,
+            "text": "  rank: Int"
+          },
+          {
+            "lineNumber": 992,
+            "text": "}"
+          },
+          {
+            "lineNumber": 993
+          },
+          {
+            "lineNumber": 994,
+            "text": "input UpdateGroupRoleInput {"
+          },
+          {
+            "lineNumber": 995,
+            "text": "  groupRoleId: BigInt!"
+          },
+          {
+            "lineNumber": 996,
+            "text": "  roleName: String"
+          },
+          {
+            "lineNumber": 997,
+            "text": "  permissions: [String!]"
+          },
+          {
+            "lineNumber": 998,
+            "text": "  rank: Int"
+          },
+          {
+            "lineNumber": 999,
+            "text": "}"
+          },
+          {
+            "lineNumber": 1000
+          },
+          {
+            "lineNumber": 1001,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1002,
+            "text": "Input for sending an actor update request to the UDP game server. This updates the state of an actor (player character or NPC) in a specific chunk."
+          },
+          {
+            "lineNumber": 1003,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1004,
+            "text": "input ActorUpdateRequestInput {"
+          },
+          {
+            "lineNumber": 1005,
+            "text": "  \"\"\"The ID of the app where the actor is located.\"\"\""
+          },
+          {
+            "lineNumber": 1006,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 1007
+          },
+          {
+            "lineNumber": 1008,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1009,
+            "text": "  The chunk coordinates where the actor is located. A chunk is a 16x16x16 voxel cube."
+          },
+          {
+            "lineNumber": 1010,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1011,
+            "text": "  chunk: ChunkCoordinatesInput!"
+          },
+          {
+            "lineNumber": 1012
+          },
+          {
+            "lineNumber": 1013,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1014,
+            "text": "  A unique identifier for the actor. Must be exactly 32 bytes when encoded as UTF-8. This is typically a client-generated UUID."
+          },
+          {
+            "lineNumber": 1015,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1016,
+            "text": "  uuid: String!"
+          },
+          {
+            "lineNumber": 1017
+          },
+          {
+            "lineNumber": 1018,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1019,
+            "text": "  The actor state data, base64-encoded. May be an empty string for registration-only updates (no state payload)."
+          },
+          {
+            "lineNumber": 1020,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1021,
+            "text": "  state: String!"
+          },
+          {
+            "lineNumber": 1022
+          },
+          {
+            "lineNumber": 1023,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1024,
+            "text": "  Chunk replication distance (0-8). Defaults to 8 for actor updates. Clamped to 0-8."
+          },
+          {
+            "lineNumber": 1025,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1026,
+            "text": "  distance: Int"
+          },
+          {
+            "lineNumber": 1027
+          },
+          {
+            "lineNumber": 1028,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1029,
+            "text": "  Decay algorithm for replication: 0 = none, 1 = exponential, 2 = linear 50%, 3 = linear 25%, 4 = linear 10%, 5 = linear 5%. Defaults to 1 (exponential) for actor updates."
+          },
+          {
+            "lineNumber": 1030,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1031,
+            "text": "  decayRate: Int"
+          },
+          {
+            "lineNumber": 1032
+          },
+          {
+            "lineNumber": 1033,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1034,
+            "text": "  Client's sequence number for this message (0-255, wraps). Used to match error responses."
+          },
+          {
+            "lineNumber": 1035,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1036,
+            "text": "  sequenceNumber: Int"
+          },
+          {
+            "lineNumber": 1037,
+            "text": "}"
+          },
+          {
+            "lineNumber": 1038
+          },
+          {
+            "lineNumber": 1039,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1040,
+            "text": "Input for sending a voxel update request to the UDP game server. This updates a single voxel (block) in a specific chunk. Voxel coordinates are relative to the chunk."
+          },
+          {
+            "lineNumber": 1041,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1042,
+            "text": "input VoxelUpdateRequestInput {"
+          },
+          {
+            "lineNumber": 1043,
+            "text": "  \"\"\"The ID of the app where the voxel is located.\"\"\""
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 1043
+          },
+          "startPosition": {
+            "line": 970
+          }
+        },
+        "relativeWorkspacePath": "./vendor/schemas/game.gql",
+        "signatures": {}
+      },
+      "score": 0.4303646981716156
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "isSignature": true,
+            "lineNumber": 63,
+            "text": "export class CrowdySession {"
+          },
+          {
+            "lineNumber": 376
+          },
+          {
+            "lineNumber": 377
+          },
+          {
+            "lineNumber": 378,
+            "text": "  async upsertPresenceActor("
+          },
+          {
+            "lineNumber": 379,
+            "text": "    pose: ActorPose,"
+          },
+          {
+            "lineNumber": 380,
+            "text": "  ): Promise\u003cvoid\u003e {"
+          },
+          {
+            "lineNumber": 381,
+            "text": "    const publicState = encodePresenceState(pose);"
+          },
+          {
+            "lineNumber": 382,
+            "text": "    await postLocalPresence(this.actorUuid, pose);"
+          },
+          {
+            "lineNumber": 383,
+            "text": "    try {"
+          },
+          {
+            "lineNumber": 384,
+            "text": "      await this.client.udp.sendVoxelUpdate({"
+          },
+          {
+            "lineNumber": 385,
+            "text": "        appId: APP_ID,"
+          },
+          {
+            "lineNumber": 386,
+            "text": "        chunk: PRESENCE_CHUNK,"
+          },
+          {
+            "lineNumber": 387,
+            "text": "        uuid: this.actorUuid,"
+          },
+          {
+            "lineNumber": 388,
+            "text": "        voxel: presenceLocationForUuid(this.actorUuid),"
+          },
+          {
+            "lineNumber": 389,
+            "text": "        voxelType: PRESENCE_VOXEL_TYPE,"
+          },
+          {
+            "lineNumber": 390,
+            "text": "        voxelState: publicState,"
+          },
+          {
+            "lineNumber": 391,
+            "text": "        sequenceNumber: this.nextPresenceSequence(),"
+          },
+          {
+            "lineNumber": 392,
+            "text": "        distance: 8,"
+          },
+          {
+            "lineNumber": 393,
+            "text": "        decayRate: 0,"
+          },
+          {
+            "lineNumber": 394,
+            "text": "      });"
+          },
+          {
+            "lineNumber": 395,
+            "text": "    } catch {"
+          },
+          {
+            "lineNumber": 396,
+            "text": "      // Local dev relay is sufficient for the tutorial if UDP presence is not"
+          },
+          {
+            "lineNumber": 397,
+            "text": "      // accepted by the current dev-tier account."
+          },
+          {
+            "lineNumber": 398,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 399,
+            "text": "  }"
+          },
+          {
+            "lineNumber": 400
+          },
+          {
+            "lineNumber": 401,
+            "text": "  async listPresenceActors(maxAgeMs = 10_000): Promise\u003cPresenceActor[]\u003e {"
+          },
+          {
+            "lineNumber": 402,
+            "text": "    const merged = new Map\u003cstring, PresenceActor\u003e();"
+          },
+          {
+            "lineNumber": 433,
+            "text": "  }"
+          },
+          {
+            "isSignature": true,
+            "lineNumber": 521,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "column": 1,
+            "line": 520
+          },
+          "startPosition": {
+            "line": 62
+          }
+        },
+        "relativeWorkspacePath": "./src/game/session/CrowdySession.ts",
+        "signatures": {
+          "ranges": [
+            {
+              "endPosition": {
+                "column": 8,
+                "line": 63
+              },
+              "startPosition": {
+                "column": 1,
+                "line": 63
+              }
+            },
+            {
+              "endPosition": {
+                "column": 3,
+                "line": 64
+              },
+              "startPosition": {
+                "column": 8,
+                "line": 63
+              }
+            }
+          ]
+        }
+      },
+      "score": 0.420113205909729
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 1151,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1152,
+            "text": "  sequenceNumber: Int"
+          },
+          {
+            "lineNumber": 1153,
+            "text": "}"
+          },
+          {
+            "lineNumber": 1154
+          },
+          {
+            "lineNumber": 1155,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1156,
+            "text": "Input for sending a client event notification to the UDP game server. Events are custom game events that can be used for various gameplay mechanics. The event type and state format are defined by the client/mod."
+          },
+          {
+            "lineNumber": 1157,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1158,
+            "text": "input ClientEventNotificationInput {"
+          },
+          {
+            "lineNumber": 1159,
+            "text": "  \"\"\"The ID of the app where the event is occurring.\"\"\""
+          },
+          {
+            "lineNumber": 1160,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 1161
+          },
+          {
+            "lineNumber": 1162,
+            "text": "  \"\"\"The chunk coordinates where the event is located.\"\"\""
+          },
+          {
+            "lineNumber": 1163,
+            "text": "  chunk: ChunkCoordinatesInput!"
+          },
+          {
+            "lineNumber": 1164
+          },
+          {
+            "lineNumber": 1165,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1166,
+            "text": "  A unique identifier for the object controlling this event. Must be exactly 32 bytes when encoded as UTF-8."
+          },
+          {
+            "lineNumber": 1167,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1168,
+            "text": "  uuid: String!"
+          },
+          {
+            "lineNumber": 1169
+          },
+          {
+            "lineNumber": 1170,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1171,
+            "text": "  The event type ID (uint16, 0-65535). This is a client-defined enum that determines how the event should be processed."
+          },
+          {
+            "lineNumber": 1172,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1173,
+            "text": "  eventType: Int!"
+          },
+          {
+            "lineNumber": 1174
+          },
+          {
+            "lineNumber": 1175,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1176,
+            "text": "  The event state data, base64-encoded. The format is defined by the event type and is currently only processed by clients."
+          },
+          {
+            "lineNumber": 1177,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1178,
+            "text": "  state: String!"
+          },
+          {
+            "lineNumber": 1179
+          },
+          {
+            "lineNumber": 1180,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1181,
+            "text": "  Chunk replication distance (0-8). Defaults to 8 for events. Clamped to 0-8."
+          },
+          {
+            "lineNumber": 1182,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1183,
+            "text": "  distance: Int"
+          },
+          {
+            "lineNumber": 1184
+          },
+          {
+            "lineNumber": 1185,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1186,
+            "text": "  Decay algorithm for replication: 0 = none, 1 = exponential, 2 = linear 50%, 3 = linear 25%, 4 = linear 10%, 5 = linear 5%. Defaults to 0 (none) for events."
+          },
+          {
+            "lineNumber": 1187,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1188,
+            "text": "  decayRate: Int"
+          },
+          {
+            "lineNumber": 1189
+          },
+          {
+            "lineNumber": 1190,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1191,
+            "text": "  Client's sequence number for this message (0-255, wraps). Used to match error responses."
+          },
+          {
+            "lineNumber": 1192,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1193,
+            "text": "  sequenceNumber: Int"
+          },
+          {
+            "lineNumber": 1194,
+            "text": "}"
+          },
+          {
+            "lineNumber": 1195
+          },
+          {
+            "lineNumber": 1196,
+            "text": "type Subscription {"
+          },
+          {
+            "lineNumber": 1197,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1198,
+            "text": "  Downlink from the game server (responses, notifications, GenericErrorResponse, and RealtimeConnectionEvent). On subscribe, opens a UDP proxy session if none exists (least-loaded server). Connection failures are delivered as RealtimeConnectionEvent. Unsubscribing stops delivery only; call disconnectUdpProxy to release the session."
+          },
+          {
+            "lineNumber": 1199,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1200,
+            "text": "  udpNotifications: UdpNotification"
+          },
+          {
+            "lineNumber": 1201,
+            "text": "}"
+          },
+          {
+            "lineNumber": 1202
+          },
+          {
+            "lineNumber": 1203,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1204,
+            "text": "All game-server messages delivered over the UDP proxy as GraphQL payloads. Subscribe to udpNotifications before or with sending mutations so responses and GenericErrorResponse (correlate via sequenceNumber) are not missed."
+          },
+          {
+            "lineNumber": 1205,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1206,
+            "text": "union UdpNotification = ActorUpdateResponse | ActorUpdateNotification | VoxelUpdateResponse | VoxelUpdateNotification | ClientAudioNotification | ClientTextNotification | ClientEventNotification | ServerEventNotification | GenericErrorResponse | RealtimeConnectionEvent"
+          },
+          {
+            "lineNumber": 1207
+          },
+          {
+            "lineNumber": 1208,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1209,
+            "text": "Response from the UDP game server for an actor update request. Received via the udpNotifications subscription."
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 1209
+          },
+          "startPosition": {
+            "line": 1150
+          }
+        },
+        "relativeWorkspacePath": "./vendor/schemas/game.gql",
+        "signatures": {}
+      },
+      "score": 0.41604650020599365
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 283,
+            "text": "}"
+          },
+          {
+            "lineNumber": 284
+          },
+          {
+            "lineNumber": 285,
+            "text": "type ChunkVoxelResponse {"
+          },
+          {
+            "lineNumber": 286,
+            "text": "  coordinates: ChunkCoordinates!"
+          },
+          {
+            "lineNumber": 287,
+            "text": "  voxels: [Voxel!]!"
+          },
+          {
+            "lineNumber": 288,
+            "text": "}"
+          },
+          {
+            "lineNumber": 289
+          },
+          {
+            "lineNumber": 290,
+            "text": "type ChunkLodsResponse {"
+          },
+          {
+            "lineNumber": 291,
+            "text": "  chunkId: ID!"
+          },
+          {
+            "lineNumber": 292,
+            "text": "  appId: ID!"
+          },
+          {
+            "lineNumber": 293,
+            "text": "  coordinates: ChunkCoordinates!"
+          },
+          {
+            "lineNumber": 294,
+            "text": "  lods: [LodData!]!"
+          },
+          {
+            "lineNumber": 295,
+            "text": "  updatedAt: DateTime!"
+          },
+          {
+            "lineNumber": 296,
+            "text": "}"
+          },
+          {
+            "lineNumber": 297
+          },
+          {
+            "lineNumber": 298,
+            "text": "type ChunksByDistanceResponse {"
+          },
+          {
+            "lineNumber": 299,
+            "text": "  chunks: [Chunk!]!"
+          },
+          {
+            "lineNumber": 300,
+            "text": "  limit: Int"
+          },
+          {
+            "lineNumber": 301,
+            "text": "  skip: Int"
+          },
+          {
+            "lineNumber": 302,
+            "text": "}"
+          },
+          {
+            "lineNumber": 303
+          },
+          {
+            "lineNumber": 304,
+            "text": "type ChunkVoxelUpdatesResponse {"
+          },
+          {
+            "lineNumber": 305,
+            "text": "  coordinates: ChunkCoordinates!"
+          },
+          {
+            "lineNumber": 306,
+            "text": "  voxels: [Voxel!]!"
+          },
+          {
+            "lineNumber": 307,
+            "text": "}"
+          },
+          {
+            "lineNumber": 308
+          },
+          {
+            "lineNumber": 309,
+            "text": "type VoxelUpdatesByDistanceResponse {"
+          },
+          {
+            "lineNumber": 310,
+            "text": "  chunks: [ChunkVoxelUpdatesResponse!]!"
+          },
+          {
+            "lineNumber": 311,
+            "text": "  centerCoordinate: ChunkCoordinates!"
+          },
+          {
+            "lineNumber": 312,
+            "text": "  limit: Int"
+          },
+          {
+            "lineNumber": 313,
+            "text": "  skip: Int"
+          },
+          {
+            "lineNumber": 314,
+            "text": "}"
+          },
+          {
+            "lineNumber": 315
+          },
+          {
+            "lineNumber": 316,
+            "text": "type VoxelUpdateHistoryEvent {"
+          },
+          {
+            "lineNumber": 317,
+            "text": "  id: BigInt!"
+          },
+          {
+            "lineNumber": 318,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 319,
+            "text": "  coordinates: ChunkCoordinates!"
+          },
+          {
+            "lineNumber": 320,
+            "text": "  location: VoxelCoordinates!"
+          },
+          {
+            "lineNumber": 321,
+            "text": "  oldVoxelType: Int"
+          },
+          {
+            "lineNumber": 322,
+            "text": "  newVoxelType: Int"
+          },
+          {
+            "lineNumber": 323,
+            "text": "  changedBy: BigInt"
+          },
+          {
+            "lineNumber": 324,
+            "text": "  changedAt: DateTime!"
+          },
+          {
+            "lineNumber": 325,
+            "text": "}"
+          },
+          {
+            "lineNumber": 326
+          },
+          {
+            "lineNumber": 327,
+            "text": "type RollbackVoxelEventResult {"
+          },
+          {
+            "lineNumber": 328,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 329,
+            "text": "  coordinates: ChunkCoordinates!"
+          },
+          {
+            "lineNumber": 330,
+            "text": "  location: VoxelCoordinates!"
+          },
+          {
+            "lineNumber": 331,
+            "text": "  fromVoxelType: Int"
+          },
+          {
+            "lineNumber": 332,
+            "text": "  toVoxelType: Int"
+          },
+          {
+            "lineNumber": 333,
+            "text": "  plannedAction: String!"
+          },
+          {
+            "lineNumber": 334,
+            "text": "  applied: Boolean!"
+          },
+          {
+            "lineNumber": 335,
+            "text": "  reason: String"
+          },
+          {
+            "lineNumber": 336,
+            "text": "}"
+          },
+          {
+            "lineNumber": 337
+          },
+          {
+            "lineNumber": 338,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 339,
+            "text": "UDP proxy session for the game token on the request. Returned by udpProxyConnectionStatus and connectUdpProxy. Binary UDP layouts are documented in database/client-wire-formats.md."
+          },
+          {
+            "lineNumber": 340,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 341,
+            "text": "type UdpProxyConnectionStatus {"
+          },
+          {
+            "lineNumber": 342,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 343,
+            "text": "  Whether the user is currently connected to a UDP game server through the proxy."
+          },
+          {
+            "lineNumber": 344,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 345,
+            "text": "  connected: Boolean!"
+          },
+          {
+            "lineNumber": 346
+          },
+          {
+            "lineNumber": 347,
+            "text": "  \"\"\"The IPv6 address of the UDP game server (only present when connected).\"\"\""
+          },
+          {
+            "lineNumber": 348,
+            "text": "  serverIp6: String"
+          },
+          {
+            "lineNumber": 349
+          },
+          {
+            "lineNumber": 350,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 351,
+            "text": "  The client port of the UDP game server (only present when connected). This is the port that native clients would connect to directly."
+          },
+          {
+            "lineNumber": 352,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 353,
+            "text": "  serverClientPort: Int"
+          },
+          {
+            "lineNumber": 354
+          },
+          {
+            "lineNumber": 355,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 356,
+            "text": "  Timestamp of the last message received from the UDP server (only present when connected). Used to detect connection health."
+          },
+          {
+            "lineNumber": 357,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 358,
+            "text": "  lastMessageTime: DateTime"
+          },
+          {
+            "lineNumber": 359,
+            "text": "}"
+          },
+          {
+            "lineNumber": 360
+          },
+          {
+            "lineNumber": 361,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 362,
+            "text": "Startup contract for browser game clients. Fetch this after login to initialize protocol/version checks and UDP proxy state in one round trip."
+          },
+          {
+            "lineNumber": 363,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 364,
+            "text": "type GameClientBootstrap {"
+          },
+          {
+            "lineNumber": 365,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 366,
+            "text": "  me: User!"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 366
+          },
+          "startPosition": {
+            "line": 282
+          }
+        },
+        "relativeWorkspacePath": "./vendor/schemas/game.gql",
+        "signatures": {}
+      },
+      "score": 0.3909057378768921
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "isSignature": true,
+            "lineNumber": 11,
+            "text": "export class ActorSender {"
+          },
+          {
+            "lineNumber": 68
+          },
+          {
+            "lineNumber": 69
+          },
+          {
+            "lineNumber": 70,
+            "text": "  private async sendOnce(): Promise\u003cvoid\u003e {"
+          },
+          {
+            "lineNumber": 71,
+            "text": "    if (!this.provider) return;"
+          },
+          {
+            "lineNumber": 72,
+            "text": "    const pose = this.provider.getPose();"
+          },
+          {
+            "lineNumber": 73,
+            "text": "    const chunk ="
+          },
+          {
+            "lineNumber": 74,
+            "text": "      this.chunkOverride ?? worldToChunkInput(pose.worldX, pose.worldY).chunk;"
+          },
+          {
+            "lineNumber": 75,
+            "text": "    const seq = this.nextSeq();"
+          },
+          {
+            "lineNumber": 76,
+            "text": "    await this.session.sendActorUpdate({"
+          },
+          {
+            "lineNumber": 77,
+            "text": "      chunk,"
+          },
+          {
+            "lineNumber": 78,
+            "text": "      state: this.stateEncoder(pose),"
+          },
+          {
+            "lineNumber": 79,
+            "text": "      sequenceNumber: seq,"
+          },
+          {
+            "lineNumber": 80,
+            "text": "      distance: this.chunkOverride ? BATTLE_ACTOR_REPLICATION_DISTANCE : 8,"
+          },
+          {
+            "lineNumber": 81,
+            "text": "      decayRate: 0,"
+          },
+          {
+            "lineNumber": 82,
+            "text": "      uuid: this.actorUuid ?? undefined,"
+          },
+          {
+            "lineNumber": 83,
+            "text": "    });"
+          },
+          {
+            "lineNumber": 84,
+            "text": "  }"
+          },
+          {
+            "lineNumber": 85
+          },
+          {
+            "lineNumber": 86,
+            "text": "  private nextSeq(): number {"
+          },
+          {
+            "lineNumber": 87,
+            "text": "    const s = this.sequenceNumber;"
+          },
+          {
+            "lineNumber": 90,
+            "text": "  }"
+          },
+          {
+            "isSignature": true,
+            "lineNumber": 91,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "column": 1,
+            "line": 90
+          },
+          "startPosition": {
+            "line": 10
+          }
+        },
+        "relativeWorkspacePath": "./src/game/session/ActorSender.ts",
+        "signatures": {
+          "ranges": [
+            {
+              "endPosition": {
+                "column": 8,
+                "line": 11
+              },
+              "startPosition": {
+                "column": 1,
+                "line": 11
+              }
+            },
+            {
+              "endPosition": {
+                "column": 3,
+                "line": 12
+              },
+              "startPosition": {
+                "column": 8,
+                "line": 11
+              }
+            }
+          ]
+        }
+      },
+      "score": 0.3886606693267822
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 106,
+            "text": "/** All battle actors register in one chunk so UDP fanout reaches every pilot. */"
+          },
+          {
+            "lineNumber": 107,
+            "text": "export const BATTLE_ACTOR_CHUNK = { x: '0', y: '0', z: '0' } as const;"
+          },
+          {
+            "lineNumber": 108,
+            "text": "export const BATTLE_ACTOR_REPLICATION_DISTANCE = 8;"
+          },
+          {
+            "lineNumber": 109,
+            "text": "/** Dev relay + UDP: refresh relay snapshot when UDP is quiet this long (ms). */"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "column": 80,
+            "line": 108
+          },
+          "startPosition": {
+            "column": 52,
+            "line": 104
+          }
+        },
+        "relativeWorkspacePath": "./src/config.ts",
+        "signatures": {}
+      },
+      "score": 0.37626326084136963
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "isSignature": true,
+            "lineNumber": 110,
+            "text": "export function useBattleRoyale() {"
+          },
+          {
+            "lineNumber": 383,
+            "text": "() =\u003e {"
+          },
+          {
+            "lineNumber": 387,
+            "text": "async () =\u003e {"
+          },
+          {
+            "lineNumber": 391,
+            "text": "const registerUdpHandlers = "
+          },
+          {
+            "lineNumber": 417,
+            "text": ";"
+          },
+          {
+            "lineNumber": 418
+          },
+          {
+            "lineNumber": 419,
+            "text": "        unsubs.push("
+          },
+          {
+            "lineNumber": 420,
+            "text": "          session.onNotification('ClientEventNotification', (n) =\u003e {"
+          },
+          {
+            "lineNumber": 421,
+            "text": "            if (n.__typename !== 'ClientEventNotification') return;"
+          },
+          {
+            "lineNumber": 422,
+            "text": "            if (n.eventType === EVENT_FIRE) {"
+          },
+          {
+            "lineNumber": 423,
+            "text": "              const payload = decodeJsonPayload\u003cFireEventPayload\u003e(n.state);"
+          },
+          {
+            "lineNumber": 424,
+            "text": "              if (!payload || payload.ownerUuid === battleActorUuid) return;"
+          },
+          {
+            "lineNumber": 425,
+            "text": "              if (projectilesRef.current.some((p) =\u003e p.id === payload.id)) return;"
+          },
+          {
+            "lineNumber": 426,
+            "text": "              projectilesRef.current.push({"
+          },
+          {
+            "lineNumber": 427,
+            "text": "                id: payload.id,"
+          },
+          {
+            "lineNumber": 428,
+            "text": "                ownerUuid: payload.ownerUuid,"
+          },
+          {
+            "lineNumber": 429,
+            "text": "                x: payload.x,"
+          },
+          {
+            "lineNumber": 430,
+            "text": "                y: payload.y ?? 0,"
+          },
+          {
+            "lineNumber": 431,
+            "text": "                z: payload.z ?? 0,"
+          },
+          {
+            "lineNumber": 432,
+            "text": "                vx: payload.vx,"
+          },
+          {
+            "lineNumber": 433,
+            "text": "                vy: payload.vy ?? 0,"
+          },
+          {
+            "lineNumber": 434,
+            "text": "                vz: payload.vz ?? 0,"
+          },
+          {
+            "lineNumber": 435,
+            "text": "                bornAt: performance.now(),"
+          },
+          {
+            "lineNumber": 436,
+            "text": "              });"
+          },
+          {
+            "lineNumber": 437,
+            "text": "              bump();"
+          },
+          {
+            "lineNumber": 438,
+            "text": "              return;"
+          },
+          {
+            "lineNumber": 439,
+            "text": "            }"
+          },
+          {
+            "lineNumber": 440,
+            "text": "            if (n.eventType === EVENT_HIT) {"
+          },
+          {
+            "lineNumber": 441,
+            "text": "              const payload = decodeJsonPayload\u003cHitEventPayload\u003e(n.state);"
+          },
+          {
+            "lineNumber": 442,
+            "text": "              if (!payload) return;"
+          },
+          {
+            "lineNumber": 443,
+            "text": "              void applyHit(payload);"
+          },
+          {
+            "lineNumber": 444,
+            "text": "              return;"
+          },
+          {
+            "lineNumber": 445,
+            "text": "            }"
+          },
+          {
+            "lineNumber": 446,
+            "text": "            if (n.eventType === EVENT_DESTROY) {"
+          },
+          {
+            "lineNumber": 447,
+            "text": "              const payload = decodeJsonPayload\u003cDestroyEventPayload\u003e(n.state);"
+          },
+          {
+            "lineNumber": 448,
+            "text": "              if (!payload) return;"
+          },
+          {
+            "lineNumber": 449,
+            "text": "              const remote = remoteRef.current.get(payload.targetUuid);"
+          },
+          {
+            "lineNumber": 450,
+            "text": "              const color = remote?.color ?? actorColorForUuid(payload.targetUuid);"
+          },
+          {
+            "lineNumber": 451,
+            "text": "              applyDestroy(payload, color);"
+          },
+          {
+            "lineNumber": 452,
+            "text": "            }"
+          },
+          {
+            "lineNumber": 453,
+            "text": "          }),"
+          },
+          {
+            "lineNumber": 454,
+            "text": "        );"
+          },
+          {
+            "lineNumber": 455,
+            "text": "      };"
+          },
+          {
+            "lineNumber": 456
+          },
+          {
+            "lineNumber": 457,
+            "text": "      try {"
+          },
+          {
+            "lineNumber": 458,
+            "text": "        await session.connectGameSession({ beforeUdpConnect: registerUdpHandlers });"
+          },
+          {
+            "lineNumber": 459,
+            "text": "      } catch (error) {"
+          },
+          {
+            "lineNumber": 460,
+            "text": "        console.error('Battle royale connection failed:', error);"
+          },
+          {
+            "lineNumber": 461,
+            "text": "        bump();"
+          },
+          {
+            "lineNumber": 462,
+            "text": "        return;"
+          },
+          {
+            "lineNumber": 463,
+            "text": "      }"
+          },
+          {
+            "lineNumber": 464,
+            "text": "      if (cancelled) return;"
+          },
+          {
+            "lineNumber": 465
+          },
+          {
+            "lineNumber": 466,
+            "text": "      actorSenderRef.current.setStateEncoder(() =\u003e"
+          },
+          {
+            "lineNumber": 467,
+            "text": "        encodeShipState("
+          },
+          {
+            "lineNumber": 468,
+            "text": "          { ...localShipRef.current, colorId: pilotColorId },"
+          },
+          {
+            "lineNumber": 469,
+            "text": "          pilotColorId,"
+          },
+          {
+            "lineNumber": 470,
+            "text": "        ),"
+          },
+          {
+            "lineNumber": 471,
+            "text": "      );"
+          },
+          {
+            "lineNumber": 472,
+            "text": "      actorSenderRef.current.setProvider({"
+          },
+          {
+            "lineNumber": 473,
+            "text": "        getPose: () =\u003e shipStateToPose(localShipRef.current),"
+          },
+          {
+            "lineNumber": 474,
+            "text": "      });"
+          },
+          {
+            "lineNumber": 551,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 568,
+            "text": "  }"
+          },
+          {
+            "isSignature": true,
+            "lineNumber": 1002,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "column": 1,
+            "line": 1001
+          },
+          "startPosition": {
+            "line": 109
+          }
+        },
+        "relativeWorkspacePath": "./src/game/battle/useBattleRoyale.ts",
+        "signatures": {
+          "ranges": [
+            {
+              "endPosition": {
+                "column": 8,
+                "line": 110
+              },
+              "startPosition": {
+                "column": 1,
+                "line": 110
+              }
+            },
+            {
+              "endPosition": {
+                "column": 3,
+                "line": 111
+              },
+              "startPosition": {
+                "column": 8,
+                "line": 110
+              }
+            },
+            {
+              "endPosition": {
+                "column": 3,
+                "line": 383
+              },
+              "startPosition": {
+                "column": 3,
+                "line": 383
+              }
+            },
+            {
+              "endPosition": {
+                "column": 5,
+                "line": 384
+              },
+              "startPosition": {
+                "column": 13,
+                "line": 383
+              }
+            },
+            {
+              "endPosition": {
+                "column": 10,
+                "line": 387
+              },
+              "startPosition": {
+                "column": 10,
+                "line": 387
+              }
+            },
+            {
+              "endPosition": {
+                "column": 7,
+                "line": 388
+              },
+              "startPosition": {
+                "column": 11,
+                "line": 387
+              }
+            },
+            {
+              "endPosition": {
+                "column": 13,
+                "line": 391
+              },
+              "startPosition": {
+                "column": 7,
+                "line": 391
+              }
+            },
+            {
+              "endPosition": {
+                "column": 35,
+                "line": 391
+              },
+              "startPosition": {
+                "column": 13,
+                "line": 391
+              }
+            }
+          ]
+        }
+      },
+      "score": 0.37187373638153076
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 769,
+            "text": "  Send a text (chat) packet to the game server. Opens a UDP proxy session automatically if none exists; notifications arrive on udpNotifications."
+          },
+          {
+            "lineNumber": 770,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 771,
+            "text": "  sendTextPacket(input: ClientTextPacketInput!): Boolean!"
+          },
+          {
+            "lineNumber": 772
+          },
+          {
+            "lineNumber": 773,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 774,
+            "text": "  Send a client event to the game server. Opens a UDP proxy session automatically if none exists; related notifications arrive on udpNotifications."
+          },
+          {
+            "lineNumber": 775,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 776,
+            "text": "  sendClientEvent(input: ClientEventNotificationInput!): Boolean!"
+          },
+          {
+            "lineNumber": 777,
+            "text": "}"
+          },
+          {
+            "lineNumber": 778
+          },
+          {
+            "lineNumber": 779,
+            "text": "input UpdateGamertagInput {"
+          },
+          {
+            "lineNumber": 780,
+            "text": "  gamertag: String!"
+          },
+          {
+            "lineNumber": 781,
+            "text": "  disambiguation: String!"
+          },
+          {
+            "lineNumber": 782,
+            "text": "}"
+          },
+          {
+            "lineNumber": 783
+          },
+          {
+            "lineNumber": 784,
+            "text": "input CreateAvatarInput {"
+          },
+          {
+            "lineNumber": 785,
+            "text": "  name: String"
+          },
+          {
+            "lineNumber": 786,
+            "text": "}"
+          },
+          {
+            "lineNumber": 787
+          },
+          {
+            "lineNumber": 788,
+            "text": "input UpdateAvatarInput {"
+          },
+          {
+            "lineNumber": 789,
+            "text": "  name: String"
+          },
+          {
+            "lineNumber": 790,
+            "text": "}"
+          },
+          {
+            "lineNumber": 791
+          },
+          {
+            "lineNumber": 792,
+            "text": "input CreateActorInput {"
+          },
+          {
+            "lineNumber": 793,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 794,
+            "text": "  avatarId: BigInt"
+          },
+          {
+            "lineNumber": 795,
+            "text": "  uuid: String!"
+          },
+          {
+            "lineNumber": 796,
+            "text": "  chunk: ChunkCoordinatesInput!"
+          },
+          {
+            "lineNumber": 797,
+            "text": "  privateState: String"
+          },
+          {
+            "lineNumber": 798,
+            "text": "  publicState: String"
+          },
+          {
+            "lineNumber": 799,
+            "text": "}"
+          },
+          {
+            "lineNumber": 800
+          },
+          {
+            "lineNumber": 801,
+            "text": "input UpdateActorInput {"
+          },
+          {
+            "lineNumber": 802,
+            "text": "  appId: BigInt"
+          },
+          {
+            "lineNumber": 803,
+            "text": "  avatarId: BigInt"
+          },
+          {
+            "lineNumber": 804,
+            "text": "  chunk: ChunkCoordinatesInput"
+          },
+          {
+            "lineNumber": 805,
+            "text": "  privateState: String"
+          },
+          {
+            "lineNumber": 806,
+            "text": "  publicState: String"
+          },
+          {
+            "lineNumber": 807,
+            "text": "}"
+          },
+          {
+            "lineNumber": 808
+          },
+          {
+            "lineNumber": 809,
+            "text": "input UpdateUserStateInput {"
+          },
+          {
+            "lineNumber": 810,
+            "text": "  state: String"
+          },
+          {
+            "lineNumber": 811,
+            "text": "}"
+          },
+          {
+            "lineNumber": 812
+          },
+          {
+            "lineNumber": 813,
+            "text": "input UpdateAvatarStateInput {"
+          },
+          {
+            "lineNumber": 814,
+            "text": "  publicState: String"
+          },
+          {
+            "lineNumber": 815,
+            "text": "  privateState: String"
+          },
+          {
+            "lineNumber": 816,
+            "text": "}"
+          },
+          {
+            "lineNumber": 817
+          },
+          {
+            "lineNumber": 818,
+            "text": "input UpdateAvatarAppStateInput {"
+          },
+          {
+            "lineNumber": 819,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 820,
+            "text": "  avatarId: BigInt!"
+          },
+          {
+            "lineNumber": 821
+          },
+          {
+            "lineNumber": 822,
+            "text": "  \"\"\"Base64-encoded binary state. Null clears it.\"\"\""
+          },
+          {
+            "lineNumber": 823,
+            "text": "  state: String"
+          },
+          {
+            "lineNumber": 824,
+            "text": "}"
+          },
+          {
+            "lineNumber": 825
+          },
+          {
+            "lineNumber": 826,
+            "text": "input UpdateActorStateInput {"
+          },
+          {
+            "lineNumber": 827,
+            "text": "  privateState: String"
+          },
+          {
+            "lineNumber": 828,
+            "text": "  publicState: String"
+          },
+          {
+            "lineNumber": 829,
+            "text": "}"
+          },
+          {
+            "lineNumber": 830
+          },
+          {
+            "lineNumber": 831,
+            "text": "input CreateUserAppStateInput {"
+          },
+          {
+            "lineNumber": 832,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 833,
+            "text": "  state: String"
+          },
+          {
+            "lineNumber": 834,
+            "text": "}"
+          },
+          {
+            "lineNumber": 835
+          },
+          {
+            "lineNumber": 836,
+            "text": "input TeleportRequestInput {"
+          },
+          {
+            "lineNumber": 837,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 838,
+            "text": "  chunkAddress: ChunkCoordinatesInput!"
+          },
+          {
+            "lineNumber": 839,
+            "text": "  voxelAddress: VoxelCoordinatesInput!"
+          },
+          {
+            "lineNumber": 840,
+            "text": "  uuid: String!"
+          },
+          {
+            "lineNumber": 841,
+            "text": "}"
+          },
+          {
+            "lineNumber": 842
+          },
+          {
+            "lineNumber": 843,
+            "text": "input VoxelCoordinatesInput {"
+          },
+          {
+            "lineNumber": 844,
+            "text": "  x: Int!"
+          },
+          {
+            "lineNumber": 845,
+            "text": "  y: Int!"
+          },
+          {
+            "lineNumber": 846,
+            "text": "  z: Int!"
+          },
+          {
+            "lineNumber": 847,
+            "text": "}"
+          },
+          {
+            "lineNumber": 848
+          },
+          {
+            "lineNumber": 849,
+            "text": "input ChunkUpdateInput {"
+          },
+          {
+            "lineNumber": 850,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 851,
+            "text": "  coordinates: ChunkCoordinatesInput!"
+          },
+          {
+            "lineNumber": 852,
+            "text": "  voxels: String"
+          },
+          {
+            "lineNumber": 853,
+            "text": "  voxelStates: [VoxelStateInput!]"
+          },
+          {
+            "lineNumber": 854,
+            "text": "}"
+          },
+          {
+            "lineNumber": 855
+          },
+          {
+            "lineNumber": 856,
+            "text": "input VoxelStateInput {"
+          },
+          {
+            "lineNumber": 857,
+            "text": "  voxelCoord: VoxelCoordinatesInput!"
+          },
+          {
+            "lineNumber": 858,
+            "text": "  voxelType: Int!"
+          },
+          {
+            "lineNumber": 859,
+            "text": "  state: String"
+          },
+          {
+            "lineNumber": 860,
+            "text": "}"
+          },
+          {
+            "lineNumber": 861
+          },
+          {
+            "lineNumber": 862,
+            "text": "input UpdateChunkStateInput {"
+          },
+          {
+            "lineNumber": 863,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 864,
+            "text": "  coordinates: ChunkCoordinatesInput!"
+          },
+          {
+            "lineNumber": 865,
+            "text": "  chunkState: String"
+          },
+          {
+            "lineNumber": 866,
+            "text": "}"
+          },
+          {
+            "lineNumber": 867
+          },
+          {
+            "lineNumber": 868,
+            "text": "input UpdateChunkLodsInput {"
+          },
+          {
+            "lineNumber": 869,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 870,
+            "text": "  coordinates: ChunkCoordinatesInput!"
+          },
+          {
+            "lineNumber": 871,
+            "text": "  lods: [LodDataInput!]!"
+          },
+          {
+            "lineNumber": 872,
+            "text": "}"
+          },
+          {
+            "lineNumber": 873
+          },
+          {
+            "lineNumber": 874,
+            "text": "input LodDataInput {"
+          },
+          {
+            "lineNumber": 875,
+            "text": "  level: Int!"
+          },
+          {
+            "lineNumber": 876,
+            "text": "  data: String!"
+          },
+          {
+            "lineNumber": 877,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 878
+          },
+          "startPosition": {
+            "line": 768
+          }
+        },
+        "relativeWorkspacePath": "./vendor/schemas/game.gql",
+        "signatures": {}
+      },
+      "score": 0.365834504365921
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 1315,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1316,
+            "text": "type VoxelUpdateNotification {"
+          },
+          {
+            "lineNumber": 1317,
+            "text": "  \"\"\"The ID of the app where the voxel is located.\"\"\""
+          },
+          {
+            "lineNumber": 1318,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 1319
+          },
+          {
+            "lineNumber": 1320,
+            "text": "  \"\"\"The X coordinate of the chunk containing the voxel.\"\"\""
+          },
+          {
+            "lineNumber": 1321,
+            "text": "  chunkX: BigInt!"
+          },
+          {
+            "lineNumber": 1322
+          },
+          {
+            "lineNumber": 1323,
+            "text": "  \"\"\"The Y coordinate of the chunk containing the voxel.\"\"\""
+          },
+          {
+            "lineNumber": 1324,
+            "text": "  chunkY: BigInt!"
+          },
+          {
+            "lineNumber": 1325
+          },
+          {
+            "lineNumber": 1326,
+            "text": "  \"\"\"The Z coordinate of the chunk containing the voxel.\"\"\""
+          },
+          {
+            "lineNumber": 1327,
+            "text": "  chunkZ: BigInt!"
+          },
+          {
+            "lineNumber": 1328
+          },
+          {
+            "lineNumber": 1329,
+            "text": "  \"\"\"Chunk replication distance (0-8) from the original message.\"\"\""
+          },
+          {
+            "lineNumber": 1330,
+            "text": "  distance: Int!"
+          },
+          {
+            "lineNumber": 1331
+          },
+          {
+            "lineNumber": 1332,
+            "text": "  \"\"\"Decay algorithm (0-5) from the original message.\"\"\""
+          },
+          {
+            "lineNumber": 1333,
+            "text": "  decayRate: Int!"
+          },
+          {
+            "lineNumber": 1334
+          },
+          {
+            "lineNumber": 1335,
+            "text": "  \"\"\"The unique identifier for this voxel update.\"\"\""
+          },
+          {
+            "lineNumber": 1336,
+            "text": "  uuid: String!"
+          },
+          {
+            "lineNumber": 1337
+          },
+          {
+            "lineNumber": 1338,
+            "text": "  \"\"\"The X coordinate of the voxel within the chunk.\"\"\""
+          },
+          {
+            "lineNumber": 1339,
+            "text": "  voxelX: Int!"
+          },
+          {
+            "lineNumber": 1340
+          },
+          {
+            "lineNumber": 1341,
+            "text": "  \"\"\"The Y coordinate of the voxel within the chunk.\"\"\""
+          },
+          {
+            "lineNumber": 1342,
+            "text": "  voxelY: Int!"
+          },
+          {
+            "lineNumber": 1343
+          },
+          {
+            "lineNumber": 1344,
+            "text": "  \"\"\"The Z coordinate of the voxel within the chunk.\"\"\""
+          },
+          {
+            "lineNumber": 1345,
+            "text": "  voxelZ: Int!"
+          },
+          {
+            "lineNumber": 1346
+          },
+          {
+            "lineNumber": 1347,
+            "text": "  \"\"\"The voxel type ID that was set.\"\"\""
+          },
+          {
+            "lineNumber": 1348,
+            "text": "  voxelType: Int!"
+          },
+          {
+            "lineNumber": 1349
+          },
+          {
+            "lineNumber": 1350,
+            "text": "  \"\"\"The voxel state data, base64-encoded.\"\"\""
+          },
+          {
+            "lineNumber": 1351,
+            "text": "  voxelState: String!"
+          },
+          {
+            "lineNumber": 1352
+          },
+          {
+            "lineNumber": 1353,
+            "text": "  \"\"\"The sender's sequence number for this message (0-255).\"\"\""
+          },
+          {
+            "lineNumber": 1354,
+            "text": "  sequenceNumber: Int!"
+          },
+          {
+            "lineNumber": 1355
+          },
+          {
+            "lineNumber": 1356,
+            "text": "  \"\"\"Server-generated epoch milliseconds timestamp.\"\"\""
+          },
+          {
+            "lineNumber": 1357,
+            "text": "  epochMillis: BigInt!"
+          },
+          {
+            "lineNumber": 1358,
+            "text": "}"
+          },
+          {
+            "lineNumber": 1359
+          },
+          {
+            "lineNumber": 1360,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1361,
+            "text": "Notification received when another client sends an audio packet (voice chat). Received via the udpNotifications subscription."
+          },
+          {
+            "lineNumber": 1362,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1363,
+            "text": "type ClientAudioNotification {"
+          },
+          {
+            "lineNumber": 1364,
+            "text": "  \"\"\"The ID of the app where the audio is coming from.\"\"\""
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 1364
+          },
+          "startPosition": {
+            "line": 1314
+          }
+        },
+        "relativeWorkspacePath": "./vendor/schemas/game.gql",
+        "signatures": {}
+      },
+      "score": 0.36466920375823975
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "isSignature": true,
+            "lineNumber": 63,
+            "text": "export class CrowdySession {"
+          },
+          {
+            "lineNumber": 439
+          },
+          {
+            "lineNumber": 440
+          },
+          {
+            "lineNumber": 441,
+            "text": "  async sendVoxelUpdate(input: {"
+          },
+          {
+            "lineNumber": 442,
+            "text": "    chunk: { x: string; y: string; z: string };"
+          },
+          {
+            "lineNumber": 443,
+            "text": "    cell?: SharedPaintCell;"
+          },
+          {
+            "lineNumber": 444,
+            "text": "    voxel: { x: number; y: number; z: number };"
+          },
+          {
+            "lineNumber": 445,
+            "text": "    voxelType: number;"
+          },
+          {
+            "lineNumber": 446,
+            "text": "    voxelState: string;"
+          },
+          {
+            "lineNumber": 447,
+            "text": "    sequenceNumber: number;"
+          },
+          {
+            "lineNumber": 448,
+            "text": "    distance?: number;"
+          },
+          {
+            "lineNumber": 449,
+            "text": "    decayRate?: number;"
+          },
+          {
+            "lineNumber": 450,
+            "text": "  }): Promise\u003cboolean\u003e {"
+          },
+          {
+            "lineNumber": 451,
+            "text": "    if (input.cell) {"
+          },
+          {
+            "lineNumber": 452,
+            "text": "      await postLocalPaint(input.cell);"
+          },
+          {
+            "lineNumber": 453,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 454,
+            "text": "    return this.client.udp.sendVoxelUpdate({"
+          },
+          {
+            "lineNumber": 455,
+            "text": "      appId: APP_ID,"
+          },
+          {
+            "lineNumber": 456,
+            "text": "      chunk: input.chunk,"
+          },
+          {
+            "lineNumber": 457,
+            "text": "      uuid: this.actorUuid,"
+          },
+          {
+            "lineNumber": 458,
+            "text": "      voxel: input.voxel,"
+          },
+          {
+            "lineNumber": 459,
+            "text": "      voxelType: input.voxelType,"
+          },
+          {
+            "lineNumber": 460,
+            "text": "      voxelState: input.voxelState,"
+          },
+          {
+            "lineNumber": 461,
+            "text": "      sequenceNumber: input.sequenceNumber,"
+          },
+          {
+            "lineNumber": 462,
+            "text": "      distance: input.distance,"
+          },
+          {
+            "lineNumber": 463,
+            "text": "      decayRate: input.decayRate,"
+          },
+          {
+            "lineNumber": 464,
+            "text": "    });"
+          },
+          {
+            "lineNumber": 465,
+            "text": "  }"
+          },
+          {
+            "lineNumber": 466
+          },
+          {
+            "lineNumber": 467,
+            "text": "  async listSharedPaint(): Promise\u003cSharedPaintCell[]\u003e {"
+          },
+          {
+            "lineNumber": 468,
+            "text": "    return listLocalPaint();"
+          },
+          {
+            "lineNumber": 469,
+            "text": "  }"
+          },
+          {
+            "isSignature": true,
+            "lineNumber": 521,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "column": 1,
+            "line": 520
+          },
+          "startPosition": {
+            "line": 62
+          }
+        },
+        "relativeWorkspacePath": "./src/game/session/CrowdySession.ts",
+        "signatures": {
+          "ranges": [
+            {
+              "endPosition": {
+                "column": 8,
+                "line": 63
+              },
+              "startPosition": {
+                "column": 1,
+                "line": 63
+              }
+            },
+            {
+              "endPosition": {
+                "column": 3,
+                "line": 64
+              },
+              "startPosition": {
+                "column": 8,
+                "line": 63
+              }
+            }
+          ]
+        }
+      },
+      "score": 0.357578307390213
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "isSignature": true,
+            "lineNumber": 51,
+            "text": "export function useGameDemo(mode: GameMode) {"
+          },
+          {
+            "lineNumber": 72,
+            "text": "() =\u003e {"
+          },
+          {
+            "lineNumber": 73
+          },
+          {
+            "lineNumber": 74,
+            "text": "  }, [session]);"
+          },
+          {
+            "lineNumber": 75
+          },
+          {
+            "lineNumber": 76,
+            "text": "  useEffect(() =\u003e {"
+          },
+          {
+            "lineNumber": 77,
+            "text": "    if (mode === 'coords') return;"
+          },
+          {
+            "lineNumber": 78
+          },
+          {
+            "lineNumber": 79,
+            "text": "    void (async () =\u003e {"
+          },
+          {
+            "lineNumber": 80,
+            "text": "      await session.connectGameSession();"
+          },
+          {
+            "lineNumber": 81
+          },
+          {
+            "lineNumber": 82,
+            "text": "      session.onNotification('ActorUpdateNotification', (n) =\u003e {"
+          },
+          {
+            "lineNumber": 83,
+            "text": "        if (n.__typename !== 'ActorUpdateNotification') return;"
+          },
+          {
+            "lineNumber": 84,
+            "text": "        if (n.uuid === session.actorUuid) return;"
+          },
+          {
+            "lineNumber": 85,
+            "text": "        const pose = decodeActorState(n.state);"
+          },
+          {
+            "lineNumber": 86,
+            "text": "        if (!pose) return;"
+          },
+          {
+            "lineNumber": 87,
+            "text": "        remoteRef.current.set(n.uuid, {"
+          },
+          {
+            "lineNumber": 88,
+            "text": "          uuid: n.uuid,"
+          },
+          {
+            "lineNumber": 89,
+            "text": "          pose,"
+          },
+          {
+            "lineNumber": 90,
+            "text": "          color: actorColorForUuid(n.uuid),"
+          },
+          {
+            "lineNumber": 91,
+            "text": "        });"
+          },
+          {
+            "lineNumber": 92,
+            "text": "        bump();"
+          },
+          {
+            "lineNumber": 93,
+            "text": "      });"
+          },
+          {
+            "lineNumber": 94
+          },
+          {
+            "lineNumber": 95,
+            "text": "      session.onNotification('VoxelUpdateNotification', (n) =\u003e {"
+          },
+          {
+            "lineNumber": 96,
+            "text": "        if (n.__typename !== 'VoxelUpdateNotification') return;"
+          },
+          {
+            "lineNumber": 97,
+            "text": "        const cell = voxelToCell({"
+          },
+          {
+            "lineNumber": 98,
+            "text": "          chunkX: Number(n.chunkX),"
+          },
+          {
+            "lineNumber": 99,
+            "text": "          chunkY: Number(n.chunkY),"
+          },
+          {
+            "lineNumber": 100,
+            "text": "          voxelX: n.voxelX,"
+          },
+          {
+            "lineNumber": 101,
+            "text": "          voxelY: n.voxelY,"
+          },
+          {
+            "lineNumber": 102,
+            "text": "        });"
+          },
+          {
+            "lineNumber": 103,
+            "text": "        const rgba = voxelStateToRgba(n.voxelState) ?? { r: 200, g: 100, b: 50, a: 255 };"
+          },
+          {
+            "lineNumber": 104,
+            "text": "        voxelStoreRef.current.set(cell.cellX, cell.cellY, {"
+          },
+          {
+            "lineNumber": 105,
+            "text": "          r: rgba.r,"
+          },
+          {
+            "lineNumber": 106,
+            "text": "          g: rgba.g,"
+          },
+          {
+            "lineNumber": 107,
+            "text": "          b: rgba.b,"
+          },
+          {
+            "lineNumber": 108,
+            "text": "          a: rgba.a,"
+          },
+          {
+            "lineNumber": 109,
+            "text": "          voxelType: n.voxelType,"
+          },
+          {
+            "lineNumber": 110,
+            "text": "        });"
+          },
+          {
+            "lineNumber": 111,
+            "text": "        bump();"
+          },
+          {
+            "lineNumber": 112,
+            "text": "      });"
+          },
+          {
+            "lineNumber": 113
+          },
+          {
+            "lineNumber": 114,
+            "text": "      if (mode === 'paint' || mode === 'full') {"
+          },
+          {
+            "lineNumber": 115,
+            "text": "        const cx = Math.floor(localPoseRef.current.worldX / (8 * 16));"
+          },
+          {
+            "lineNumber": 116,
+            "text": "        const cy = Math.floor(localPoseRef.current.worldY / (8 * 16));"
+          },
+          {
+            "lineNumber": 117,
+            "text": "        await session.hydrateVoxels(cx, cy, (cellX, cellY, r, g, b, a, voxelType) =\u003e {"
+          },
+          {
+            "lineNumber": 118,
+            "text": "          voxelStoreRef.current.set(cellX, cellY, { r, g, b, a, voxelType });"
+          },
+          {
+            "lineNumber": 119,
+            "text": "        });"
+          },
+          {
+            "lineNumber": 120,
+            "text": "        setHydrated(true);"
+          },
+          {
+            "lineNumber": 121,
+            "text": "        bump();"
+          },
+          {
+            "lineNumber": 122,
+            "text": "      }"
+          },
+          {
+            "lineNumber": 123
+          },
+          {
+            "lineNumber": 124,
+            "text": "      actorSenderRef.current.setProvider({"
+          },
+          {
+            "lineNumber": 125,
+            "text": "        getPose: () =\u003e localPoseRef.current,"
+          },
+          {
+            "lineNumber": 126,
+            "text": "      });"
+          },
+          {
+            "lineNumber": 127,
+            "text": "      actorSenderRef.current.start();"
+          },
+          {
+            "lineNumber": 128,
+            "text": "      await actorSenderRef.current.sendNow();"
+          },
+          {
+            "lineNumber": 129
+          },
+          {
+            "lineNumber": 130,
+            "text": "      const syncPresence = async () =\u003e {"
+          },
+          {
+            "lineNumber": 169,
+            "text": ";"
+          },
+          {
+            "lineNumber": 176,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 185,
+            "text": "  }"
+          },
+          {
+            "isSignature": true,
+            "lineNumber": 306,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "column": 1,
+            "line": 305
+          },
+          "startPosition": {
+            "line": 50
+          }
+        },
+        "relativeWorkspacePath": "./src/game/useGameDemo.ts",
+        "signatures": {
+          "ranges": [
+            {
+              "endPosition": {
+                "column": 8,
+                "line": 51
+              },
+              "startPosition": {
+                "column": 1,
+                "line": 51
+              }
+            },
+            {
+              "endPosition": {
+                "column": 3,
+                "line": 52
+              },
+              "startPosition": {
+                "column": 8,
+                "line": 51
+              }
+            }
+          ]
+        }
+      },
+      "score": 0.3521181344985962
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 566,
+            "text": "  teamPolicy(appId: BigInt!): AppGroupPolicy!"
+          },
+          {
+            "lineNumber": 567
+          },
+          {
+            "lineNumber": 568,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 569,
+            "text": "  UDP proxy session status for the game token on this request. Without a game token, returns connected: false. Does not open a session—use udpNotifications or connectUdpProxy."
+          },
+          {
+            "lineNumber": 570,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 571,
+            "text": "  udpProxyConnectionStatus: UdpProxyConnectionStatus!"
+          },
+          {
+            "lineNumber": 572
+          },
+          {
+            "lineNumber": 573,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 574,
+            "text": "  Single startup payload for browser game clients: current user, version requirements, UDP proxy status, realtime protocol details, and spatial send limits."
+          },
+          {
+            "lineNumber": 575,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 576,
+            "text": "  gameClientBootstrap(appId: BigInt!): GameClientBootstrap!"
+          },
+          {
+            "lineNumber": 577,
+            "text": "}"
+          },
+          {
+            "lineNumber": 578
+          },
+          {
+            "lineNumber": 579,
+            "text": "input ActorFilterInput {"
+          },
+          {
+            "lineNumber": 580,
+            "text": "  appId: BigInt"
+          },
+          {
+            "lineNumber": 581,
+            "text": "  avatarId: BigInt"
+          },
+          {
+            "lineNumber": 582,
+            "text": "  uuid: String"
+          },
+          {
+            "lineNumber": 583,
+            "text": "  chunk: ChunkCoordinatesInput"
+          },
+          {
+            "lineNumber": 584,
+            "text": "}"
+          },
+          {
+            "lineNumber": 585
+          },
+          {
+            "lineNumber": 586,
+            "text": "input ChunkCoordinatesInput {"
+          },
+          {
+            "lineNumber": 587,
+            "text": "  x: BigInt!"
+          },
+          {
+            "lineNumber": 588,
+            "text": "  y: BigInt!"
+          },
+          {
+            "lineNumber": 589,
+            "text": "  z: BigInt!"
+          },
+          {
+            "lineNumber": 590,
+            "text": "}"
+          },
+          {
+            "lineNumber": 591
+          },
+          {
+            "lineNumber": 592,
+            "text": "input BatchActorLookupInput {"
+          },
+          {
+            "lineNumber": 593,
+            "text": "  uuids: [String!]!"
+          },
+          {
+            "lineNumber": 594,
+            "text": "}"
+          },
+          {
+            "lineNumber": 595
+          },
+          {
+            "lineNumber": 596,
+            "text": "input GetChunkInput {"
+          },
+          {
+            "lineNumber": 597,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 598,
+            "text": "  coordinates: ChunkCoordinatesInput!"
+          },
+          {
+            "lineNumber": 599,
+            "text": "  requestedLodLevels: [Int!]"
+          },
+          {
+            "lineNumber": 600,
+            "text": "  includeAllLods: Boolean"
+          },
+          {
+            "lineNumber": 601,
+            "text": "}"
+          },
+          {
+            "lineNumber": 602
+          },
+          {
+            "lineNumber": 603,
+            "text": "input GetChunkLodsInput {"
+          },
+          {
+            "lineNumber": 604,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 605,
+            "text": "  coordinates: ChunkCoordinatesInput!"
+          },
+          {
+            "lineNumber": 606,
+            "text": "  lodLevels: [Int!]!"
+          },
+          {
+            "lineNumber": 607,
+            "text": "}"
+          },
+          {
+            "lineNumber": 608
+          },
+          {
+            "lineNumber": 609,
+            "text": "input GetVoxelListInput {"
+          },
+          {
+            "lineNumber": 610,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 611,
+            "text": "  coordinates: ChunkCoordinatesInput!"
+          },
+          {
+            "lineNumber": 612,
+            "text": "}"
+          },
+          {
+            "lineNumber": 613
+          },
+          {
+            "lineNumber": 614,
+            "text": "input GetChunksByDistanceInput {"
+          },
+          {
+            "lineNumber": 615,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 616,
+            "text": "  centerCoordinate: ChunkCoordinatesInput!"
+          },
+          {
+            "lineNumber": 617,
+            "text": "  maxDistance: Int!"
+          },
+          {
+            "lineNumber": 618,
+            "text": "  limit: Int"
+          },
+          {
+            "lineNumber": 619,
+            "text": "  skip: Int"
+          },
+          {
+            "lineNumber": 620,
+            "text": "}"
+          },
+          {
+            "lineNumber": 621
+          },
+          {
+            "lineNumber": 622,
+            "text": "input ListVoxelsInput {"
+          },
+          {
+            "lineNumber": 623,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 624,
+            "text": "  coordinates: ChunkCoordinatesInput!"
+          },
+          {
+            "lineNumber": 625,
+            "text": "  since: DateTime"
+          },
+          {
+            "lineNumber": 626,
+            "text": "}"
+          },
+          {
+            "lineNumber": 627
+          },
+          {
+            "lineNumber": 628,
+            "text": "input ListVoxelUpdatesByDistanceInput {"
+          },
+          {
+            "lineNumber": 629,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 630,
+            "text": "  centerCoordinate: ChunkCoordinatesInput!"
+          },
+          {
+            "lineNumber": 631,
+            "text": "  maxDistance: Int!"
+          },
+          {
+            "lineNumber": 632,
+            "text": "  limit: Int"
+          },
+          {
+            "lineNumber": 633,
+            "text": "  skip: Int"
+          },
+          {
+            "lineNumber": 634,
+            "text": "  since: DateTime"
+          },
+          {
+            "lineNumber": 635,
+            "text": "}"
+          },
+          {
+            "lineNumber": 636
+          },
+          {
+            "lineNumber": 637,
+            "text": "input NearbyGridPermissionsInput {"
+          },
+          {
+            "lineNumber": 638,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 639,
+            "text": "  userId: BigInt!"
+          },
+          {
+            "lineNumber": 640,
+            "text": "  lowChunk: ChunkCoordinatesInput!"
+          },
+          {
+            "lineNumber": 641,
+            "text": "  highChunk: ChunkCoordinatesInput!"
+          },
+          {
+            "lineNumber": 642,
+            "text": "}"
+          },
+          {
+            "lineNumber": 643
+          },
+          {
+            "lineNumber": 644,
+            "text": "type Mutation {"
+          },
+          {
+            "lineNumber": 645,
+            "text": "  updateGamertag(input: UpdateGamertagInput!): User!"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 645
+          },
+          "startPosition": {
+            "line": 565
+          }
+        },
+        "relativeWorkspacePath": "./vendor/schemas/game.gql",
+        "signatures": {}
+      },
+      "score": 0.34050801396369934
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 727,
+            "text": "  Remove a member from a team (manage_members; members may remove themselves)."
+          },
+          {
+            "lineNumber": 728,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 729,
+            "text": "  removeTeamMember(groupId: BigInt!, userId: BigInt!): Boolean!"
+          },
+          {
+            "lineNumber": 730
+          },
+          {
+            "lineNumber": 731,
+            "text": "  \"\"\"Replace a member's roles (manage_roles).\"\"\""
+          },
+          {
+            "lineNumber": 732,
+            "text": "  setTeamMemberRoles(input: SetMemberRolesInput!): GroupMember!"
+          },
+          {
+            "lineNumber": 733
+          },
+          {
+            "lineNumber": 734,
+            "text": "  \"\"\"Create a team role (manage_roles).\"\"\""
+          },
+          {
+            "lineNumber": 735,
+            "text": "  createTeamRole(input: CreateGroupRoleInput!): GroupRole!"
+          },
+          {
+            "lineNumber": 736
+          },
+          {
+            "lineNumber": 737,
+            "text": "  \"\"\"Update a team role (manage_roles).\"\"\""
+          },
+          {
+            "lineNumber": 738,
+            "text": "  updateTeamRole(input: UpdateGroupRoleInput!): GroupRole!"
+          },
+          {
+            "lineNumber": 739
+          },
+          {
+            "lineNumber": 740,
+            "text": "  \"\"\"Delete a non-system team role (manage_roles).\"\"\""
+          },
+          {
+            "lineNumber": 741,
+            "text": "  deleteTeamRole(groupRoleId: BigInt!): Boolean!"
+          },
+          {
+            "lineNumber": 742
+          },
+          {
+            "lineNumber": 743,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 744,
+            "text": "  Open the UDP proxy session for this game token (idempotent: returns the existing status if one is already open). Binds a socket and selects the game server with the fewest clients on first open. Optional: send mutations and udpNotifications also create a session lazily when none exists. To force a fresh socket, call disconnectUdpProxy first."
+          },
+          {
+            "lineNumber": 745,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 746,
+            "text": "  connectUdpProxy: UdpProxyConnectionStatus!"
+          },
+          {
+            "lineNumber": 747
+          },
+          {
+            "lineNumber": 748,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 749,
+            "text": "  Close the UDP proxy session and socket for this game token. Unsubscribing from udpNotifications does not disconnect; use this mutation (or rely on server inactivity timeout)."
+          },
+          {
+            "lineNumber": 750,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 751,
+            "text": "  disconnectUdpProxy: Boolean!"
+          },
+          {
+            "lineNumber": 752
+          },
+          {
+            "lineNumber": 753,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 754,
+            "text": "  Send an actor update to the game server. Opens a UDP proxy session automatically if none exists. Responses and GenericErrorResponse are delivered on udpNotifications."
+          },
+          {
+            "lineNumber": 755,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 756,
+            "text": "  sendActorUpdate(input: ActorUpdateRequestInput!): Boolean!"
+          },
+          {
+            "lineNumber": 757
+          },
+          {
+            "lineNumber": 758,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 759,
+            "text": "  Send a voxel update to the game server. Opens a UDP proxy session automatically if none exists; responses arrive on udpNotifications."
+          },
+          {
+            "lineNumber": 760,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 761,
+            "text": "  sendVoxelUpdate(input: VoxelUpdateRequestInput!): Boolean!"
+          },
+          {
+            "lineNumber": 762
+          },
+          {
+            "lineNumber": 763,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 764,
+            "text": "  Send a voice audio packet to the game server. Opens a UDP proxy session automatically if none exists; notifications arrive on udpNotifications."
+          },
+          {
+            "lineNumber": 765,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 766,
+            "text": "  sendAudioPacket(input: ClientAudioPacketInput!): Boolean!"
+          },
+          {
+            "lineNumber": 767
+          },
+          {
+            "lineNumber": 768,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 769,
+            "text": "  Send a text (chat) packet to the game server. Opens a UDP proxy session automatically if none exists; notifications arrive on udpNotifications."
+          },
+          {
+            "lineNumber": 770,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 771,
+            "text": "  sendTextPacket(input: ClientTextPacketInput!): Boolean!"
+          },
+          {
+            "lineNumber": 772
+          },
+          {
+            "lineNumber": 773,
+            "text": "  \"\"\""
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 773
+          },
+          "startPosition": {
+            "line": 726
+          }
+        },
+        "relativeWorkspacePath": "./vendor/schemas/game.gql",
+        "signatures": {}
+      },
+      "score": 0.33754411339759827
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 1041,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1042,
+            "text": "input VoxelUpdateRequestInput {"
+          },
+          {
+            "lineNumber": 1043,
+            "text": "  \"\"\"The ID of the app where the voxel is located.\"\"\""
+          },
+          {
+            "lineNumber": 1044,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 1045
+          },
+          {
+            "lineNumber": 1046,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1047,
+            "text": "  The chunk coordinates containing the voxel. A chunk is a 16x16x16 voxel cube."
+          },
+          {
+            "lineNumber": 1048,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1049,
+            "text": "  chunk: ChunkCoordinatesInput!"
+          },
+          {
+            "lineNumber": 1050
+          },
+          {
+            "lineNumber": 1051,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1052,
+            "text": "  A unique identifier for this voxel update. Must be exactly 32 bytes when encoded as UTF-8."
+          },
+          {
+            "lineNumber": 1053,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1054,
+            "text": "  uuid: String!"
+          },
+          {
+            "lineNumber": 1055
+          },
+          {
+            "lineNumber": 1056,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1057,
+            "text": "  The voxel coordinates within the chunk. Values must be between -32768 and 32767 (int16 range)."
+          },
+          {
+            "lineNumber": 1058,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1059,
+            "text": "  voxel: VoxelCoordinatesInput!"
+          },
+          {
+            "lineNumber": 1060
+          },
+          {
+            "lineNumber": 1061,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1062,
+            "text": "  The new voxel type ID. This determines the appearance and properties of the voxel."
+          },
+          {
+            "lineNumber": 1063,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1064,
+            "text": "  voxelType: Int!"
+          },
+          {
+            "lineNumber": 1065
+          },
+          {
+            "lineNumber": 1066,
+            "text": "  \"\"\"The voxel state data, base64-encoded.\"\"\""
+          },
+          {
+            "lineNumber": 1067,
+            "text": "  voxelState: String!"
+          },
+          {
+            "lineNumber": 1068
+          },
+          {
+            "lineNumber": 1069,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1070,
+            "text": "  Chunk replication distance (0-8). Defaults to 8 for voxel updates. Clamped to 0-8."
+          },
+          {
+            "lineNumber": 1071,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1072,
+            "text": "  distance: Int"
+          },
+          {
+            "lineNumber": 1073
+          },
+          {
+            "lineNumber": 1074,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1075,
+            "text": "  Decay algorithm for replication: 0 = none, 1 = exponential, 2 = linear 50%, 3 = linear 25%, 4 = linear 10%, 5 = linear 5%. Defaults to 0 (none) for voxel updates."
+          },
+          {
+            "lineNumber": 1076,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1077,
+            "text": "  decayRate: Int"
+          },
+          {
+            "lineNumber": 1078
+          },
+          {
+            "lineNumber": 1079,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1080,
+            "text": "  Client's sequence number for this message (0-255, wraps). Used to match error responses."
+          },
+          {
+            "lineNumber": 1081,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1082,
+            "text": "  sequenceNumber: Int"
+          },
+          {
+            "lineNumber": 1083,
+            "text": "}"
+          },
+          {
+            "lineNumber": 1084
+          },
+          {
+            "lineNumber": 1085,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1086,
+            "text": "Input for sending a client audio packet (voice chat) to the UDP game server. The audio data is compressed and will be broadcast to nearby players."
+          },
+          {
+            "lineNumber": 1087,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1088,
+            "text": "input ClientAudioPacketInput {"
+          },
+          {
+            "lineNumber": 1089,
+            "text": "  \"\"\"The ID of the app where the audio is being sent from.\"\"\""
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 1089
+          },
+          "startPosition": {
+            "line": 1040
+          }
+        },
+        "relativeWorkspacePath": "./vendor/schemas/game.gql",
+        "signatures": {}
+      },
+      "score": 0.33575108647346497
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "isSignature": true,
+            "lineNumber": 63,
+            "text": "export class CrowdySession {"
+          },
+          {
+            "lineNumber": 467,
+            "text": "async listSharedPaint(): Promise\u003cSharedPaintCell[]\u003e {"
+          },
+          {
+            "lineNumber": 468
+          },
+          {
+            "lineNumber": 469,
+            "text": "  }"
+          },
+          {
+            "lineNumber": 470
+          },
+          {
+            "lineNumber": 471,
+            "text": "  async sendClientEvent(input: {"
+          },
+          {
+            "lineNumber": 472,
+            "text": "    chunk: { x: string; y: string; z: string };"
+          },
+          {
+            "lineNumber": 473,
+            "text": "    eventType: number;"
+          },
+          {
+            "lineNumber": 474,
+            "text": "    state: string;"
+          },
+          {
+            "lineNumber": 475,
+            "text": "    sequenceNumber: number;"
+          },
+          {
+            "lineNumber": 476,
+            "text": "    distance?: number;"
+          },
+          {
+            "lineNumber": 477,
+            "text": "    decayRate?: number;"
+          },
+          {
+            "lineNumber": 478,
+            "text": "    uuid?: string;"
+          },
+          {
+            "lineNumber": 479,
+            "text": "  }): Promise\u003cboolean\u003e {"
+          },
+          {
+            "lineNumber": 480,
+            "text": "    return this.client.udp.sendClientEvent({"
+          },
+          {
+            "lineNumber": 481,
+            "text": "      appId: APP_ID,"
+          },
+          {
+            "lineNumber": 482,
+            "text": "      chunk: input.chunk,"
+          },
+          {
+            "lineNumber": 483,
+            "text": "      uuid: input.uuid ?? this.actorUuid,"
+          },
+          {
+            "lineNumber": 484,
+            "text": "      eventType: input.eventType,"
+          },
+          {
+            "lineNumber": 485,
+            "text": "      state: input.state,"
+          },
+          {
+            "lineNumber": 486,
+            "text": "      sequenceNumber: input.sequenceNumber,"
+          },
+          {
+            "lineNumber": 487,
+            "text": "      distance: input.distance,"
+          },
+          {
+            "lineNumber": 488,
+            "text": "      decayRate: input.decayRate,"
+          },
+          {
+            "lineNumber": 489,
+            "text": "    });"
+          },
+          {
+            "lineNumber": 490,
+            "text": "  }"
+          },
+          {
+            "lineNumber": 491
+          },
+          {
+            "lineNumber": 492,
+            "text": "  async hydrateVoxels("
+          },
+          {
+            "lineNumber": 493,
+            "text": "    centerChunkX: number,"
+          },
+          {
+            "lineNumber": 494,
+            "text": "    centerChunkY: number,"
+          },
+          {
+            "lineNumber": 495,
+            "text": "    onCell: (cellX: number, cellY: number, r: number, g: number, b: number, a: number, voxelType: number) =\u003e void,"
+          },
+          {
+            "lineNumber": 496,
+            "text": "  ): Promise\u003cnumber\u003e {"
+          },
+          {
+            "lineNumber": 497,
+            "text": "    "
+          },
+          {
+            "lineNumber": 520,
+            "text": "  }"
+          },
+          {
+            "isSignature": true,
+            "lineNumber": 521,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "column": 1,
+            "line": 520
+          },
+          "startPosition": {
+            "line": 62
+          }
+        },
+        "relativeWorkspacePath": "./src/game/session/CrowdySession.ts",
+        "signatures": {
+          "ranges": [
+            {
+              "endPosition": {
+                "column": 8,
+                "line": 63
+              },
+              "startPosition": {
+                "column": 1,
+                "line": 63
+              }
+            },
+            {
+              "endPosition": {
+                "column": 3,
+                "line": 64
+              },
+              "startPosition": {
+                "column": 8,
+                "line": 63
+              }
+            }
+          ]
+        }
+      },
+      "score": 0.3334527015686035
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "isSignature": true,
+            "lineNumber": 110,
+            "text": "export function useBattleRoyale() {"
+          },
+          {
+            "lineNumber": 383,
+            "text": "() =\u003e {"
+          },
+          {
+            "lineNumber": 387,
+            "text": "async () =\u003e {"
+          },
+          {
+            "lineNumber": 471
+          },
+          {
+            "lineNumber": 472,
+            "text": "      actorSenderRef.current.setProvider({"
+          },
+          {
+            "lineNumber": 473,
+            "text": "        getPose: () =\u003e shipStateToPose(localShipRef.current),"
+          },
+          {
+            "lineNumber": 474,
+            "text": "      });"
+          },
+          {
+            "lineNumber": 475,
+            "text": "      actorSenderRef.current.start();"
+          },
+          {
+            "lineNumber": 476,
+            "text": "      await actorSenderRef.current.sendNow();"
+          },
+          {
+            "lineNumber": 477,
+            "text": "      if (cancelled) return;"
+          },
+          {
+            "lineNumber": 478
+          },
+          {
+            "lineNumber": 479,
+            "text": "      const postPresence = () =\u003e {"
+          },
+          {
+            "lineNumber": 480,
+            "text": "        void postBattlePresence(battleActorUuid, localShipRef.current, pilotColorId);"
+          },
+          {
+            "lineNumber": 481,
+            "text": "      };"
+          },
+          {
+            "lineNumber": 482
+          },
+          {
+            "lineNumber": 483,
+            "text": "      const syncPeers = async () =\u003e {"
+          },
+          {
+            "lineNumber": 484,
+            "text": "        try {"
+          },
+          {
+            "lineNumber": 485,
+            "text": "          const peers = await listBattlePeers(battleActorUuid);"
+          },
+          {
+            "lineNumber": 486,
+            "text": "          const now = performance.now();"
+          },
+          {
+            "lineNumber": 487,
+            "text": "          for (const peer of peers) {"
+          },
+          {
+            "lineNumber": 488,
+            "text": "            const existing = remoteRef.current.get(peer.uuid);"
+          },
+          {
+            "lineNumber": 489,
+            "text": "            const color = actorColorForUuid(peer.colorId ?? peer.uuid);"
+          },
+          {
+            "lineNumber": 490,
+            "text": "            const udpFresh ="
+          },
+          {
+            "lineNumber": 491,
+            "text": "              existing?.positionSource === 'udp' \u0026\u0026"
+          },
+          {
+            "lineNumber": 492,
+            "text": "              now - (existing.lastSeenAt ?? 0) \u003c= BATTLE_RELAY_UDP_STALE_MS;"
+          },
+          {
+            "lineNumber": 493,
+            "text": "            if (udpFresh) {"
+          },
+          {
+            "lineNumber": 494,
+            "text": "              remoteRef.current.set(peer.uuid, { ...existing, color });"
+          },
+          {
+            "lineNumber": 495,
+            "text": "              continue;"
+          },
+          {
+            "lineNumber": 496,
+            "text": "            }"
+          },
+          {
+            "lineNumber": 497,
+            "text": "            upsertRemoteShip("
+          },
+          {
+            "lineNumber": 498,
+            "text": "              remoteRef.current,"
+          },
+          {
+            "lineNumber": 499,
+            "text": "              peer.uuid,"
+          },
+          {
+            "lineNumber": 500,
+            "text": "              { ...peer.ship, colorId: peer.colorId },"
+          },
+          {
+            "lineNumber": 501,
+            "text": "              color,"
+          },
+          {
+            "lineNumber": 502,
+            "text": "              'relay',"
+          },
+          {
+            "lineNumber": 503,
+            "text": "              now,"
+          },
+          {
+            "lineNumber": 504,
+            "text": "              { serverMs: peer.updatedAt },"
+          },
+          {
+            "lineNumber": 505,
+            "text": "            );"
+          },
+          {
+            "lineNumber": 506,
+            "text": "          }"
+          },
+          {
+            "lineNumber": 507
+          },
+          {
+            "lineNumber": 508,
+            "text": "          for (const destroy of await listBattleDestroys()) {"
+          },
+          {
+            "lineNumber": 509,
+            "text": "            if (destroy.targetUuid === battleActorUuid) continue;"
+          },
+          {
+            "lineNumber": 510,
+            "text": "            applyDestroy(destroy, destroy.color);"
+          },
+          {
+            "lineNumber": 511,
+            "text": "          }"
+          },
+          {
+            "lineNumber": 512
+          },
+          {
+            "lineNumber": 513,
+            "text": "          for (const fire of await listBattleFires()) {"
+          },
+          {
+            "lineNumber": 514,
+            "text": "            if (fire.ownerUuid === battleActorUuid) continue;"
+          },
+          {
+            "lineNumber": 515,
+            "text": "            if (projectilesRef.current.some((p) =\u003e p.id === fire.id)) continue;"
+          },
+          {
+            "lineNumber": 516,
+            "text": "            projectilesRef.current.push({"
+          },
+          {
+            "lineNumber": 517,
+            "text": "              id: fire.id,"
+          },
+          {
+            "lineNumber": 518,
+            "text": "              ownerUuid: fire.ownerUuid,"
+          },
+          {
+            "lineNumber": 519,
+            "text": "              x: fire.x,"
+          },
+          {
+            "lineNumber": 520,
+            "text": "              y: fire.y ?? 0,"
+          },
+          {
+            "lineNumber": 521,
+            "text": "              z: fire.z ?? 0,"
+          },
+          {
+            "lineNumber": 522,
+            "text": "              vx: fire.vx,"
+          },
+          {
+            "lineNumber": 523,
+            "text": "              vy: fire.vy ?? 0,"
+          },
+          {
+            "lineNumber": 524,
+            "text": "              vz: fire.vz ?? 0,"
+          },
+          {
+            "lineNumber": 525,
+            "text": "              bornAt: fire.firedAt,"
+          },
+          {
+            "lineNumber": 526,
+            "text": "            });"
+          },
+          {
+            "lineNumber": 527,
+            "text": "          }"
+          },
+          {
+            "lineNumber": 528
+          },
+          {
+            "lineNumber": 529,
+            "text": "          bump();"
+          },
+          {
+            "lineNumber": 533,
+            "text": ";"
+          },
+          {
+            "lineNumber": 551,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 568,
+            "text": "  }"
+          },
+          {
+            "isSignature": true,
+            "lineNumber": 1002,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "column": 1,
+            "line": 1001
+          },
+          "startPosition": {
+            "line": 109
+          }
+        },
+        "relativeWorkspacePath": "./src/game/battle/useBattleRoyale.ts",
+        "signatures": {
+          "ranges": [
+            {
+              "endPosition": {
+                "column": 8,
+                "line": 110
+              },
+              "startPosition": {
+                "column": 1,
+                "line": 110
+              }
+            },
+            {
+              "endPosition": {
+                "column": 3,
+                "line": 111
+              },
+              "startPosition": {
+                "column": 8,
+                "line": 110
+              }
+            },
+            {
+              "endPosition": {
+                "column": 3,
+                "line": 383
+              },
+              "startPosition": {
+                "column": 3,
+                "line": 383
+              }
+            },
+            {
+              "endPosition": {
+                "column": 5,
+                "line": 384
+              },
+              "startPosition": {
+                "column": 13,
+                "line": 383
+              }
+            },
+            {
+              "endPosition": {
+                "column": 10,
+                "line": 387
+              },
+              "startPosition": {
+                "column": 10,
+                "line": 387
+              }
+            },
+            {
+              "endPosition": {
+                "column": 7,
+                "line": 388
+              },
+              "startPosition": {
+                "column": 11,
+                "line": 387
+              }
+            }
+          ]
+        }
+      },
+      "score": 0.3294380307197571
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 1478,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1479,
+            "text": "type ServerEventNotification {"
+          },
+          {
+            "lineNumber": 1480,
+            "text": "  \"\"\"The ID of the app where the event is occurring.\"\"\""
+          },
+          {
+            "lineNumber": 1481,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 1482
+          },
+          {
+            "lineNumber": 1483,
+            "text": "  \"\"\"The X coordinate of the chunk where the event is located.\"\"\""
+          },
+          {
+            "lineNumber": 1484,
+            "text": "  chunkX: BigInt!"
+          },
+          {
+            "lineNumber": 1485
+          },
+          {
+            "lineNumber": 1486,
+            "text": "  \"\"\"The Y coordinate of the chunk where the event is located.\"\"\""
+          },
+          {
+            "lineNumber": 1487,
+            "text": "  chunkY: BigInt!"
+          },
+          {
+            "lineNumber": 1488
+          },
+          {
+            "lineNumber": 1489,
+            "text": "  \"\"\"The Z coordinate of the chunk where the event is located.\"\"\""
+          },
+          {
+            "lineNumber": 1490,
+            "text": "  chunkZ: BigInt!"
+          },
+          {
+            "lineNumber": 1491
+          },
+          {
+            "lineNumber": 1492,
+            "text": "  \"\"\"Chunk replication distance (0-8) from the original message.\"\"\""
+          },
+          {
+            "lineNumber": 1493,
+            "text": "  distance: Int!"
+          },
+          {
+            "lineNumber": 1494
+          },
+          {
+            "lineNumber": 1495,
+            "text": "  \"\"\"Decay algorithm (0-5) from the original message.\"\"\""
+          },
+          {
+            "lineNumber": 1496,
+            "text": "  decayRate: Int!"
+          },
+          {
+            "lineNumber": 1497
+          },
+          {
+            "lineNumber": 1498,
+            "text": "  \"\"\"The unique identifier of the object controlling this event.\"\"\""
+          },
+          {
+            "lineNumber": 1499,
+            "text": "  uuid: String!"
+          },
+          {
+            "lineNumber": 1500
+          },
+          {
+            "lineNumber": 1501,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1502,
+            "text": "  The event type ID (uint16). This determines how the event should be processed."
+          },
+          {
+            "lineNumber": 1503,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1504,
+            "text": "  eventType: Int!"
+          },
+          {
+            "lineNumber": 1505
+          },
+          {
+            "lineNumber": 1506,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1507,
+            "text": "  The event state data, base64-encoded. The format is defined by the event type."
+          },
+          {
+            "lineNumber": 1508,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1509,
+            "text": "  state: String!"
+          },
+          {
+            "lineNumber": 1510
+          },
+          {
+            "lineNumber": 1511,
+            "text": "  \"\"\"The sender's sequence number for this message (0-255).\"\"\""
+          },
+          {
+            "lineNumber": 1512,
+            "text": "  sequenceNumber: Int!"
+          },
+          {
+            "lineNumber": 1513
+          },
+          {
+            "lineNumber": 1514,
+            "text": "  \"\"\"Server-generated epoch milliseconds timestamp.\"\"\""
+          },
+          {
+            "lineNumber": 1515,
+            "text": "  epochMillis: BigInt!"
+          },
+          {
+            "lineNumber": 1516,
+            "text": "}"
+          },
+          {
+            "lineNumber": 1517
+          },
+          {
+            "lineNumber": 1518,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1519,
+            "text": "Generic error response from the UDP game server. Uses the sequence number to match the original request that failed."
+          },
+          {
+            "lineNumber": 1520,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1521,
+            "text": "type GenericErrorResponse {"
+          },
+          {
+            "lineNumber": 1522,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1523,
+            "text": "  The sequence number from the original request, used to correlate this error with the request that caused it."
+          },
+          {
+            "lineNumber": 1524,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1525,
+            "text": "  sequenceNumber: Int!"
+          },
+          {
+            "lineNumber": 1526
+          },
+          {
+            "lineNumber": 1527,
+            "text": "  \"\"\"Error code indicating the reason for the failure.\"\"\""
+          },
+          {
+            "lineNumber": 1528,
+            "text": "  errorCode: UdpErrorCode!"
+          },
+          {
+            "lineNumber": 1529,
+            "text": "}"
+          },
+          {
+            "lineNumber": 1530
+          },
+          {
+            "lineNumber": 1531,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1532,
+            "text": "SDK-facing realtime lifecycle event emitted on udpNotifications when the subscription cannot open a UDP proxy session."
+          },
+          {
+            "lineNumber": 1533,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1534,
+            "text": "type RealtimeConnectionEvent {"
+          },
+          {
+            "lineNumber": 1535,
+            "text": "  status: String!"
+          },
+          {
+            "lineNumber": 1536,
+            "text": "  code: String!"
+          },
+          {
+            "lineNumber": 1537,
+            "text": "  message: String!"
+          },
+          {
+            "lineNumber": 1538,
+            "text": "  retryable: Boolean!"
+          },
+          {
+            "lineNumber": 1539,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "column": 1,
+            "line": 1538
+          },
+          "startPosition": {
+            "line": 1477
+          }
+        },
+        "relativeWorkspacePath": "./vendor/schemas/game.gql",
+        "signatures": {}
+      },
+      "score": 0.32223328948020935
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 1431,
+            "text": "  epochMillis: BigInt!"
+          },
+          {
+            "lineNumber": 1432,
+            "text": "}"
+          },
+          {
+            "lineNumber": 1433
+          },
+          {
+            "lineNumber": 1434,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1435,
+            "text": "Notification received when another client sends a custom event. Received via the udpNotifications subscription."
+          },
+          {
+            "lineNumber": 1436,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1437,
+            "text": "type ClientEventNotification {"
+          },
+          {
+            "lineNumber": 1438,
+            "text": "  \"\"\"The ID of the app where the event is occurring.\"\"\""
+          },
+          {
+            "lineNumber": 1439,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 1440
+          },
+          {
+            "lineNumber": 1441,
+            "text": "  \"\"\"The X coordinate of the chunk where the event is located.\"\"\""
+          },
+          {
+            "lineNumber": 1442,
+            "text": "  chunkX: BigInt!"
+          },
+          {
+            "lineNumber": 1443
+          },
+          {
+            "lineNumber": 1444,
+            "text": "  \"\"\"The Y coordinate of the chunk where the event is located.\"\"\""
+          },
+          {
+            "lineNumber": 1445,
+            "text": "  chunkY: BigInt!"
+          },
+          {
+            "lineNumber": 1446
+          },
+          {
+            "lineNumber": 1447,
+            "text": "  \"\"\"The Z coordinate of the chunk where the event is located.\"\"\""
+          },
+          {
+            "lineNumber": 1448,
+            "text": "  chunkZ: BigInt!"
+          },
+          {
+            "lineNumber": 1449
+          },
+          {
+            "lineNumber": 1450,
+            "text": "  \"\"\"Chunk replication distance (0-8) from the original message.\"\"\""
+          },
+          {
+            "lineNumber": 1451,
+            "text": "  distance: Int!"
+          },
+          {
+            "lineNumber": 1452
+          },
+          {
+            "lineNumber": 1453,
+            "text": "  \"\"\"Decay algorithm (0-5) from the original message.\"\"\""
+          },
+          {
+            "lineNumber": 1454,
+            "text": "  decayRate: Int!"
+          },
+          {
+            "lineNumber": 1455
+          },
+          {
+            "lineNumber": 1456,
+            "text": "  \"\"\"The unique identifier of the object controlling this event.\"\"\""
+          },
+          {
+            "lineNumber": 1457,
+            "text": "  uuid: String!"
+          },
+          {
+            "lineNumber": 1458
+          },
+          {
+            "lineNumber": 1459,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1460,
+            "text": "  The event type ID (uint16). This determines how the event should be processed."
+          },
+          {
+            "lineNumber": 1461,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1462,
+            "text": "  eventType: Int!"
+          },
+          {
+            "lineNumber": 1463
+          },
+          {
+            "lineNumber": 1464,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1465,
+            "text": "  The event state data, base64-encoded. The format is defined by the event type."
+          },
+          {
+            "lineNumber": 1466,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1467,
+            "text": "  state: String!"
+          },
+          {
+            "lineNumber": 1468
+          },
+          {
+            "lineNumber": 1469,
+            "text": "  \"\"\"The sender's sequence number for this message (0-255).\"\"\""
+          },
+          {
+            "lineNumber": 1470,
+            "text": "  sequenceNumber: Int!"
+          },
+          {
+            "lineNumber": 1471
+          },
+          {
+            "lineNumber": 1472,
+            "text": "  \"\"\"Server-generated epoch milliseconds timestamp.\"\"\""
+          },
+          {
+            "lineNumber": 1473,
+            "text": "  epochMillis: BigInt!"
+          },
+          {
+            "lineNumber": 1474,
+            "text": "}"
+          },
+          {
+            "lineNumber": 1475
+          },
+          {
+            "lineNumber": 1476,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1477,
+            "text": "Notification received when the server sends a custom event. Received via the udpNotifications subscription."
+          },
+          {
+            "lineNumber": 1478,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1479,
+            "text": "type ServerEventNotification {"
+          },
+          {
+            "lineNumber": 1480,
+            "text": "  \"\"\"The ID of the app where the event is occurring.\"\"\""
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 1480
+          },
+          "startPosition": {
+            "line": 1430
+          }
+        },
+        "relativeWorkspacePath": "./vendor/schemas/game.gql",
+        "signatures": {}
+      },
+      "score": 0.3145134449005127
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 1362,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1363,
+            "text": "type ClientAudioNotification {"
+          },
+          {
+            "lineNumber": 1364,
+            "text": "  \"\"\"The ID of the app where the audio is coming from.\"\"\""
+          },
+          {
+            "lineNumber": 1365,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 1366
+          },
+          {
+            "lineNumber": 1367,
+            "text": "  \"\"\"The X coordinate of the chunk where the audio source is located.\"\"\""
+          },
+          {
+            "lineNumber": 1368,
+            "text": "  chunkX: BigInt!"
+          },
+          {
+            "lineNumber": 1369
+          },
+          {
+            "lineNumber": 1370,
+            "text": "  \"\"\"The Y coordinate of the chunk where the audio source is located.\"\"\""
+          },
+          {
+            "lineNumber": 1371,
+            "text": "  chunkY: BigInt!"
+          },
+          {
+            "lineNumber": 1372
+          },
+          {
+            "lineNumber": 1373,
+            "text": "  \"\"\"The Z coordinate of the chunk where the audio source is located.\"\"\""
+          },
+          {
+            "lineNumber": 1374,
+            "text": "  chunkZ: BigInt!"
+          },
+          {
+            "lineNumber": 1375
+          },
+          {
+            "lineNumber": 1376,
+            "text": "  \"\"\"Chunk replication distance (0-8) from the original message.\"\"\""
+          },
+          {
+            "lineNumber": 1377,
+            "text": "  distance: Int!"
+          },
+          {
+            "lineNumber": 1378
+          },
+          {
+            "lineNumber": 1379,
+            "text": "  \"\"\"Decay algorithm (0-5) from the original message.\"\"\""
+          },
+          {
+            "lineNumber": 1380,
+            "text": "  decayRate: Int!"
+          },
+          {
+            "lineNumber": 1381
+          },
+          {
+            "lineNumber": 1382,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1383,
+            "text": "  The unique identifier of the audio source (typically the player UUID sending the audio)."
+          },
+          {
+            "lineNumber": 1384,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1385,
+            "text": "  uuid: String!"
+          },
+          {
+            "lineNumber": 1386
+          },
+          {
+            "lineNumber": 1387,
+            "text": "  \"\"\"The compressed audio data, base64-encoded.\"\"\""
+          },
+          {
+            "lineNumber": 1388,
+            "text": "  audioData: String!"
+          },
+          {
+            "lineNumber": 1389
+          },
+          {
+            "lineNumber": 1390,
+            "text": "  \"\"\"The sender's sequence number for this message (0-255).\"\"\""
+          },
+          {
+            "lineNumber": 1391,
+            "text": "  sequenceNumber: Int!"
+          },
+          {
+            "lineNumber": 1392
+          },
+          {
+            "lineNumber": 1393,
+            "text": "  \"\"\"Server-generated epoch milliseconds timestamp.\"\"\""
+          },
+          {
+            "lineNumber": 1394,
+            "text": "  epochMillis: BigInt!"
+          },
+          {
+            "lineNumber": 1395,
+            "text": "}"
+          },
+          {
+            "lineNumber": 1396
+          },
+          {
+            "lineNumber": 1397,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1398,
+            "text": "Notification received when another client sends a text message (chat). Received via the udpNotifications subscription."
+          },
+          {
+            "lineNumber": 1399,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1400,
+            "text": "type ClientTextNotification {"
+          },
+          {
+            "lineNumber": 1401,
+            "text": "  \"\"\"The ID of the app where the text message is coming from.\"\"\""
+          },
+          {
+            "lineNumber": 1402,
+            "text": "  appId: BigInt!"
+          },
+          {
+            "lineNumber": 1403
+          },
+          {
+            "lineNumber": 1404,
+            "text": "  \"\"\"The X coordinate of the chunk where the text source is located.\"\"\""
+          },
+          {
+            "lineNumber": 1405,
+            "text": "  chunkX: BigInt!"
+          },
+          {
+            "lineNumber": 1406
+          },
+          {
+            "lineNumber": 1407,
+            "text": "  \"\"\"The Y coordinate of the chunk where the text source is located.\"\"\""
+          },
+          {
+            "lineNumber": 1408,
+            "text": "  chunkY: BigInt!"
+          },
+          {
+            "lineNumber": 1409
+          },
+          {
+            "lineNumber": 1410,
+            "text": "  \"\"\"The Z coordinate of the chunk where the text source is located.\"\"\""
+          },
+          {
+            "lineNumber": 1411,
+            "text": "  chunkZ: BigInt!"
+          },
+          {
+            "lineNumber": 1412
+          },
+          {
+            "lineNumber": 1413,
+            "text": "  \"\"\"Chunk replication distance (0-8) from the original message.\"\"\""
+          },
+          {
+            "lineNumber": 1414,
+            "text": "  distance: Int!"
+          },
+          {
+            "lineNumber": 1415
+          },
+          {
+            "lineNumber": 1416,
+            "text": "  \"\"\"Decay algorithm (0-5) from the original message.\"\"\""
+          },
+          {
+            "lineNumber": 1417,
+            "text": "  decayRate: Int!"
+          },
+          {
+            "lineNumber": 1418
+          },
+          {
+            "lineNumber": 1419,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1420,
+            "text": "  The unique identifier of the text source (typically the player UUID sending the message)."
+          },
+          {
+            "lineNumber": 1421,
+            "text": "  \"\"\""
+          },
+          {
+            "lineNumber": 1422,
+            "text": "  uuid: String!"
+          },
+          {
+            "lineNumber": 1423
+          },
+          {
+            "lineNumber": 1424,
+            "text": "  \"\"\"The text message content, UTF-8 encoded. Display this to the user.\"\"\""
+          },
+          {
+            "lineNumber": 1425,
+            "text": "  text: String!"
+          },
+          {
+            "lineNumber": 1426
+          },
+          {
+            "lineNumber": 1427,
+            "text": "  \"\"\"The sender's sequence number for this message (0-255).\"\"\""
+          },
+          {
+            "lineNumber": 1428,
+            "text": "  sequenceNumber: Int!"
+          },
+          {
+            "lineNumber": 1429
+          },
+          {
+            "lineNumber": 1430,
+            "text": "  \"\"\"Server-generated epoch milliseconds timestamp.\"\"\""
+          },
+          {
+            "lineNumber": 1431,
+            "text": "  epochMillis: BigInt!"
+          },
+          {
+            "lineNumber": 1432,
+            "text": "}"
+          },
+          {
+            "lineNumber": 1433
+          },
+          {
+            "lineNumber": 1434,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1435,
+            "text": "Notification received when another client sends a custom event. Received via the udpNotifications subscription."
+          },
+          {
+            "lineNumber": 1436,
+            "text": "\"\"\""
+          },
+          {
+            "lineNumber": 1437,
+            "text": "type ClientEventNotification {"
+          },
+          {
+            "lineNumber": 1438,
+            "text": "  \"\"\"The ID of the app where the event is occurring.\"\"\""
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 1438
+          },
+          "startPosition": {
+            "line": 1361
+          }
+        },
+        "relativeWorkspacePath": "./vendor/schemas/game.gql",
+        "signatures": {}
+      },
+      "score": 0.3093290328979492
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "isSignature": true,
+            "lineNumber": 11,
+            "text": "export class ActorSender {"
+          },
+          {
+            "lineNumber": 12,
+            "text": "  private intervalId: ReturnType\u003ctypeof setInterval\u003e | null = null;"
+          },
+          {
+            "lineNumber": 13,
+            "text": "  private sequenceNumber = 0;"
+          },
+          {
+            "lineNumber": 14,
+            "text": "  private provider: PoseProvider | null = null;"
+          },
+          {
+            "lineNumber": 15,
+            "text": "  private stateEncoder: (pose: ActorPose) =\u003e string = encodeActorState;"
+          },
+          {
+            "lineNumber": 16,
+            "text": "  private actorUuid: string | null = null;"
+          },
+          {
+            "lineNumber": 17,
+            "text": "  private syncIntervalMs = ACTOR_SYNC_INTERVAL_MS;"
+          },
+          {
+            "lineNumber": 18,
+            "text": "  private chunkOverride: { x: string; y: string; z: string } | null = null;"
+          },
+          {
+            "lineNumber": 19
+          },
+          {
+            "lineNumber": 20,
+            "text": "  constructor("
+          },
+          {
+            "lineNumber": 21,
+            "text": "    private readonly session: CrowdySession,"
+          },
+          {
+            "lineNumber": 22,
+            "text": "    syncIntervalMs = ACTOR_SYNC_INTERVAL_MS,"
+          },
+          {
+            "lineNumber": 23,
+            "text": "  ) {"
+          },
+          {
+            "lineNumber": 24,
+            "text": "    this.syncIntervalMs = syncIntervalMs;"
+          },
+          {
+            "lineNumber": 25,
+            "text": "  }"
+          },
+          {
+            "lineNumber": 26
+          },
+          {
+            "lineNumber": 27,
+            "text": "  setSyncIntervalMs(ms: number): void {"
+          },
+          {
+            "lineNumber": 28,
+            "text": "    this.syncIntervalMs = ms;"
+          },
+          {
+            "lineNumber": 33,
+            "text": "  }"
+          },
+          {
+            "isSignature": true,
+            "lineNumber": 91,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "column": 1,
+            "line": 90
+          },
+          "startPosition": {
+            "column": 1,
+            "line": 8
+          }
+        },
+        "relativeWorkspacePath": "./src/game/session/ActorSender.ts",
+        "signatures": {}
+      },
+      "score": 0.3001779019832611
+    }
+  ]
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="semantic_search_full"><details>
+<summary>Tool use: **semantic_search_full**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn",
+  "pattern": "BATTLE_ACTOR_CHUNK|chunkOverride|beforeUdpConnect"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn",
+  "pattern": "BATTLE_ACTOR_CHUNK|chunkOverride|beforeUdpConnect",
+  "topFiles": [
+    {
+      "matchCount": 4,
+      "uri": "src/game/session/ActorSender.ts"
+    },
+    {
+      "matchCount": 1,
+      "uri": "src/config.ts"
+    },
+    {
+      "matchCount": 4,
+      "uri": "src/game/battle/useBattleRoyale.ts"
+    },
+    {
+      "matchCount": 4,
+      "uri": "src/game/session/CrowdySession.ts"
+    }
+  ],
+  "totalFiles": 4,
+  "totalMatches": 13
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+Glob pattern "**/*" matches every file and is not allowed. Use a more specific glob or no glob.
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+Checking `useGameDemo` to see how it handles chunks. Dynamic world position chunks worked on Netlify before.
+
+The fixed chunk {0,0,0} may be the culprit. Need to verify Netlify environment variables and whether decayRate was previously zero. Random player spawns might be registering in chunk 0,0,0 while using worldToChunkInput. Server routing to that fixed chunk could be blocking replication.
+
+Wondering if the server now requires clients to have presence or interest in chunk 0,0,0. Another possibility is that the server validates actor positions against their chunk. Need to inspect worldToChunkInput and spawn positions to understand chunk mapping.
+
+Also suspecting `shouldApplyRemoteUpdate` sequence logic might reject updates. Noticed `registerUdpHandlers` could run twice during forbidden retries. That would duplicate notifications but probably isn't causing invisibility. Now considering a simpler root cause on Netlify production.
+
+The user reports this broke on Netlify after the last changes. Production lacks a dev relay, so UDP failure would hide all players. The user likely means self-connection works but remotes do not. The recent changes included fixing BATTLE_ACTOR_CHUNK, adding beforeUdpConnect handler registration, and modifying syncPeers relay logic. Need to inspect netlify.toml and environment variables.
+
+Burst sync is dev-only. The fixed chunk {0,0,0} likely breaks production UDP fanout. Battle spawns at random large coordinates, so worldToChunkInput places players in various chunks. Dynamic chunks should let nearby players see each other within distance 8. The server may require updates to match the client's actual chunk.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/world/coordinates.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle",
+  "pattern": "randomSpawn|worldX|worldZ"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle",
+  "pattern": "randomSpawn|worldX|worldZ",
+  "topFiles": [
+    {
+      "matchCount": 2,
+      "uri": "src/game/battle/rivalHud.ts"
+    },
+    {
+      "matchCount": 4,
+      "uri": "src/game/battle/arena.ts"
+    },
+    {
+      "matchCount": 15,
+      "uri": "src/game/battle/useBattleRoyale.ts"
+    },
+    {
+      "matchCount": 16,
+      "uri": "src/game/battle/remoteSync.ts"
+    },
+    {
+      "matchCount": 9,
+      "uri": "src/game/battle/shipState.ts"
+    },
+    {
+      "matchCount": 3,
+      "uri": "src/game/battle/spawn.ts"
+    }
+  ],
+  "totalFiles": 6,
+  "totalMatches": 49
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="search" data-tool-name="glob_file_search">
+<details>
+<summary>Tool use: **glob_file_search** • Searched codebase "" • **2** results in **1** directory</summary>
+
+Directory: **/Users/benjaminscholtens/Documents/personal_projects/Afterburn** (2 files)
+
+| File |
+|------|
+| `scripts/netlify-build.sh` |
+| `netlify.toml` |
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="search" data-tool-name="glob_file_search"><details>
+<summary>Tool use: **glob_file_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/remoteSync.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>

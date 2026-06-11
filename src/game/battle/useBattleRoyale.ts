@@ -31,7 +31,6 @@ import {
   BATTLE_YAW_RATE,
   BATTLE_ZONE_DAMAGE_PER_SEC,
   BATTLE_ACTOR_SYNC_INTERVAL_MS,
-  BATTLE_ACTOR_CHUNK,
   BATTLE_RELAY_UDP_STALE_MS,
   BATTLE_BARREL_ROLL_COOLDOWN_MS,
   BATTLE_BARREL_ROLL_MS,
@@ -42,6 +41,7 @@ import {
   barrelRollStrafeFactor,
   type BarrelRollDirection,
 } from '@/game/battle/barrelRoll';
+import { worldToChunkInput } from '@/game/world/coordinates';
 import {
   decodeShipState,
   encodeShipState,
@@ -103,8 +103,8 @@ function decodeJsonPayload<T>(state: string): T | null {
   }
 }
 
-function battleChunk() {
-  return { chunk: BATTLE_ACTOR_CHUNK };
+function chunkAt(x: number, z: number) {
+  return worldToChunkInput(x, z);
 }
 
 export function useBattleRoyale() {
@@ -198,7 +198,7 @@ export function useBattleRoyale() {
         bornAt: now,
       });
       projectilePrevPosRef.current.set(id, { x: px, y: py, z: pz });
-      const { chunk } = battleChunk();
+      const { chunk } = chunkAt(px, pz);
       void session.sendClientEvent({
         chunk,
         eventType: EVENT_FIRE,
@@ -243,7 +243,7 @@ export function useBattleRoyale() {
   const broadcastDestroy = useCallback(
     async (targetUuid: string, x: number, y: number, z: number, color: string) => {
       const payload: DestroyEventPayload = { targetUuid, x, y, z };
-      const { chunk } = battleChunk();
+      const { chunk } = chunkAt(x, z);
       void session.sendClientEvent({
         chunk,
         eventType: EVENT_DESTROY,
@@ -385,82 +385,83 @@ export function useBattleRoyale() {
     let cancelled = false;
 
     void (async () => {
-      actorSenderRef.current.setActorUuid(battleActorUuid);
-      actorSenderRef.current.setChunkOverride(BATTLE_ACTOR_CHUNK);
-
-      const registerUdpHandlers = () => {
-        unsubs.push(
-          session.onNotification('ActorUpdateNotification', (n) => {
-            if (n.__typename !== 'ActorUpdateNotification') return;
-            if (n.uuid === battleActorUuid) return;
-            const ship = decodeShipState(n.state);
-            if (!ship) return;
-            const seq = Number(n.sequenceNumber);
-            const serverMs = Number(n.epochMillis);
-            const prev = remoteRef.current.get(n.uuid);
-            if (!shouldApplyRemoteUpdate(prev, seq, serverMs)) return;
-            const color = actorColorForUuid(ship.colorId ?? n.uuid);
-            if (prev?.ship.alive && !ship.alive) {
-              registerExplosion(n.uuid, ship.worldX, ship.worldY, ship.worldZ, color);
-            }
-            upsertRemoteShip(
-              remoteRef.current,
-              n.uuid,
-              ship,
-              color,
-              'udp',
-              performance.now(),
-              { seq, serverMs },
-            );
-            bump();
-          }),
-        );
-
-        unsubs.push(
-          session.onNotification('ClientEventNotification', (n) => {
-            if (n.__typename !== 'ClientEventNotification') return;
-            if (n.eventType === EVENT_FIRE) {
-              const payload = decodeJsonPayload<FireEventPayload>(n.state);
-              if (!payload || payload.ownerUuid === battleActorUuid) return;
-              if (projectilesRef.current.some((p) => p.id === payload.id)) return;
-              projectilesRef.current.push({
-                id: payload.id,
-                ownerUuid: payload.ownerUuid,
-                x: payload.x,
-                y: payload.y ?? 0,
-                z: payload.z ?? 0,
-                vx: payload.vx,
-                vy: payload.vy ?? 0,
-                vz: payload.vz ?? 0,
-                bornAt: performance.now(),
-              });
-              bump();
-              return;
-            }
-            if (n.eventType === EVENT_HIT) {
-              const payload = decodeJsonPayload<HitEventPayload>(n.state);
-              if (!payload) return;
-              void applyHit(payload);
-              return;
-            }
-            if (n.eventType === EVENT_DESTROY) {
-              const payload = decodeJsonPayload<DestroyEventPayload>(n.state);
-              if (!payload) return;
-              const remote = remoteRef.current.get(payload.targetUuid);
-              const color = remote?.color ?? actorColorForUuid(payload.targetUuid);
-              applyDestroy(payload, color);
-            }
-          }),
-        );
-      };
-
       try {
-        await session.connectGameSession({ beforeUdpConnect: registerUdpHandlers });
+        await session.connectGameSession();
       } catch (error) {
         console.error('Battle royale connection failed:', error);
         bump();
         return;
       }
+      if (cancelled) return;
+
+      actorSenderRef.current.setActorUuid(battleActorUuid);
+
+      unsubs.push(
+        session.onNotification('ActorUpdateNotification', (n) => {
+          if (n.__typename !== 'ActorUpdateNotification') return;
+          if (n.uuid === battleActorUuid) return;
+          const ship = decodeShipState(n.state);
+          if (!ship) return;
+          const seq = Number(n.sequenceNumber);
+          const serverMs = Number(n.epochMillis);
+          const prev = remoteRef.current.get(n.uuid);
+          if (!shouldApplyRemoteUpdate(prev, seq, serverMs)) return;
+          const color = actorColorForUuid(ship.colorId ?? n.uuid);
+          if (prev?.ship.alive && !ship.alive) {
+            registerExplosion(n.uuid, ship.worldX, ship.worldY, ship.worldZ, color);
+          }
+          upsertRemoteShip(
+            remoteRef.current,
+            n.uuid,
+            ship,
+            color,
+            'udp',
+            performance.now(),
+            { seq, serverMs },
+          );
+          bump();
+        }),
+      );
+
+      unsubs.push(
+        session.onNotification('ClientEventNotification', (n) => {
+          if (n.__typename !== 'ClientEventNotification') return;
+          if (n.eventType === EVENT_FIRE) {
+            const payload = decodeJsonPayload<FireEventPayload>(n.state);
+            if (!payload || payload.ownerUuid === battleActorUuid) return;
+            if (projectilesRef.current.some((p) => p.id === payload.id)) return;
+            projectilesRef.current.push({
+              id: payload.id,
+              ownerUuid: payload.ownerUuid,
+              x: payload.x,
+              y: payload.y ?? 0,
+              z: payload.z ?? 0,
+              vx: payload.vx,
+              vy: payload.vy ?? 0,
+              vz: payload.vz ?? 0,
+              bornAt: performance.now(),
+            });
+            bump();
+            return;
+          }
+          if (n.eventType === EVENT_HIT) {
+            const payload = decodeJsonPayload<HitEventPayload>(n.state);
+            if (!payload) return;
+            void applyHit(payload);
+            return;
+          }
+          if (n.eventType === EVENT_DESTROY) {
+            const payload = decodeJsonPayload<DestroyEventPayload>(n.state);
+            if (!payload) return;
+            const remote = remoteRef.current.get(payload.targetUuid);
+            const color = remote?.color ?? actorColorForUuid(payload.targetUuid);
+            applyDestroy(payload, color);
+          }
+        }),
+      );
+
+      // Let the UDP proxy WebSocket subscription settle before the first actor send.
+      await new Promise((r) => setTimeout(r, 300));
       if (cancelled) return;
 
       actorSenderRef.current.setStateEncoder(() =>
@@ -555,7 +556,6 @@ export function useBattleRoyale() {
       for (const unsub of unsubs) unsub();
       actorSenderRef.current.stop();
       actorSenderRef.current.setActorUuid(null);
-      actorSenderRef.current.setChunkOverride(null);
       if (presencePostIntervalRef.current) {
         clearInterval(presencePostIntervalRef.current);
         presencePostIntervalRef.current = null;
@@ -911,7 +911,7 @@ export function useBattleRoyale() {
             y: p.y,
             z: p.z,
           };
-          const { chunk } = battleChunk();
+          const { chunk } = chunkAt(p.x, p.z);
           void session.sendClientEvent({
             chunk,
             eventType: EVENT_HIT,

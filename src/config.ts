@@ -103,9 +103,6 @@ export const BATTLE_PROJECTILE_LIFETIME_MS = 1800;
 export const BATTLE_LASER_MUZZLE_OFFSET = 3.5;
 /** Drop remote ships with no UDP update for this long (ms). */
 export const BATTLE_REMOTE_ACTOR_TIMEOUT_MS = 4_000;
-/** All battle actors register in one chunk so UDP fanout reaches every pilot. */
-export const BATTLE_ACTOR_CHUNK = { x: '0', y: '0', z: '0' } as const;
-export const BATTLE_ACTOR_REPLICATION_DISTANCE = 8;
 /** Dev relay + UDP: refresh relay snapshot when UDP is quiet this long (ms). */
 export const BATTLE_RELAY_UDP_STALE_MS = 900;
 /** Collision hull radius for floor / dome impacts. */
