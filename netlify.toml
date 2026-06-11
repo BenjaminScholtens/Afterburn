@@ -10,10 +10,10 @@
   NODE_VERSION = "20"
   VITE_MANAGEMENT_API_URL = "/mgmt-api"
   VITE_MANAGEMENT_GRAPHQL_URL = "/mgmt-api/graphql"
-  VITE_ENV_HANDLE = "e-zt0psk82q3bi"
+  VITE_ENV_HANDLE = "e-7nan5854f07w"
   VITE_GAME_API_HTTP_URL = "/game-api/graphql"
-  VITE_GAME_API_WS_URL = "wss://game.e-zt0psk82q3bi.dev.cks-env.com/graphql"
-  VITE_APP_ID = "1"
+  VITE_GAME_API_WS_URL = "wss://game.e-7nan5854f07w.dev.cks-env.com/graphql"
+  VITE_APP_ID = "67"
   VITE_ORG_ID = "1"
 
 # /mgmt-api and /game-api proxies are generated into public/_redirects at build time.
