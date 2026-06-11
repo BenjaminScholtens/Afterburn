@@ -37,7 +37,7 @@ export async function postBattlePresence(
 
 export async function listBattlePeers(
   selfUuid: string,
-  maxAgeMs = 10_000,
+  maxAgeMs = 15_000,
 ): Promise<BattlePeer[]> {
   if (!import.meta.env.DEV || typeof window === 'undefined') return [];
   try {

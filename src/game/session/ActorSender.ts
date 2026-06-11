@@ -1,4 +1,4 @@
-import { ACTOR_SYNC_INTERVAL_MS } from '@/config';
+import { ACTOR_SYNC_INTERVAL_MS, BATTLE_ACTOR_REPLICATION_DISTANCE } from '@/config';
 import { CrowdySession } from './CrowdySession';
 import type { ActorPose } from '@/game/world/actorState';
 import { encodeActorState } from '@/game/world/actorState';
@@ -15,6 +15,7 @@ export class ActorSender {
   private stateEncoder: (pose: ActorPose) => string = encodeActorState;
   private actorUuid: string | null = null;
   private syncIntervalMs = ACTOR_SYNC_INTERVAL_MS;
+  private chunkOverride: { x: string; y: string; z: string } | null = null;
 
   constructor(
     private readonly session: CrowdySession,
@@ -43,6 +44,11 @@ export class ActorSender {
     this.provider = provider;
   }
 
+  /** Pin actor updates to one chunk (battle royale — position lives in state). */
+  setChunkOverride(chunk: { x: string; y: string; z: string } | null): void {
+    this.chunkOverride = chunk;
+  }
+
   start(): void {
     if (this.intervalId) return;
     this.intervalId = setInterval(() => {
@@ -64,13 +70,14 @@ export class ActorSender {
   private async sendOnce(): Promise<void> {
     if (!this.provider) return;
     const pose = this.provider.getPose();
-    const { chunk } = worldToChunkInput(pose.worldX, pose.worldY);
+    const chunk =
+      this.chunkOverride ?? worldToChunkInput(pose.worldX, pose.worldY).chunk;
     const seq = this.nextSeq();
     await this.session.sendActorUpdate({
       chunk,
       state: this.stateEncoder(pose),
       sequenceNumber: seq,
-      distance: 8,
+      distance: this.chunkOverride ? BATTLE_ACTOR_REPLICATION_DISTANCE : 8,
       decayRate: 0,
       uuid: this.actorUuid ?? undefined,
     });

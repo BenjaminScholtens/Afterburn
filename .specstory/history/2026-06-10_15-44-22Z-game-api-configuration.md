@@ -6923,3 +6923,420 @@ _**Agent (composer-2.5)**_
 <summary>Tool use: **edit_file_v2**</summary>
 
 </details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/pages/BattleRoyale.tsx</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="delete_file">
+<details><summary>Tool use: **delete_file**</summary>
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="delete_file"><details>
+<summary>Tool use: **delete_file**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/index.css</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/index.css</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/index.css</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/index.css</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/index.css</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/index.css</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/e2e/tutorial.spec.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: cd /Users/benjaminscholtens/Documents/personal_projects/Afterburn && npm run build 2>&1</summary>
+
+```bash
+cd /Users/benjaminscholtens/Documents/personal_projects/Afterburn && npm run build 2>&1
+```
+
+```
+
+&gt; simple-web-demo@0.1.0 prebuild
+&gt; node scripts/ensure-crowdyjs.mjs
+
+
+&gt; simple-web-demo@0.1.0 build
+&gt; tsc -b &amp;&amp; vite build
+
+vite v6.4.2 building for production...
+transforming...
+✓ 247 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.56 kB │ gzip:   0.35 kB
+dist/assets/index-CZWYS0hp.css   19.44 kB │ gzip:   4.62 kB
+dist/assets/index-BoHlgM4u.js   937.59 kB │ gzip: 249.12 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.48s
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/e2e/tutorial.spec.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+`/play` is now a true fullscreen game view.
+
+**Removed**
+- Top header (title, control hints, tutorial link)
+- Side panel (connection status, hints, event log)
+
+**Added**
+- **☰** menu button (top-left) opens a popover with:
+  - **← Tutorial** link
+  - **Connection** (your guest email / connecting state)
+  - **Log** (recent session events)
+  - **Controls** reference (desktop keyboard; on mobile shows a note about on-screen controls)
+
+**Layout**
+- Arena fills the entire screen (`100dvh`, no padding or chrome)
+- In-game HUD (stats, radar, throttle) stays overlaid on the arena
+- Body scroll is locked while playing
+
+Open `/play` and you land straight in the game — tap **☰** only when you need connection info, logs, controls, or to return to the tutorial.
+
+---
+
+_**User**_
+
+We seem to be having intermittent connection issues where if two players log into the game at the same time, they can both see each other, but a third player logs in afterwards, that player does not see the other two, nor does the first two see him.
+
+---
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+Two players connecting simultaneously can see each other. A third player joining later cannot see them, and they cannot see the third player either.</details></think>
+
+_**Agent (composer-2.5)**_
+
+Investigating how battle royale discovers and syncs remote players when a third joins after the first two.
+
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/battlePresence.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/remoteSync.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/useBattleRoyale.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+The architecture reveals two discovery paths for remote players. UDP ActorUpdateNotification is the primary route for real multiplayer via the CKS game API.
+
+The dev relay path only works in DEV mode and is limited to the same Vite server instance. The third player likely fails to see others due to UDP fanout or chunk registration. If players spawn far apart, updates may not reach them until they are within replication distance. Actor registration in the correct chunk is also required.
+
+A `syncPeers` logic bug may prevent new peers from being added to the remote reference list. The dev relay should work across localhost since it is shared in memory. The UDP issue likely stems from late joiners not receiving notifications because they are outside the current chunk replication bubble.
+
+Checking how actors register in chunks through shipStateToPose, spawn, and ActorSender. The stale peer timeout may prune the third player. In syncPeers, existing UDP peers receive only color updates, while relay peers are fully upserted.
+
+New peers are always added from the relay path. Player 3 should therefore appear to players 1 and 2 on the next 250 ms poll. The relay map stores and returns entries correctly. The missing player likely means listBattlePeers is failing to return player 3.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/battle/spawn.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/ActorSender.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/world/coordinates.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn",
+  "pattern": "BATTLE_ACTOR_SYNC|ACTOR_SYNC|sendActorUpdate|chunk"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn",
+  "pattern": "BATTLE_ACTOR_SYNC|ACTOR_SYNC|sendActorUpdate|chunk",
+  "topFiles": [
+    {
+      "matchCount": 35,
+      "uri": "./.specstory/history/2026-06-10_15-44-22Z-game-api-configuration.md"
+    },
+    {
+      "matchCount": 2,
+      "uri": "./e2e/tutorial.spec.ts"
+    },
+    {
+      "matchCount": 10,
+      "uri": "./src/game/battle/useBattleRoyale.ts"
+    },
+    {
+      "matchCount": 3,
+      "uri": "./src/config.ts"
+    },
+    {
+      "matchCount": 16,
+      "uri": "./src/game/session/CrowdySession.ts"
+    },
+    {
+      "matchCount": 4,
+      "uri": "./src/game/useGameDemo.ts"
+    },
+    {
+      "matchCount": 2,
+      "uri": "./vite.config.ts"
+    },
+    {
+      "matchCount": 80,
+      "uri": "./vendor/schemas/game.gql"
+    },
+    {
+      "matchCount": 17,
+      "uri": "./src/game/world/coordinates.ts"
+    },
+    {
+      "matchCount": 4,
+      "uri": "./src/game/world/coordinates.test.ts"
+    },
+    {
+      "matchCount": 6,
+      "uri": "./src/game/session/ActorSender.ts"
+    },
+    {
+      "matchCount": 1,
+      "uri": "./src/chapters/registry.ts"
+    },
+    {
+      "matchCount": 1,
+      "uri": "./src/chapters/ch05-actors/Chapter05.tsx"
+    },
+    {
+      "matchCount": 3,
+      "uri": "./src/chapters/ch04-coords/Chapter04.tsx"
+    }
+  ],
+  "totalFiles": 14,
+  "totalMatches": 184
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>

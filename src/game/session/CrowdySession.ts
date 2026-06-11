@@ -284,11 +284,17 @@ export class CrowdySession {
   /**
    * Guest auth → bootstrap → UDP. Retries once with fresh credentials when the
    * Game API returns Forbidden (stale token from a mismatched mgmt endpoint).
+   *
+   * `beforeUdpConnect` runs after bootstrap and before UDP connect — use it to
+   * register notification handlers so the first fanout is not missed.
    */
-  async connectGameSession(): Promise<{ udpConnected: boolean; minVersion?: string }> {
+  async connectGameSession(options?: {
+    beforeUdpConnect?: () => void | Promise<void>;
+  }): Promise<{ udpConnected: boolean; minVersion?: string }> {
     await this.ensureGuestAuth();
     try {
       const boot = await this.bootstrap();
+      await options?.beforeUdpConnect?.();
       const udpConnected = await this.connectUdp();
       return { udpConnected, minVersion: boot.minVersion };
     } catch (error) {
@@ -297,6 +303,7 @@ export class CrowdySession {
       this.resetGuest();
       await this.ensureGuestAuth();
       const boot = await this.bootstrap();
+      await options?.beforeUdpConnect?.();
       const udpConnected = await this.connectUdp();
       return { udpConnected, minVersion: boot.minVersion };
     }
