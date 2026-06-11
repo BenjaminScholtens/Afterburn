@@ -25,6 +25,7 @@ import {
   BATTLE_STEER_RAMP_MS,
   BATTLE_THROTTLE_INPUT_RAMP_MS,
   BATTLE_CONTROL_RELEASE_DECAY,
+  BATTLE_JOYSTICK_SENSITIVITY,
   BATTLE_SHIP_MAX_HP,
   BATTLE_SHOT_DAMAGE,
   BATTLE_YAW_RATE,
@@ -141,6 +142,7 @@ export function useBattleRoyale() {
   const barrelRollDirectionRef = useRef<BarrelRollDirection>(-1);
   const lastTurnSignRef = useRef<BarrelRollDirection>(-1);
   const controlHoldRef = useRef({ yaw: 0, pitch: 0, boost: 0, brake: 0 });
+  const stickSteerRef = useRef({ x: 0, y: 0 });
 
   const [tick, setTick] = useState(0);
   const [events, setEvents] = useState<string[]>([]);
@@ -643,6 +645,7 @@ export function useBattleRoyale() {
         barrelRollEndsAtRef.current = 0;
         lastBarrelRollAtRef.current = 0;
         controlHoldRef.current = { yaw: 0, pitch: 0, boost: 0, brake: 0 };
+        stickSteerRef.current = { x: 0, y: 0 };
         projectilesRef.current = [];
         projectilePrevPosRef.current.clear();
         hitProjectilesRef.current.clear();
@@ -734,6 +737,17 @@ export function useBattleRoyale() {
           );
         }
 
+        const stick = stickSteerRef.current;
+        const stickX = stick.x * BATTLE_JOYSTICK_SENSITIVITY;
+        const stickY = stick.y * BATTLE_JOYSTICK_SENSITIVITY;
+        if (Math.abs(stickX) > 0.0001) {
+          ship.yaw -= stickX * BATTLE_YAW_RATE * dt;
+          turnSign = stickX > 0 ? 1 : -1;
+        }
+        if (Math.abs(stickY) > 0.0001) {
+          ship.pitch -= stickY * BATTLE_PITCH_RATE * dt;
+        }
+
         const steer = steerRef.current;
         const pitchSteer = steer.pitch;
         if (Math.abs(steer.yaw) > 0.0001) {
@@ -761,6 +775,7 @@ export function useBattleRoyale() {
           keys.has('s') ||
           keys.has('up') ||
           keys.has('down') ||
+          Math.abs(stickY) > 0.02 ||
           Math.abs(pitchSteer) > 0.0001;
         const inverted = isShipInverted(ship.pitch);
         if (inverted && !pitchingInput) {
@@ -959,6 +974,10 @@ export function useBattleRoyale() {
     else keysRef.current.delete(key);
   }, []);
 
+  const setStickSteer = useCallback((x: number, y: number) => {
+    stickSteerRef.current = { x, y };
+  }, []);
+
   return {
     getSnapshot,
     localShip: localShipRef.current,
@@ -972,6 +991,7 @@ export function useBattleRoyale() {
     setFiring,
     applySteer,
     setControlKey,
+    setStickSteer,
     tryBarrelRoll,
     throttle: throttleRef.current,
     outsideZone: outsideZoneRef.current,

@@ -78,6 +78,10 @@ export const BATTLE_STEER_RAMP_MS = 300;
 export const BATTLE_THROTTLE_INPUT_RAMP_MS = 350;
 /** How fast steer/throttle input strength falls after release (× frame ms). */
 export const BATTLE_CONTROL_RELEASE_DECAY = 2.8;
+/** On-screen joystick turn scale (analog, separate from keyboard ramp). */
+export const BATTLE_JOYSTICK_SENSITIVITY = 0.48;
+/** Inner deadzone before joystick affects steering (0–1). */
+export const BATTLE_JOYSTICK_DEADZONE = 0.24;
 /** @deprecated Use BATTLE_THROTTLE_MAX_SPEED */
 export const BATTLE_SHIP_CRUISE_SPEED = BATTLE_THROTTLE_MAX_SPEED;
 export const BATTLE_YAW_RATE = 0.05;

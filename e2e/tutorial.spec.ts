@@ -70,8 +70,8 @@ test.describe('Chapter 3 — UDP bootstrap', () => {
 test.describe('Battle royale route', () => {
   test('/play loads Star Fox Royale', async ({ page }) => {
     await page.goto('/play');
-    await expect(page.getByRole('heading', { name: 'Star Fox Royale' })).toBeVisible();
     await expect(page.locator('.battle-canvas')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Open menu' })).toBeVisible();
     await expect(page.getByText('Pilots left')).toBeVisible();
   });
 

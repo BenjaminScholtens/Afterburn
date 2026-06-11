@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { BATTLE_JOYSTICK_DEADZONE } from '@/config';
+import { applyStickDeadzone } from '@/game/battle/flight';
 
-type ControlKey = 'w' | 's' | 'a' | 'd' | 'shift' | 'ctrl';
-type SteerKey = 'w' | 's' | 'a' | 'd';
+type ControlKey = 'shift' | 'ctrl';
 
 interface BattleMobileControlsProps {
   setControlKey: (key: ControlKey, down: boolean) => void;
+  setStickSteer: (x: number, y: number) => void;
   setFiring: (active: boolean) => void;
   applySteer: (dx: number, dy: number) => void;
   onBarrelRoll: () => void;
@@ -12,11 +14,10 @@ interface BattleMobileControlsProps {
 }
 
 const AIM_SENSITIVITY = 0.0042;
-const STEER_KEYS: SteerKey[] = ['w', 'a', 's', 'd'];
-const JOYSTICK_DEADZONE = 0.18;
 
 export function BattleMobileControls({
   setControlKey,
+  setStickSteer,
   setFiring,
   applySteer,
   onBarrelRoll,
@@ -47,37 +48,17 @@ export function BattleMobileControls({
     [disabled, setControlKey],
   );
 
-  const releaseSteerKeys = useCallback(() => {
-    for (const key of STEER_KEYS) releaseKey(key);
-  }, [releaseKey]);
-
-  const applyStickDeflection = useCallback(
-    (normX: number, normY: number) => {
-      const want: Record<SteerKey, boolean> = {
-        a: normX < -JOYSTICK_DEADZONE,
-        d: normX > JOYSTICK_DEADZONE,
-        w: normY < -JOYSTICK_DEADZONE,
-        s: normY > JOYSTICK_DEADZONE,
-      };
-      for (const key of STEER_KEYS) {
-        if (want[key]) pressKey(key);
-        else releaseKey(key);
-      }
-    },
-    [pressKey, releaseKey],
-  );
-
   const resetJoystick = useCallback(() => {
     stickTouchIdRef.current = null;
     setKnobOffset({ x: 0, y: 0 });
-    releaseSteerKeys();
-  }, [releaseSteerKeys]);
+    setStickSteer(0, 0);
+  }, [setStickSteer]);
 
   useEffect(() => {
     if (disabled) resetJoystick();
   }, [disabled, resetJoystick]);
 
-  useEffect(() => () => releaseSteerKeys(), [releaseSteerKeys]);
+  useEffect(() => () => setStickSteer(0, 0), [setStickSteer]);
 
   const updateJoystick = useCallback(
     (clientX: number, clientY: number) => {
@@ -86,7 +67,7 @@ export function BattleMobileControls({
       const rect = base.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
-      const maxR = rect.width * 0.38;
+      const maxR = rect.width * 0.34;
       let dx = clientX - cx;
       let dy = clientY - cy;
       const dist = Math.hypot(dx, dy);
@@ -95,9 +76,11 @@ export function BattleMobileControls({
         dy = (dy / dist) * maxR;
       }
       setKnobOffset({ x: dx, y: dy });
-      applyStickDeflection(dx / maxR, dy / maxR);
+      const normX = applyStickDeadzone(dx / maxR, BATTLE_JOYSTICK_DEADZONE);
+      const normY = applyStickDeadzone(dy / maxR, BATTLE_JOYSTICK_DEADZONE);
+      setStickSteer(normX, normY);
     },
-    [applyStickDeflection],
+    [setStickSteer],
   );
 
   const onJoystickDown = (e: React.PointerEvent) => {

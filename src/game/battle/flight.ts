@@ -83,6 +83,13 @@ export function advanceControlHold(
   return Math.max(0, holdMs - frameMs * releaseDecay);
 }
 
+/** Remap stick axis past deadzone to 0–1 deflection. */
+export function applyStickDeadzone(value: number, deadzone: number): number {
+  const abs = Math.abs(value);
+  if (abs <= deadzone) return 0;
+  return Math.sign(value) * ((abs - deadzone) / (1 - deadzone));
+}
+
 export function addScaled(out: Vec3, dir: Vec3, scale: number): Vec3 {
   return {
     x: out.x + dir.x * scale,
