@@ -110,14 +110,14 @@ In **Site configuration → Environment variables** (scoped to **Build**), set a
 | `VITE_ENV_HANDLE` | `e-7nan5854f07w` |
 | `VITE_GAME_API_HTTP_URL` | `https://game.e-7nan5854f07w.dev.cks-env.com/graphql` (direct — game API CORS allows Netlify origins) |
 | `VITE_GAME_API_WS_URL` | `wss://game.e-7nan5854f07w.dev.cks-env.com/graphql` (direct; Netlify cannot proxy WebSockets) |
-| `VITE_APP_ID` | `67` (app id from that env) |
+| `VITE_APP_ID` | `1` (app id with active UDP entitlement on that env) |
 | `VITE_ORG_ID` | `1` |
 
 `netlify.toml` sets `VITE_MANAGEMENT_API_URL=/mgmt-api`. The build generates `public/_redirects` so `/mgmt-api` proxies to `https://api.<VITE_ENV_HANDLE>.dev.cks-env.com`. Game HTTP/WS hit the game server directly (the dev-tier game API reflects your Netlify origin in CORS). Override with `MANAGEMENT_API_PROXY_TARGET` if needed.
 
 After changing env vars: **Clear cache and deploy site**, then hard-refresh the browser (or clear site localStorage) so guest auth re-runs against the correct env.
 
-Confirm in the CKS console that **App 67** is linked to the environment and `runtime_status` is **active**.
+Confirm in the CKS console that the app is linked to the environment and `runtime_status` is **active**. Note: `gameClientBootstrap` succeeding is **not** enough — if the app lacks UDP entitlement on the env, every `sendActorUpdate` is rejected with `GenericErrorResponse: UNAUTHORIZED` on the subscription and players never see each other.
 
 For non-Netlify static hosts, build with direct API URLs (no `/mgmt-api` proxy):
 

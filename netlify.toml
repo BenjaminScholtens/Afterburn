@@ -14,7 +14,7 @@
   # Game API allows Netlify origins via CORS — direct URL avoids proxy failures under UDP load.
   VITE_GAME_API_HTTP_URL = "https://game.e-7nan5854f07w.dev.cks-env.com/graphql"
   VITE_GAME_API_WS_URL = "wss://game.e-7nan5854f07w.dev.cks-env.com/graphql"
-  VITE_APP_ID = "67"
+  VITE_APP_ID = "1"
   VITE_ORG_ID = "1"
 
 # /mgmt-api proxy is generated into public/_redirects at build time (game API is direct — see above).

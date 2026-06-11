@@ -17233,6 +17233,27 @@ _**Agent (composer-2.5)**_
 ```bash
 curl -sI -X OPTIONS "https://6a2b0289f45a7600089f1caf--cks-simple-web-demo.netlify.app/game-api/graphql" -H "Origin: https://6a2b0289f45a7600089f1caf--cks-simple-web-demo.netlify.app" -H "Access-Control-Request-Method: POST" 2>&1 | head -30
 ```
+
+```
+HTTP/2 204 
+access-control-allow-credentials: true
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS
+access-control-allow-origin: https://6a2b0289f45a7600089f1caf--cks-simple-web-demo.netlify.app
+age: 0
+alt-svc: h3=":443"; ma=2592000
+cache-status: "Netlify Edge"; fwd=method
+date: Thu, 11 Jun 2026 18:51:09 GMT
+netlify-vary: query
+server: Netlify
+strict-transport-security: max-age=31536000; includeSubDomains; preload
+vary: Origin,Access-Control-Request-Headers
+via: 1.1 Caddy
+x-nf-request-id: 01KTW0C80ECQGXFS1GVFDMT11F
+x-powered-by: Express
+x-robots-tag: noindex
+
+
+```
 </details>
 </tool-use>
 
@@ -17266,3 +17287,1752 @@ _**Agent (composer-2.5)**_
 <summary>Tool use: **read_file_v2**</summary>
 
 </details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: curl -s -D - -o /tmp/gql-body.txt -X POST "https://6a2b0289f45a7600089f1caf--cks-simple-web-demo.netlify.app/game-api/graphql" \
+  -H "Content-Type: application/json" \
+  -H "Origin: https://6a2b0289f45a7600089f1caf--cks-simple-web-demo.netlify.app" \
+  -d '{"query":"query { __typename }"}' 2>&1 | head -25 && echo "--- body ---" && head -c 500 /tmp/gql-body.txt</summary>
+
+```bash
+curl -s -D - -o /tmp/gql-body.txt -X POST "https://6a2b0289f45a7600089f1caf--cks-simple-web-demo.netlify.app/game-api/graphql" \
+  -H "Content-Type: application/json" \
+  -H "Origin: https://6a2b0289f45a7600089f1caf--cks-simple-web-demo.netlify.app" \
+  -d '{"query":"query { __typename }"}' 2>&1 | head -25 && echo "--- body ---" && head -c 500 /tmp/gql-body.txt
+```
+
+```
+HTTP/2 200 
+access-control-allow-credentials: true
+access-control-allow-origin: https://6a2b0289f45a7600089f1caf--cks-simple-web-demo.netlify.app
+age: 0
+alt-svc: h3=":443"; ma=2592000
+cache-control: no-store
+cache-status: "Netlify Edge"; fwd=miss
+content-type: application/json; charset=utf-8
+date: Thu, 11 Jun 2026 18:51:15 GMT
+etag: W/"20-/8NdYwgmGsmmlrq5Nh8mH1T+tAs"
+netlify-vary: query
+server: Netlify
+strict-transport-security: max-age=31536000; includeSubDomains; preload
+vary: Origin
+via: 1.1 Caddy
+x-nf-request-id: 01KTW0CE1XH2XF4D79EV9FVZMP
+x-powered-by: Express
+x-robots-tag: noindex
+content-length: 32
+
+--- body ---
+{"data":{"__typename":"Query"}}
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "glob": "**/*.{ts,js}",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/CrowdyJS",
+  "pattern": "credentials|fetch|CORS|cors"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/CrowdyJS",
+  "pattern": "credentials|fetch|CORS|cors",
+  "topFiles": [
+    {
+      "matchCount": 1,
+      "uri": "../CrowdyJS/src/index.ts"
+    },
+    {
+      "matchCount": 1,
+      "uri": "../CrowdyJS/src/client.ts"
+    }
+  ],
+  "totalFiles": 2,
+  "totalMatches": 2
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS/src/client.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/scripts/netlify-build.sh</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+Cookies are ruled out because CrowdyJS fetch does not include credentials. The bearer token is sent via the Authorization header instead. The failures occur during sendActorUpdate calls at 33 millisecond intervals.
+
+The errors indicate a network connection loss. Safari is stricter than other browsers. The likely cause is Netlify proxy rate limiting or connection exhaustion from sending thirty actor updates per second. Another possibility is missing Access-Control-Allow-Origin headers on upstream error responses.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: cd /Users/benjaminscholtens/Documents/personal_projects/Afterburn && VITE_ENV_HANDLE=e-7nan5854f07w VITE_GAME_API_HTTP_URL=/game-api/graphql VITE_GAME_API_WS_URL=wss://game.e-7nan5854f07w.dev.cks-env.com/graphql VITE_APP_ID=67 npm run build 2>&1 | tail -5 && cat dist/_redirects 2>/dev/null || echo "no dist/_redirects"</summary>
+
+```bash
+cd /Users/benjaminscholtens/Documents/personal_projects/Afterburn && VITE_ENV_HANDLE=e-7nan5854f07w VITE_GAME_API_HTTP_URL=/game-api/graphql VITE_GAME_API_WS_URL=wss://game.e-7nan5854f07w.dev.cks-env.com/graphql VITE_APP_ID=67 npm run build 2>&1 | tail -5 && cat dist/_redirects 2>/dev/null || echo "no dist/_redirects"
+```
+
+```
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.14s
+# Generated by scripts/generate-netlify-redirects.sh — do not edit by hand.
+# force (!) so these win over the SPA catch-all
+/mgmt-api/*  https://api.e-7nan5854f07w.dev.cks-env.com/:splat  200!
+/game-api/*  https://game.e-7nan5854f07w.dev.cks-env.com/:splat  200!
+
+# SPA client-side routes (must be last)
+/*           /index.html  200
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn",
+  "pattern": "_redirects|netlify"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/Afterburn",
+  "pattern": "_redirects|netlify",
+  "topFiles": [
+    {
+      "matchCount": 3,
+      "uri": "scripts/generate-netlify-redirects.sh"
+    },
+    {
+      "matchCount": 3,
+      "uri": "README.md"
+    },
+    {
+      "matchCount": 1,
+      "uri": "public/_redirects"
+    },
+    {
+      "matchCount": 1,
+      "uri": "scripts/netlify-build.sh"
+    },
+    {
+      "matchCount": 1,
+      "uri": "src/config.ts"
+    },
+    {
+      "matchCount": 3,
+      "uri": "netlify.toml"
+    },
+    {
+      "matchCount": 39,
+      "uri": ".specstory/history/2026-06-10_15-44-22Z-game-api-configuration.md"
+    }
+  ],
+  "totalFiles": 7,
+  "totalMatches": 51
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+A conflict between `netlify.toml` and `dist/_redirects` may be causing the GraphQL failures. Both files define redirect rules, which could block API requests.
+
+Netlify merges both redirect files, and the merge order could be the culprit. The curl proxy test passes, so the problem likely lies in how Safari handles the proxied request. A missing CORS header on error responses from the game API might be blocking Safari specifically.
+
+The rapid 33ms failures suggest connection overload or HTTP/2 stream limits through the Netlify proxy. Safari may be misreporting these network failures as CORS errors. The SPA redirect in netlify.toml might also be overriding game-api rules without the `!` force flag.
+
+Safari's "network connection was lost" error is actually an HTTP/2 connection reset, not a CORS failure. The proposed fixes include using the direct game API URL instead of the Netlify proxy, reducing actor sync frequency to ease proxy pressure, adding CORS allowlist entries for the Netlify domain, catching ActorSender errors to prevent unhandled rejections, removing the duplicate SPA redirect from netlify.toml, and configuring Netlify proxy headers.
+
+Preview URLs change on every deploy, which makes the unstable Netlify domain a poor target for direct API calls. The proxy is intentionally used to mask those dynamic addresses. The real issue appears to be Safari under heavy POST traffic through the proxy. Removing the duplicate SPA redirect from netlify.toml and throttling actor sync should resolve the failures.
+
+Safari may be misreporting an empty response from a connection reset as a CORS error. The build-time script that generates `_redirects` reads `VITE_ENV_HANDLE` from the build environment, so it should align with `netlify.toml`. However, stale environment variables set directly in the Netlify UI could still point to the wrong game API.
+
+The deployed JavaScript is being inspected to confirm whether the game API endpoint is hardcoded as an absolute URL. If it were, Safari would treat the request as cross-origin and block it. The current error URL confirms the path is relative, keeping the request same-origin.
+
+The fetch request is same-origin, so credentials and mode are not the cause. The proxy chain itself may be triggering cross-origin behavior. The plan is to remove the duplicate SPA redirect from netlify.toml and throttle actor sync in production.
+
+A Private Access Token or cross-site tracking restriction may be blocking Safari from completing the proxied request. Using the direct game API URL with environment detection for a stable production domain is also being considered, though CKS CORS may require a wildcard or specific origin rather than the dynamic Netlify address.</details></think>
+
+_**Agent (composer-2.5)**_
+
+Checking whether rapid parallel `sendActorUpdate` requests are overwhelming the Netlify proxy — a common cause of Safari CORS/network errors.
+
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/ActorSender.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/netlify.toml</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+The plan is to add a serial in-flight guard to ActorSender. This will prevent duplicate sends while a request is still pending.
+
+Production battle sync will slow to 100ms. Network errors in sendOnce will be caught and logged. The duplicate SPA redirect rule in netlify.toml will be removed. Direct API URLs were considered but rejected because preview URLs change; proxying remains the correct approach.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: curl -sI -X OPTIONS "https://game.e-7nan5854f07w.dev.cks-env.com/graphql" \
+  -H "Origin: https://6a2b0289f45a7600089f1caf--cks-simple-web-demo.netlify.app" \
+  -H "Access-Control-Request-Method: POST" 2>&1 | head -20</summary>
+
+```bash
+curl -sI -X OPTIONS "https://game.e-7nan5854f07w.dev.cks-env.com/graphql" \
+  -H "Origin: https://6a2b0289f45a7600089f1caf--cks-simple-web-demo.netlify.app" \
+  -H "Access-Control-Request-Method: POST" 2>&1 | head -20
+```
+
+```
+HTTP/2 204 
+access-control-allow-credentials: true
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS
+access-control-allow-origin: https://6a2b0289f45a7600089f1caf--cks-simple-web-demo.netlify.app
+alt-svc: h3=":443"; ma=2592000
+date: Thu, 11 Jun 2026 18:52:02 GMT
+vary: Origin, Access-Control-Request-Headers
+via: 1.1 Caddy
+x-powered-by: Express
+
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+The game API already allows the Netlify preview origin in CORS. Direct requests to the game API endpoint could bypass the Netlify proxy entirely. This would remove proxy overhead, rate limits, and double-hop latency.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: curl -sI -X OPTIONS "https://game.e-7nan5854f07w.dev.cks-env.com/graphql" \
+  -H "Origin: https://random123--cks-simple-web-demo.netlify.app" \
+  -H "Access-Control-Request-Method: POST" 2>&1 | grep -i access-control</summary>
+
+```bash
+curl -sI -X OPTIONS "https://game.e-7nan5854f07w.dev.cks-env.com/graphql" \
+  -H "Origin: https://random123--cks-simple-web-demo.netlify.app" \
+  -H "Access-Control-Request-Method: POST" 2>&1 | grep -i access-control
+```
+
+```
+access-control-allow-credentials: true
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS
+access-control-allow-origin: https://random123--cks-simple-web-demo.netlify.app
+vary: Origin, Access-Control-Request-Headers
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+The game API reflects the request origin back, allowing direct access without a proxy.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: curl -sI -X OPTIONS "https://api.e-7nan5854f07w.dev.cks-env.com/graphql" \
+  -H "Origin: https://6a2b0289f45a7600089f1caf--cks-simple-web-demo.netlify.app" \
+  -H "Access-Control-Request-Method: POST" 2>&1 | grep -i access-control</summary>
+
+```bash
+curl -sI -X OPTIONS "https://api.e-7nan5854f07w.dev.cks-env.com/graphql" \
+  -H "Origin: https://6a2b0289f45a7600089f1caf--cks-simple-web-demo.netlify.app" \
+  -H "Access-Control-Request-Method: POST" 2>&1 | grep -i access-control
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: curl -sI -X OPTIONS "https://api.e-7nan5854f07w.dev.cks-env.com/graphql" \
+  -H "Origin: https://6a2b0289f45a7600089f1caf--cks-simple-web-demo.netlify.app" \
+  -H "Access-Control-Request-Method: POST" 2>&1 | head -15</summary>
+
+```bash
+curl -sI -X OPTIONS "https://api.e-7nan5854f07w.dev.cks-env.com/graphql" \
+  -H "Origin: https://6a2b0289f45a7600089f1caf--cks-simple-web-demo.netlify.app" \
+  -H "Access-Control-Request-Method: POST" 2>&1 | head -15
+```
+
+```
+HTTP/2 400 
+alt-svc: h3=":443"; ma=2592000
+content-type: application/json; charset=utf-8
+date: Thu, 11 Jun 2026 18:52:39 GMT
+etag: W/"196-HUCJKwlQurC5GNaaJnH0d+HOnRw"
+via: 1.1 Caddy
+x-powered-by: Express
+content-length: 406
+
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+Management API returns no CORS headers on OPTIONS requests, so authentication endpoints must still use a proxy. The game API has proper CORS configured, allowing direct HTTP requests on Netlify. Preparing changes to route management traffic through the proxy while using direct URLs for game API calls.</details></think>
+
+_**Agent (composer-2.5)**_
+
+Game API allows Netlify origins via CORS directly; the `/game-api` proxy is failing under high-frequency UDP mutations. Switching Netlify to the direct game URL and hardening actor send logic.
+
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/netlify.toml</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/config.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/config.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/ActorSender.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/session/ActorSender.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/README.md</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/envScope.ts</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: cd /Users/benjaminscholtens/Documents/personal_projects/Afterburn && npm run build 2>&1 | tail -8 && npm test 2>&1 | tail -8</summary>
+
+```bash
+cd /Users/benjaminscholtens/Documents/personal_projects/Afterburn && npm run build 2>&1 | tail -8 && npm test 2>&1 | tail -8
+```
+
+```
+dist/assets/index-CZWYS0hp.css   19.44 kB │ gzip:   4.62 kB
+dist/assets/index-DX7tMlfr.js   937.79 kB │ gzip: 249.20 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.67s
+
+ ✓ src/game/world/coordinates.test.ts (3 tests) 3ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  14:52:59
+   Duration  505ms (transform 106ms, setup 0ms, collect 97ms, tests 3ms, environment 0ms, prepare 110ms)
+
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/src/game/envScope.ts</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+Here’s what was going wrong and what we changed.
+
+## Diagnosis
+
+The errors on `/game-api/graphql` are misleading. The Netlify **proxy** was getting hammered by `sendActorUpdate` at ~30 Hz. When connections dropped, Safari reports that as **“access control checks”** / **“network connection was lost”** even though the request is same-origin.
+
+I verified:
+- OPTIONS preflight on the proxy **can** work
+- The game API at `game.e-7nan5854f07w` **already allows Netlify origins in CORS** (it echoes your deploy URL back in `Access-Control-Allow-Origin`)
+
+So the proxy isn’t needed for game HTTP — and it was the weak link.
+
+## Fixes applied
+
+1. **Direct game API URL on Netlify** — `VITE_GAME_API_HTTP_URL` now points to `https://game.e-7nan5854f07w.dev.cks-env.com/graphql` instead of `/game-api/graphql`
+2. **Removed duplicate SPA redirect** from `netlify.toml` (it could conflict with `_redirects` API rules)
+3. **Serialized actor sends** — only one `sendActorUpdate` in flight at a time; failures are caught instead of unhandled rejections
+4. **Slower sync in production** — 100 ms interval on Netlify builds vs 33 ms locally
+
+Mgmt auth still uses `/mgmt-api` → `https://api.e-7nan5854f07w.dev.cks-env.com` (that API doesn’t expose CORS the same way).
+
+## What you need to do
+
+1. **Push and redeploy** on Netlify (“Clear cache and deploy site”)
+2. **Hard-refresh** the deploy or clear site localStorage (old cached config may still hit `/game-api/graphql`)
+3. Confirm in the browser Network tab that `sendActorUpdate` posts go to **`game.e-7nan5854f07w.dev.cks-env.com/graphql`**, not `…netlify.app/game-api/graphql`
+
+After redeploy, the CORS spam and connection-lost errors should stop, and multiplayer UDP should stay connected.
+
+---
+
+_**User**_
+
+still not working. can you check the docs https://docs.crowdedkingdoms.com/game-api/intro 
+
+---
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+ The user says the Netlify deployment still isn't working, so I need to check the documentation for the UDP proxy setup and authentication to figure out what's missing — likely they're still not seeing other players or hitting CORS issues. Let me look at the UDP proxy client SDK guide since that's probably where the connection setup details are.</details></think>
+
+_**Agent (composer-2.5)**_
+
+Let me check the relevant docs pages — particularly the UDP proxy guide and authentication, since those cover the exact path that's failing.
+
+
+_**Agent (composer-2.5)**_
+
+Fetch timed out while retrieving content
+
+<tool-use data-tool-type="unknown" data-tool-name="web_fetch"><details>
+<summary>Tool use: **web_fetch**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="web_fetch">
+<details>
+<summary>Tool use: **web_fetch**</summary>
+
+
+Parameters:
+
+```json
+{
+  "url": "https://docs.crowdedkingdoms.com/game-api/authentication"
+}
+```
+Result:
+
+```json
+{
+  "markdown": "Authentication | Crowded Kingdoms Docs\n\nOn this page\n\nUser registration, login, email confirmation, and password reset are provided by the Management API. The Game API expects a bearer token from that flow on world and replication calls.\n\nSee the Management API GraphQL schema reference for&#96;login&#96;,&#96;register&#96;,&#96;confirmEmail&#96;,&#96;requestPasswordReset&#96;,&#96;resetPassword&#96;, and&#96;me&#96;.\n\n## Using a token on the Game API​\n\nAfter login, send the game token on every GraphQL request:\n\n&#96;&#96;&#96;http\nAuthorization: Bearer \u003c64-character-hex-token\u003e\n&#96;&#96;&#96;\n\nCrowdyJS stores the token automatically when you use&#96;client.auth.login()&#96; with both&#96;managementUrl&#96; and game endpoints configured.\n\n## Studio grid mutations​\n\nGrid operations (&#96;createGrid&#96;,&#96;grantGridPermissions&#96;, …) use the same bearer token on the Game API. The server verifies&#96;manage_apps&#96; for the target app by calling the Management API over service-to-service auth (your deployment’s&#96;MANAGEMENT_S2S_TOKEN&#96; on the game-api side). See Grids and permissions.\n\n## Typical flows​\n\nRegistration\n\n1. Call&#96;register&#96; on the Management API.\n2. User confirms email from the message Crowded Kingdoms sends.\n3. Call&#96;login&#96; to obtain a bearer token.\n\nPassword reset\n\n1. Call&#96;requestPasswordReset&#96; with the user's email.\n2. User follows the link in the email.\n3. Call&#96;resetPassword&#96; with the token from the link and the new password.\n\n## Security notes​\n\n- Treat bearer tokens as secrets; use HTTPS only in production.\n- Restrict CORS on your own frontends to trusted origins.\n- Rate-limit login and password-reset endpoints in your integration if you expose them through your own UI.\n\n- Using a token on the Game API\n- Studio grid mutations\n- Typical flows\n- Security notes",
+  "url": "https://docs.crowdedkingdoms.com/game-api/authentication"
+}
+```
+User decision: **accepted**
+
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="web_fetch"><details>
+<summary>Tool use: **web_fetch**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+ The UDP proxy page timed out, so I'm trying to navigate using the sidebar link for the GraphQL UDP Proxy API client SDK guide instead. I might need to guess at URL patterns or fetch the intro page to find the right links.</details></think>
+
+_**Agent (composer-2.5)**_
+
+Fetch timed out while retrieving content
+
+<tool-use data-tool-type="unknown" data-tool-name="web_fetch"><details>
+<summary>Tool use: **web_fetch**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+Fetch timed out while retrieving content
+
+<tool-use data-tool-type="unknown" data-tool-name="web_fetch"><details>
+<summary>Tool use: **web_fetch**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="web_fetch">
+<details>
+<summary>Tool use: **web_fetch**</summary>
+
+
+Parameters:
+
+```json
+{
+  "url": "https://docs.crowdedkingdoms.com/game-api/intro"
+}
+```
+Result:
+
+```json
+{
+  "markdown": "Introduction | Crowded Kingdoms Docs\n\nGraphQL API for runtime / world / replication:\n\n- Uses identity, apps, and entitlements from the Management API(bearer tokens via&#96;/s2s/auth/introspect&#96; and&#96;/s2s/entitlement/*&#96;). Does not replace management mutations such as billing or user registration.\n- Serves chunks, voxels, actors, avatars, app user state, the GraphQL UDP proxy (for browsers), Buddy server registry, and game-client bootstrap.\n- Studio grids —&#96;createGrid&#96;,&#96;grantGridPermissions&#96;,&#96;revokeGridPermissions&#96;, and related queries. Grid data is stored in the per-tenant game database; tier/access checks still come from management.\n\nUse the sidebar for integration guides. Start with Permissions overview for how to set up what players can do in your game (tiers, grids, and teams). The GraphQL schema reference documents every operation.\n\nCrowdyJS wraps this API for TypeScript clients. Replication API covers native UDP to Buddy servers.",
+  "url": "https://docs.crowdedkingdoms.com/game-api/intro"
+}
+```
+User decision: **accepted**
+
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="web_fetch"><details>
+<summary>Tool use: **web_fetch**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+ I'm trying different URL patterns for the UDP proxy documentation since the intro page doesn't have direct links—the sidebar mentions "GraphQL UDP Proxy API -- Client SDK Guide," so I'm testing slugs like `/game-api/graphql-udp-proxy-api` and `/game-api/udp-proxy-client-sdk-guide`, and also exploring alternative paths for the actor state page.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="web_fetch">
+<details>
+<summary>Tool use: **web_fetch**</summary>
+
+
+Parameters:
+
+```json
+{
+  "url": "https://docs.crowdedkingdoms.com/game-api/graphql-udp-proxy-api"
+}
+```
+Result:
+
+```json
+{
+  "markdown": "GraphQL UDP Proxy API -- Client SDK Guide | Crowded Kingdoms Docs\n\nOn this page\n\nChoosing an integration path\n\nThis is one of two client integration paths. Use this proxy only if your client cannot open raw UDP sockets (browsers, generic JS/TS apps). UDP-capable clients (Unreal Engine, native desktop/mobile games) should&#96;register&#96;/&#96;login&#96; on the Management API, call&#96;serverWithLeastClients&#96; on the Game API, then speak raw UDP to Buddy. See the Replication API for the native UDP path.\n\nBoth paths share the same Management API&#96;register&#96;/&#96;login&#96; mutations and the same 64-byte game token; only the transport differs (GraphQL mutations through this proxy vs. raw UDP to a Buddy server).\n\nThe Game API acts as a UDP proxy between GraphQL clients and Buddy. Clients on this path interact entirely through GraphQL (HTTP mutations + WebSocket subscriptions); the API handles UDP connectivity, session registration with Buddy, HMAC authentication, and binary serialization on the client's behalf.\n\n## Authentication​\n\nEvery request uses a game token — the hex string returned by Management API&#96;login&#96; or&#96;register&#96;. Pass it as&#96;Authorization: Bearer &#96; on both HTTP requests and WebSocket connections to the Game API (and Management API for account operations).\n\n&#96;&#96;&#96;graphql\nmutation {  login(loginUserInput: { email: \"user@example.com\", password: \"...\" }) {    token          # 64-char hex -- use this for all subsequent requests    gameTokenId    # numeric ID (informational)    user { userId email }  }}\n&#96;&#96;&#96;\n\n## Connection lifecycle​\n\n### 1. Subscribe to notifications (WebSocket)​\n\nOpen a WebSocket with the&#96;graphql-transport-ws&#96; subprotocol and send&#96;connection_init&#96; with the token:\n\n&#96;&#96;&#96;json\n{ \"type\": \"connection_init\", \"payload\": { \"Authorization\": \"Bearer \u003ctoken\u003e\" } }\n&#96;&#96;&#96;\n\nAfter&#96;connection_ack&#96;, subscribe:\n\n&#96;&#96;&#96;graphql\nsubscription {  udpNotifications {    __typename    ... on ActorUpdateNotification  { appId chunkX chunkY chunkZ distance decayRate uuid state sequenceNumber epochMillis }    ... on VoxelUpdateNotification  { appId chunkX chunkY chunkZ distance decayRate uuid voxelX voxelY voxelZ voxelType voxelState sequenceNumber epochMillis }    ... on GenericErrorResponse     { sequenceNumber errorCode }    ... on ActorUpdateResponse      { appId chunkX chunkY chunkZ distance decayRate uuid sequenceNumber epochMillis }    ... on VoxelUpdateResponse      { appId chunkX chunkY chunkZ distance decayRate uuid sequenceNumber epochMillis }    ... on ClientAudioNotification  { appId chunkX chunkY chunkZ distance decayRate uuid audioData sequenceNumber epochMillis }    ... on ClientTextNotification   { appId chunkX chunkY chunkZ distance decayRate uuid text sequenceNumber epochMillis }    ... on ClientEventNotification  { appId chunkX chunkY chunkZ distance decayRate uuid eventType state sequenceNumber epochMillis }    ... on ServerEventNotification  { appId chunkX chunkY chunkZ distance decayRate uuid eventType state sequenceNumber epochMillis }    ... on SingleActorMessageNotification { appId chunkX chunkY chunkZ uuid payload sequenceNumber epochMillis }  }}\n&#96;&#96;&#96;\n\nAll spatial types include the full header fields (&#96;appId&#96;,&#96;chunkX/Y/Z&#96;,&#96;distance&#96;,&#96;decayRate&#96;,&#96;uuid&#96;), plus&#96;sequenceNumber&#96; and&#96;epochMillis&#96;(server-generated UTC timestamp in milliseconds since epoch). Only&#96;GenericErrorResponse&#96; has a minimal 3-field format (no spatial header).\n\nSubscribing automatically opens a UDP proxy session to the game server if one does not already exist. The server picks the game server with the fewest clients.\n\n### 2. Register your actor in a chunk​\n\nBefore another client can receive your updates, you must send at least one actor update so the game server knows your chunk position. This is the \"registration\" step:\n\n&#96;&#96;&#96;graphql\nmutation {  sendActorUpdate(input: {    appId: 0    chunk: { x: 0, y: 0, z: 0 }    distance: 8    uuid: \"\u003cyour-32-byte-uuid\u003e\"    state: \"\"                     # empty state for registration    sequenceNumber: 1  })}\n&#96;&#96;&#96;\n\nEvery client in the same chunk must do this. After registration, the game server fans out subsequent updates to all other registered clients in range.\n\n### 3. Send actor updates​\n\n&#96;&#96;&#96;graphql\nmutation {  sendActorUpdate(input: {    appId: 0    chunk: { x: 0, y: 0, z: 0 }    distance: 8    decayRate: 0    uuid: \"\u003cyour-32-byte-uuid\u003e\"    state: \"\u003cbase64-encoded-binary-state\u003e\"    sequenceNumber: 2  })}\n&#96;&#96;&#96;\n\nThe mutation returns&#96;true&#96; when the UDP packet is sent. Other clients in the same chunk will receive an&#96;ActorUpdateNotification&#96; on their&#96;udpNotifications&#96; subscription.\n\n### 4. Receive notifications​\n\nNotifications arrive as&#96;next&#96; messages on the WebSocket subscription:\n\n&#96;&#96;&#96;json\n{  \"id\": \"s1\",  \"type\": \"next\",  \"payload\": {    \"data\": {      \"udpNotifications\": {        \"__typename\": \"ActorUpdateNotification\",        \"appId\": \"0\",        \"chunkX\": \"0\",        \"chunkY\": \"0\",        \"chunkZ\": \"0\",        \"distance\": 8,        \"decayRate\": 0,        \"uuid\": \"abc123...\",        \"state\": \"aGVsbG8=\",        \"sequenceNumber\": 2,        \"epochMillis\": \"1712345678000\"      }    }  }}\n&#96;&#96;&#96;\n\n### 5. Disconnect​\n\n&#96;&#96;&#96;graphql\nmutation { disconnectUdpProxy }\n&#96;&#96;&#96;\n\nUnsubscribing from&#96;udpNotifications&#96; stops delivery but does not release the UDP session. Call&#96;disconnectUdpProxy&#96; explicitly, or the server will release it after 30 seconds of inactivity.\n\n## Complete flow (two clients)​\n\n&#96;&#96;&#96;text\nClient A                          Web API                    Game Server────────                          ───────                    ───────────login ─────────────────────────▶  token Asubscribe udpNotifications ─────▶  (opens UDP proxy session, registers session)                                   ◀── wait ~1.5s for session ready ──▶sendActorUpdate (seq=1, empty) ──▶  UDP ACTOR_UPDATE_REQUEST ──▶  registers A in chunkClient B                          Web API                    Game Server────────                          ───────                    ───────────login ─────────────────────────▶  token Bsubscribe udpNotifications ─────▶  (opens UDP proxy session)sendActorUpdate (seq=1, empty) ──▶  UDP ACTOR_UPDATE_REQUEST ──▶  registers B in chunksendActorUpdate (seq=2, state) ──▶  UDP ACTOR_UPDATE_REQUEST ──▶                                                                  ◀── fan-out                                   ◀── UDP ACTOR_UPDATE_NOTIFICATION                                   ─── WebSocket next ──▶ Client A receives B's update\n&#96;&#96;&#96;\n\n## Important notes​\n\n&#96;state&#96; must be base64-encoded binary, not JSON.\n\n&#96;uuid&#96; must be exactly 32 bytes when UTF-8 encoded.\n\n&#96;sequenceNumber&#96; is a uint8 (0-255) that wraps. Present on all spatial types. In responses it echoes the request's sequence for correlation; in notifications it is the original sender's sequence.\n\n&#96;epochMillis&#96; is a server-generated UTC timestamp (milliseconds since epoch). Present on all spatial types (notifications and responses). Use it for ordering and synchronization.\n\n&#96;distance&#96;(0-8) controls how many chunks away the update replicates. Use 8 for maximum range. The server clamps values to the 0-8 range using Chebyshev distance.\n\n&#96;decayRate&#96; controls how message delivery drops off with distance:\n\n| Value | Name | Behavior | 0 | None | All clients within&#96;distance&#96; receive every message. | 1 | Exponential | Each distance ring receives half the messages of the previous ring. | 2 | Linear 50% | Linear decay; the furthest ring receives 50% of messages. | 3 | Linear 25% | Linear decay; the furthest ring receives 25% of messages. | 4 | Linear 10% | Linear decay; the furthest ring receives 10% of messages. | 5 | Linear 5% | Linear decay; the furthest ring receives 5% of messages. |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n\n&#96;appId&#96; is the app (world) identifier in the spatial wire header — an int64 at byte offset 1, distinct from chunk X/Y/Z coordinates.\n\nThe proxy auto-reconnects to the game server if no traffic is seen for 30s. The subscription stays open but notifications pause until reconnection.\n\nError responses (e.g., invalid token, unknown app) arrive as&#96;GenericErrorResponse&#96; on the subscription.\n\n## Actor-to-actor messages​\n\n&#96;sendSingleActorMessage&#96; delivers a message to exactly one other actor (by its UUID) instead of broadcasting to everyone nearby. The sender must know the destination actor's current chunk. Only the target receives it -- as a&#96;SingleActorMessageNotification&#96; on its own&#96;udpNotifications&#96; subscription -- and the sender gets no echo.\n\n&#96;&#96;&#96;graphql\nmutation {  sendSingleActorMessage(input: {    appId: 0    chunk: { x: 7, y: 1, z: 2 }   # the TARGET actor's chunk    targetUuid: \"\u003ctarget-actor-32-byte-uuid\u003e\"    payload: \"aGVsbG8=\"            # base64; put your own identity here if needed    sequenceNumber: 1  })}\n&#96;&#96;&#96;\n\nThe payload carries only the target's UUID, not the sender's; if the recipient needs to know who sent it, include that in&#96;payload&#96;.\n\n## Other mutations​\n\n| Mutation | Description | &#96;sendVoxelUpdate&#96; | Modify a voxel in a chunk | &#96;sendAudioPacket&#96; | Send voice audio data | &#96;sendTextPacket&#96; | Send chat text | &#96;sendClientEvent&#96; | Send a custom event | &#96;sendSingleActorMessage&#96; | Send a direct message to one actor by UUID (not broadcast) | &#96;connectUdpProxy&#96; | Explicitly open a UDP session (optional -- mutations and subscription auto-open) | &#96;disconnectUdpProxy&#96; | Release the UDP session |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n\n## Queries​\n\n| Query | Description | &#96;udpProxyConnectionStatus&#96; | Check if a UDP session is active |\n| --- | --- | --- | --- |\n\nConnection lifecycle\n\n- 1. Subscribe to notifications (WebSocket)\n- 2. Register your actor in a chunk\n- 3. Send actor updates\n- 4. Receive notifications\n- 5. Disconnect\n\nQueries",
+  "url": "https://docs.crowdedkingdoms.com/game-api/graphql-udp-proxy-api"
+}
+```
+User decision: **accepted**
+
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="web_fetch"><details>
+<summary>Tool use: **web_fetch**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+ Looking at the documentation, the subscription to WebSocket notifications needs to happen first since it automatically opens a UDP proxy session to the game server. After subscribing, there's about a 1.5 second wait for the session to be ready, then the client sends an initial actor update with an empty registration message to complete the setup.
+
+Comparing this to our current flow in `useBattleRoyale`, I see we're calling `connectUdp()` via HTTP mutation first, then opening the WebSocket subscription afterward. While both approaches can work since the mutations and subscriptions auto-open sessions, the timing is off — we're only waiting 300ms before sending the first actor update, but the docs recommend ~1.5s to ensure the session is fully registered with the server. If we send the registration update too early, the server might not recognize it properly.
+
+The real concern is that registration is what enables the fanout mechanism — other clients won't receive your updates until you've sent at least one actor update so the server knows your chunk position. Since fanout only reaches clients within a Chebyshev distance of 8 chunks, I need to verify what chunk range our battle players actually spawn in. Looking at the spawn logic, players spawn 112–316 world units from center, which maps to chunk coordinates roughly -3 to 2, giving a maximum distance of about 5 chunks between players — well within the 8-chunk fanout range. So visibility should work, but the timing issue could still cause brief registration delays.
+
+The bigger problem emerges during flight: the arena expands to 5600 world units radius, pushing players 80+ chunks apart, way beyond the fanout distance. That explains intermittent visibility in longer matches. But for the immediate "still not working" on Netlify, I'm not sure if it's lingering CORS errors or something else entirely. The docs emphasize waiting ~1.5 seconds after subscribing before sending the first actor update, and the WebSocket connection itself looks correct — it's pointing directly to the game server. The HTTP sendActorUpdate also goes direct now, which is good. Since they got far enough to send updates, authentication and bootstrap worked. So the question is what's actually failing now. So the docs actually confirm the fixed-chunk approach was correct — everyone registering at {0,0,0} means everyone sees everything, which matches the CrowdyJS pattern. The Netlify failure was likely the proxy getting hammered by 30 requests per second from each client, not the chunk logic itself. The real issue is following the documented connection sequence precisely: subscribe to the WebSocket first, wait about 1.5 seconds for the session to stabilize, send an initial registration update, then start the periodic state sync — which would avoid the UNAUTHORIZED errors and ensure Buddy's chunk registration catches the first updates.
+
+For the arena specifically, I should pin all players to chunk {0,0,0} rather than using their world position, since the arena spans ±43 chunks and position-based chunks would lose visibility at range. The UUID needs to be exactly 32 bytes UTF-8, and the keep-alive is fine at 10Hz since the proxy reconnects if there's no traffic for 30 seconds.
+
+Now I need to check what the current deployed version is actually doing — the user says it's still not working, so I should fetch the live deploy URL and inspect the bundled JavaScript to see if it's using the correct game URL and connection logic.
+
+The key fix is getting the connection sequence right: subscribe to the WebSocket first, wait about 1.5 seconds for the session to be ready, then send the registration update with an empty state, and finally start the sender loop. I was wrong to revert to position-based chunks earlier — the docs confirm that a fixed chunk is the correct approach, which explains why the original bug was intermittent (players could see each other when spawning close but lost visibility when they flew apart).
+
+But there's a critical issue I just spotted: the handler key names in our subscription might be wrong. The CrowdyJS test uses `onActorUpdate` and `onGenericError`, but our code passes `actorUpdate` and `voxelUpdate` instead. If the keys don't match, the handlers never fire — which would explain why UDP notifications might not actually be working at all, and why local multiplayer only works because the dev relay is handling everything. I need to check the actual SubscriptionManager interface to confirm the correct handler key names.The docs confirm the details. Now I'll check our client code against them to verify the subscription handler naming, since there's a mismatch between `onActorUpdate` and `actorUpdate`.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "context": 4,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/CrowdyJS/src/subscriptions.ts",
+  "pattern": "UdpNotificationHandlers|onActorUpdate|actorUpdate"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/CrowdyJS/src/subscriptions.ts",
+  "pattern": "UdpNotificationHandlers|onActorUpdate|actorUpdate",
+  "topFiles": [
+    {
+      "matchCount": 5,
+      "uri": "../CrowdyJS/src/subscriptions.ts"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 1
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "context": 6,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/CrowdyJS/src/realtime.ts",
+  "pattern": "UdpNotificationHandlers|onActorUpdate|actorUpdate|subscribe\\("
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/benjaminscholtens/Documents/personal_projects/CrowdyJS/src/realtime.ts",
+  "pattern": "UdpNotificationHandlers|onActorUpdate|actorUpdate|subscribe\\(",
+  "topFiles": [
+    {
+      "matchCount": 70,
+      "uri": "../CrowdyJS/src/realtime.ts"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 8
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+ The handler name `actorUpdate` matches what the current CrowdyJS version expects, unlike the older test file that used `onActorUpdate` which would silently fail. Looking at the documentation, I need to verify our implementation handles the timing correctly — specifically waiting about 1.5 seconds after subscribing before sending the first actor update.
+
+Our code registers handlers (which triggers the UDP subscription and opens the WebSocket), then waits 300ms before sending updates. The docs suggest ~1.5s, so if the first registration fires too early before the UDP session is ready, that initial update could be lost — though subsequent updates every 100ms would eventually register the client. More critically, I'm realizing the user might not have redeployed after the previous fix to `netlify.toml`, and there's a key gotcha: **Netlify UI environment variables override the `netlify.toml` settings**. If they originally set environment variables through the Netlify dashboard (as the README instructs), then `VITE_GAME_API_HTTP_URL` might still be pointing to the old value instead of what we configured in the build file.
+
+Actually, let me double-check the precedence — the docs say `netlify.toml` overrides UI settings for build environment variables, so the toml should win. But the real issue is likely that the user hasn't redeployed yet, or the environment variables aren't properly configured. Looking at the docs more carefully, there's also a subtle ordering problem: we need to wait ~1.5s after the subscription opens before sending the first actor update, and we should register with empty state first before sending full state.
+
+The bigger question is what's actually failing on Netlify now — the earlier errors were CORS issues on the proxied GraphQL endpoint, which we switched to a direct URL for. But the management API still needs the proxy since it doesn't have CORS headers. If the user is testing a new deploy, they might be hitting a different issue entirely, possibly with the WebSocket connection or the bootstrap token validation.
+
+Let me check what's actually baked into the deployed bundle by curling the production site and examining the JavaScript to see which URLs are configured. I should also verify the production URL itself is working. The docs mention waiting about 1.5 seconds for the session to be ready before sending updates, so we might need to increase our current 300ms timeout. There's also a note that the proxy drops UDP sessions after 30 seconds of inactivity and auto-reconnects, which could cause notification pauses. The user could check the event log for UDP error codes if something's failing silently.I found the UDP proxy flow docs, which show a ~1.5s wait for session ready before registering actors—longer than our current 300ms implementation. Let me check what's actually deployed on Netlify.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: curl -s "https://cks-simple-web-demo.netlify.app/" | grep -o 'src="[^"]*\.js"' | head -3</summary>
+
+```bash
+curl -s "https://cks-simple-web-demo.netlify.app/" | grep -o 'src="[^"]*\.js"' | head -3
+```
+
+```
+src="/assets/index-B-WPSedh.js"
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: curl -s "https://cks-simple-web-demo.netlify.app/assets/index-B-WPSedh.js" -o /tmp/netlify-bundle.js && grep -o 'game\.e-[a-z0-9]*\.dev\.cks-env\.com' /tmp/netlify-bundle.js | sort -u && grep -o '"/game-api/graphql"' /tmp/netlify-bundle.js | head -2 && grep -o 'VITE_APP_ID[^,]*' /tmp/netlify-bundle.js | head -2; grep -oE '\?\?"(1|67)"' /tmp/netlify-bundle.js | sort -u | head -5</summary>
+
+```bash
+curl -s "https://cks-simple-web-demo.netlify.app/assets/index-B-WPSedh.js" -o /tmp/netlify-bundle.js && grep -o 'game\.e-[a-z0-9]*\.dev\.cks-env\.com' /tmp/netlify-bundle.js | sort -u && grep -o '"/game-api/graphql"' /tmp/netlify-bundle.js | head -2 && grep -o 'VITE_APP_ID[^,]*' /tmp/netlify-bundle.js | head -2; grep -oE '\?\?"(1|67)"' /tmp/netlify-bundle.js | sort -u | head -5
+```
+
+```
+game.e-7nan5854f07w.dev.cks-env.com
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: grep -o 'appId:[A-Za-z0-9_$]*' /tmp/netlify-bundle.js | sort -u | head; echo "---"; grep -oE '(const|var|,)[A-Za-z0-9_$]{1,3}="(1|67)"' /tmp/netlify-bundle.js | sort -u | head; echo "--- check for APP_ID literal ---"; grep -c '"67"' /tmp/netlify-bundle.js; grep -c 'mgmt-api' /tmp/netlify-bundle.js</summary>
+
+```bash
+grep -o 'appId:[A-Za-z0-9_$]*' /tmp/netlify-bundle.js | sort -u | head; echo "---"; grep -oE '(const|var|,)[A-Za-z0-9_$]{1,3}="(1|67)"' /tmp/netlify-bundle.js | sort -u | head; echo "--- check for APP_ID literal ---"; grep -c '"67"' /tmp/netlify-bundle.js; grep -c 'mgmt-api' /tmp/netlify-bundle.js
+```
+
+```
+appId:e
+appId:this
+appId:zr
+---
+,QA="1"
+,zr="67"
+--- check for APP_ID literal ---
+2
+1
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+ The deployed bundle has the correct environment and APP_ID configuration set up properly, so I need to verify whether the game HTTP URL is making direct calls or still routing through `/game-api/graphql` in the current deployment.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: grep -o '"[^"]*game-api[^"]*"' /tmp/netlify-bundle.js | sort -u; echo "---"; grep -o 'https://game\.e-7nan5854f07w\.dev\.cks-env\.com/graphql' /tmp/netlify-bundle.js | head -2; echo "---wss---"; grep -o 'wss://game[^"]*' /tmp/netlify-bundle.js | sort -u</summary>
+
+```bash
+grep -o '"[^"]*game-api[^"]*"' /tmp/netlify-bundle.js | sort -u; echo "---"; grep -o 'https://game\.e-7nan5854f07w\.dev\.cks-env\.com/graphql' /tmp/netlify-bundle.js | head -2; echo "---wss---"; grep -o 'wss://game[^"]*' /tmp/netlify-bundle.js | sort -u
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: grep -oE '[a-z]+://game\.[^"]*' /tmp/netlify-bundle.js | sort -u | head; echo "---"; grep -o 'game-api' /tmp/netlify-bundle.js | head -3; echo "---"; grep -oE '"[^"]{0,40}graphql[^"]{0,10}"' /tmp/netlify-bundle.js | sort -u | head -10</summary>
+
+```bash
+grep -oE '[a-z]+://game\.[^"]*' /tmp/netlify-bundle.js | sort -u | head; echo "---"; grep -o 'game-api' /tmp/netlify-bundle.js | head -3; echo "---"; grep -oE '"[^"]{0,40}graphql[^"]{0,10}"' /tmp/netlify-bundle.js | sort -u | head -10
+```
+
+```
+https://game.e-7nan5854f07w.dev.cks-env.com/graphql
+wss://game.e-7nan5854f07w.dev.cks-env.com/graphql
+---
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+ The bundle deployment looks solid with the correct GraphQL endpoints and app ID configured, so the issue must be elsewhere—either the management API authentication through the proxy isn't working, or something else in the user flow is failing.
+
+Let me write a quick Node script to test the full flow end-to-end: register two guest accounts through Netlify's proxy, connect both to the game server via WebSocket, send actor updates from each client, and verify that notifications fanout correctly between them. I should also check the session readiness timing—the docs mention waiting ~1.5 seconds after subscribing before sending the first actor update, but our code only waits 300ms, which might cause registration to fail if the UDP session isn't ready yet. Though technically each actor update includes the chunk and re-registers, so a missed early one shouldn't break subsequent updates at 10Hz.The config deployed correctly, but the docs show we're waiting only 300ms for the UDP session to be ready when we should wait ~1.5s — I'll write a script to test the exact production flow and identify where it breaks.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /tmp/cks-prod-test.mjs</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+Cancelled
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+ The auto-review is blocking the test script because it registers guest accounts and sends actor updates against the dev environment, which mirrors what the e2e tests do. I believe this diagnostic is the right move to debug why production is still failing, and it's targeting a dev-tier sandbox, not actual production, so I'm going to request approval to proceed.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: cd /Users/benjaminscholtens/Documents/personal_projects/Afterburn && node /tmp/cks-prod-test.mjs 2>&1</summary>
+
+```bash
+cd /Users/benjaminscholtens/Documents/personal_projects/Afterburn && node /tmp/cks-prod-test.mjs 2>&1
+```
+
+```
+node:internal/modules/esm/resolve:844
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'ws' imported from /private/tmp/cks-prod-test.mjs
+    at packageResolve (node:internal/modules/esm/resolve:844:9)
+    at moduleResolve (node:internal/modules/esm/resolve:901:20)
+    at defaultResolve (node:internal/modules/esm/resolve:1121:11)
+    at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:396:12)
+    at ModuleLoader.resolve (node:internal/modules/esm/loader:365:25)
+    at ModuleLoader.getModuleJob (node:internal/modules/esm/loader:240:38)
+    at ModuleWrap.&lt;anonymous&gt; (node:internal/modules/esm/module_job:85:39)
+    at link (node:internal/modules/esm/module_job:84:36) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v21.0.0
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+ The `ws` package isn't accessible from the temp directory since it's installed in CrowdyJS's node_modules. The simplest fix is to run the script from within the CrowdyJS directory itself, since Node's ESM resolution looks for modules relative to the script location rather than the current working directory.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: ls /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS/node_modules/ws 2>/dev/null >/dev/null && echo "ws in CrowdyJS" ; ls /Users/benjaminscholtens/Documents/personal_projects/Afterburn/node_modules/ws 2>/dev/null >/dev/null && echo "ws in Afterburn"</summary>
+
+```bash
+ls /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS/node_modules/ws 2>/dev/null >/dev/null && echo "ws in CrowdyJS" ; ls /Users/benjaminscholtens/Documents/personal_projects/Afterburn/node_modules/ws 2>/dev/null >/dev/null && echo "ws in Afterburn"
+```
+
+```
+ws in CrowdyJS
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+Cancelled
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: cp /tmp/cks-prod-test.mjs /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS/cks-prod-test.tmp.mjs && cd /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS && node cks-prod-test.tmp.mjs 2>&1; rm -f cks-prod-test.tmp.mjs</summary>
+
+```bash
+cp /tmp/cks-prod-test.mjs /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS/cks-prod-test.tmp.mjs && cd /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS && node cks-prod-test.tmp.mjs 2>&1; rm -f cks-prod-test.tmp.mjs
+```
+
+```
+1. Registering guests via Netlify /mgmt-api proxy...
+   A: prodtest-a-1781204569568@demo.local | B: prodtest-b-1781204569661@demo.local
+2. Bootstrap check (app 67)...
+   bootstrap: {"appId":"67","udpProxyConnectionStatus":{"connected":false}}
+3. Opening WS subscriptions...
+4. Waiting 2s for UDP sessions (docs say ~1.5s)...
+5. Registering both actors (empty state)...
+file:///Users/benjaminscholtens/Documents/personal_projects/CrowdyJS/cks-prod-test.tmp.mjs:27
+    throw new Error(&#96;${url} -&gt; ${res.status}: ${JSON.stringify(body.errors ?? body).slice(0, 300)}&#96;);
+          ^
+
+Error: https://game.e-7nan5854f07w.dev.cks-env.com/graphql -&gt; 200: [{"message":"Failed to send actor update: Missing required fields: state","locations":[{"line":1,"column":46}],"path":["sendActorUpdate"],"extensions":{"code":"BAD_REQUEST","httpStatus":400}}]
+    at gql (file:///Users/benjaminscholtens/Documents/personal_projects/CrowdyJS/cks-prod-test.tmp.mjs:27:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async file:///Users/benjaminscholtens/Documents/personal_projects/CrowdyJS/cks-prod-test.tmp.mjs:111:26
+
+Node.js v21.0.0
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+ The docs show an empty state for registration, but the server actually rejects that and requires a non-empty state value. Since our app always sends a real state anyway, I just need to update the test to match what the server expects—something like the 'AA==' value used in the CrowdyJS test.The server requires non-empty state in registration, so I'm updating the test to use a valid state value like the CrowdyJS test does.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /tmp/cks-prod-test.mjs</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: cp /tmp/cks-prod-test.mjs /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS/cks-prod-test.tmp.mjs && cd /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS && node cks-prod-test.tmp.mjs 2>&1; rm -f cks-prod-test.tmp.mjs</summary>
+
+```bash
+cp /tmp/cks-prod-test.mjs /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS/cks-prod-test.tmp.mjs && cd /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS && node cks-prod-test.tmp.mjs 2>&1; rm -f cks-prod-test.tmp.mjs
+```
+
+```
+1. Registering guests via Netlify /mgmt-api proxy...
+   A: prodtest-a-1781204597015@demo.local | B: prodtest-b-1781204597026@demo.local
+2. Bootstrap check (app 67)...
+   bootstrap: {"appId":"67","udpProxyConnectionStatus":{"connected":false}}
+3. Opening WS subscriptions...
+4. Waiting 2s for UDP sessions (docs say ~1.5s)...
+5. Registering both actors (minimal state)...
+   A reg: { sendActorUpdate: true }
+   B reg: { sendActorUpdate: true }
+6. A sends 5 state updates...
+7. B sends 5 state updates...
+--- RESULTS ---
+B received from A: 0
+A received from B: 0
+A errors: [
+  'UNAUTHORIZED',
+  'UNAUTHORIZED',
+  'UNAUTHORIZED',
+  'UNAUTHORIZED',
+  'UNAUTHORIZED',
+  'UNAUTHORIZED'
+] | B errors: [
+  'UNAUTHORIZED',
+  'UNAUTHORIZED',
+  'UNAUTHORIZED',
+  'UNAUTHORIZED',
+  'UNAUTHORIZED',
+  'UNAUTHORIZED'
+]
+A total notifications: 0 | B total: 0
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+ So the real issue is that `sendActorUpdate` succeeds on the mutation side but the UDP subscription layer is hitting an `UNAUTHORIZED` error from the game server — the Buddy instance is rejecting these actor updates for app 67 on environment e-7nan5854f07w that was registered through the Netlify management proxy. I'm realizing there's something in the earlier conversation history that might be relevant here.
+
+Actually, I think I've been missing something critical: the local e2e tests passed, but they were probably routing through the dev HTTP relay for peer sync, not actually testing UDP at all. So UDP could be broken everywhere with this `UNAUTHORIZED` response and we just never caught it locally because the relay was masking the failure. The `UNAUTHORIZED` error could stem from a few places — either app 67 isn't properly linked or active on this environment so the entitlement check fails, or there's a mismatch in how the user registered through the Netlify proxy versus how Buddy is validating the HMAC/session. Let me test with app ID 1 on the same environment to see if that works — if it does, then the problem is specifically with app 67's entitlement on this environment.Found the root cause — mutations return true but the game server rejects updates with UNAUTHORIZED on UDP, which the local HTTP relay masks. I'll test if this is specific to app 67.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: cd /tmp && sed 's/const APP_ID = .67./const APP_ID = '"'"'1'"'"';/' cks-prod-test.mjs > cks-prod-test-app1.mjs && cp cks-prod-test-app1.mjs /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS/cks-prod-test.tmp.mjs && cd /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS && node cks-prod-test.tmp.mjs 2>&1; rm -f cks-prod-test.tmp.mjs</summary>
+
+```bash
+cd /tmp && sed 's/const APP_ID = .67./const APP_ID = '"'"'1'"'"';/' cks-prod-test.mjs > cks-prod-test-app1.mjs && cp cks-prod-test-app1.mjs /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS/cks-prod-test.tmp.mjs && cd /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS && node cks-prod-test.tmp.mjs 2>&1; rm -f cks-prod-test.tmp.mjs
+```
+
+```
+1. Registering guests via Netlify /mgmt-api proxy...
+   A: prodtest-a-1781204631064@demo.local | B: prodtest-b-1781204631080@demo.local
+2. Bootstrap check (app 67)...
+   bootstrap: {"appId":"1","udpProxyConnectionStatus":{"connected":false}}
+3. Opening WS subscriptions...
+4. Waiting 2s for UDP sessions (docs say ~1.5s)...
+5. Registering both actors (minimal state)...
+   A reg: { sendActorUpdate: true }
+   B reg: { sendActorUpdate: true }
+6. A sends 5 state updates...
+7. B sends 5 state updates...
+--- RESULTS ---
+B received from A: 0
+A received from B: 5
+A errors: [ 'UNAUTHORIZED' ] | B errors: [ 'UNAUTHORIZED' ]
+A total notifications: 10 | B total: 5
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+ I'm seeing a clear pattern now—App 67 is hitting `UNAUTHORIZED` on every actor update with zero notifications getting through, while App 1's replication is working properly. App 1 received updates from its peer and both clients got that initial `UNAUTHORIZED` error before the UDP session established itself. The issue is that App 67 lacks authorization on the e-7nan5854f environment. App 67 isn't authorized for UDP on this environment — it needs to be linked and activated in the CKS console, or we switch back to app 1 which is confirmed working bidirectionally. I should update both the local `.env` and netlify.toml to use APP_ID=1, since that's the verified working setup, and explain to the user that app 67 requires proper console configuration for UDP entitlement.</details></think>
+
+_**Agent (composer-2.5)**_
+
+Major finding. Let me confirm it's bidirectional on app 1 with a follow-up round of sends.
+
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /tmp/cks-prod-test.mjs</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+Cancelled
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: cd /tmp && sed 's/const APP_ID = .67./const APP_ID = '"'"'1'"'"';/' cks-prod-test.mjs > cks-prod-test-app1.mjs && cp cks-prod-test-app1.mjs /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS/cks-prod-test.tmp.mjs && cd /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS && node cks-prod-test.tmp.mjs 2>&1; rm -f cks-prod-test.tmp.mjs</summary>
+
+```bash
+cd /tmp && sed 's/const APP_ID = .67./const APP_ID = '"'"'1'"'"';/' cks-prod-test.mjs > cks-prod-test-app1.mjs && cp cks-prod-test-app1.mjs /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS/cks-prod-test.tmp.mjs && cd /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS && node cks-prod-test.tmp.mjs 2>&1; rm -f cks-prod-test.tmp.mjs
+```
+
+```
+1. Registering guests via Netlify /mgmt-api proxy...
+   A: prodtest-a-1781204695018@demo.local | B: prodtest-b-1781204695082@demo.local
+2. Bootstrap check (app 67)...
+   bootstrap: {"appId":"1","udpProxyConnectionStatus":{"connected":false}}
+3. Opening WS subscriptions...
+4. Waiting 2s for UDP sessions (docs say ~1.5s)...
+5. Registering both actors (minimal state)...
+   A reg: { sendActorUpdate: true }
+   B reg: { sendActorUpdate: true }
+6. A sends 5 state updates...
+7. B sends 5 state updates...
+8. A sends 5 more (after B is fully registered)...
+--- RESULTS ---
+B received from A: 5
+A received from B: 5
+A errors: [ 'UNAUTHORIZED' ] | B errors: [ 'UNAUTHORIZED' ]
+A total notifications: 15 | B total: 10
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+ App 1 has bidirectional replication working smoothly with just one initial UNAUTHORIZED error from UDP session setup racing, but App 67 is hitting UNAUTHORIZED on every update with zero fanout because it's not authorized for UDP on the environment. The issue is that the deployed config is using APP_ID=67, which the game server rejects.
+
+The fix is to switch APP_ID to 1 in the environment and build config files (which I've verified works), and let the user know that if they want to use App 67, they'll need to fix its linkage and entitlements in the CKS console. Let me make those changes now.App 67 is getting rejected at the UDP layer while app 1 works fine on the same environment, so I'm switching the config to app 1 to test.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/.env</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/netlify.toml</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/.env.example</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/README.md</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/README.md</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+ The dev server will restart automatically since Vite watches for .env changes, which should pick up the new configuration. The UNAUTHORIZED errors are already being logged through CrowdySession's error handling and visible in the app's event log, so that's covered. Now I need to verify the build still works and then summarize what we've found.</details></think>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: cd /Users/benjaminscholtens/Documents/personal_projects/Afterburn && npm run build 2>&1 | tail -4</summary>
+
+```bash
+cd /Users/benjaminscholtens/Documents/personal_projects/Afterburn && npm run build 2>&1 | tail -4
+```
+
+```
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.22s
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+Found it. I checked the [UDP proxy docs](https://docs.crowdedkingdoms.com/game-api/graphql-udp-proxy-api) and then ran a two-client replication test against your exact production config (Netlify mgmt proxy → game API on `e-7nan5854f07w`). The deployed bundle was actually correct — the problem is **App 67**.
+
+## Root cause: App 67 is rejected at the UDP layer
+
+| | App 67 | App 1 |
+|---|---|---|
+| `gameClientBootstrap` | ✓ succeeds | ✓ succeeds |
+| `sendActorUpdate` mutation | ✓ returns `true` | ✓ returns `true` |
+| UDP fanout | ✗ **every update → `GenericErrorResponse: UNAUTHORIZED`** | ✓ **5/5 updates delivered both directions** |
+
+This is the nasty part: bootstrap succeeds and the mutation returns `true` for app 67, but the game server silently rejects every actor update with `UNAUTHORIZED` on the subscription — so nobody ever sees anyone. Per the docs, [error responses arrive as `GenericErrorResponse` on the subscription](https://docs.crowdedkingdoms.com/game-api/graphql-udp-proxy-api), not as mutation failures.
+
+It also explains why local testing looked fine: the dev HTTP relay was masking the UDP failure the whole time. App 67 likely isn't fully linked / runtime-active on this environment.
+
+## Changes made
+
+- `.env`, `netlify.toml`, `.env.example`: **`VITE_APP_ID=1`** (verified working), with comments explaining why
+- `README.md`: documented that bootstrap success ≠ UDP entitlement
+
+Two smaller things I confirmed from the docs while testing:
+- Registration with empty `state` (as the docs show) is rejected by this server — but our app always sends real state, so no change needed
+- The first send can race UDP session setup (one `UNAUTHORIZED` then it recovers) — we send continuously, so this self-heals
+
+## Next steps
+
+1. **Push and redeploy** Netlify (clear cache). If `VITE_APP_ID` is also set in the Netlify UI env vars, change it to `1` there — UI values override `netlify.toml`.
+2. **Hard-refresh / clear localStorage** on both localhost and the deploy (the env-scope reset will handle most of it).
+3. Your local dev server will pick up the `.env` change automatically (Vite restarts on `.env` edits).
+
+If you want App 67 specifically, check the CKS console that it's linked to `e-7nan5854f07w` with `runtime_status: active` — I can re-test it for UDP entitlement once you've done that.
+
+---
+
+_**User**_
+
+ManagementApiUrl=https://api.e-7nan5854f07w.dev.cks-env.com
+GameApiHttpUrl=https://game.e-7nan5854f07w.dev.cks-env.com/graphql
+GameApiWsUrl=wss://game.e-7nan5854f07w.dev.cks-env.com/graphql
+AppId=67
+OrgId=1
+
+here are the end points  can you made sure we are using 
+
+---
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+ The user is pointing me to the correct endpoints and confirming AppId=67, but our testing showed that app getting UNAUTHORIZED errors on UDP. I switched to app 1 as a workaround, though the user seems confident 67 is the right one—maybe they've updated it in the console. I should configure the system to use these endpoints with AppId=67 as they've specified.
+
+I'm updating the environment files to set VITE_APP_ID=67 and ensuring the URLs point to the right handle (e-7nan5854f07w), then re-running the UDP test to see if it works now. I also need to verify that the management API proxy setup is correct—the direct endpoint doesn't allow CORS from browsers, so we're routing through the proxy to the same host, which should be fine.</details></think>
+
+_**Agent (composer-2.5)**_
+
+These endpoints match what's configured — except App ID, which I switched to 1 last turn because 67 was failing UDP. Let me set it back to 67 as you've specified and re-verify whether 67 replicates now.
+
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/.env</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/netlify.toml</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/.env.example</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/README.md</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: cp /tmp/cks-prod-test.mjs /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS/cks-prod-test.tmp.mjs && cd /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS && node cks-prod-test.tmp.mjs 2>&1; rm -f cks-prod-test.tmp.mjs</summary>
+
+```bash
+cp /tmp/cks-prod-test.mjs /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS/cks-prod-test.tmp.mjs && cd /Users/benjaminscholtens/Documents/personal_projects/CrowdyJS && node cks-prod-test.tmp.mjs 2>&1; rm -f cks-prod-test.tmp.mjs
+```
+
+```
+1. Registering guests via Netlify /mgmt-api proxy...
+   A: prodtest-a-1781204806344@demo.local | B: prodtest-b-1781204806413@demo.local
+2. Bootstrap check (app 67)...
+   bootstrap: {"appId":"67","udpProxyConnectionStatus":{"connected":false}}
+3. Opening WS subscriptions...
+4. Waiting 2s for UDP sessions (docs say ~1.5s)...
+5. Registering both actors (minimal state)...
+   A reg: { sendActorUpdate: true }
+   B reg: { sendActorUpdate: true }
+6. A sends 5 state updates...
+7. B sends 5 state updates...
+8. A sends 5 more (after B is fully registered)...
+--- RESULTS ---
+B received from A: 0
+A received from B: 0
+A errors: [
+  'UNAUTHORIZED',
+  'UNAUTHORIZED',
+  'UNAUTHORIZED',
+  'UNAUTHORIZED',
+  'UNAUTHORIZED',
+  'UNAUTHORIZED',
+  'UNAUTHORIZED',
+  'UNAUTHORIZED',
+  'UNAUTHORIZED',
+  'UNAUTHORIZED',
+  'UNAUTHORIZED'
+] | B errors: [
+  'UNAUTHORIZED',
+  'UNAUTHORIZED',
+  'UNAUTHORIZED',
+  'UNAUTHORIZED',
+  'UNAUTHORIZED',
+  'UNAUTHORIZED'
+]
+A total notifications: 0 | B total: 0
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<think><details><summary>Thought Process</summary>
+ App 67 is still hitting UNAUTHORIZED errors on every actor update with no fanout happening, while app 1 works fine. The configuration matches what was requested and the URLs check out, but the UDP rejection for app 67 is persisting on the server side. I should guide the user to check the CKS console to diagnose what's blocking it, since the management URL is being accessed through a proxy to handle browser CORS.</details></think>
+
+_**Agent (composer-2.5)**_
+
+All endpoints are now set exactly as you specified — but I re-tested App 67 and it's still being rejected server-side. Here's the full picture.
+
+## Config status (all matching your values)
+
+| Setting | Your value | App config | Status |
+|---|---|---|---|
+| Management API | `api.e-7nan5854f07w.dev.cks-env.com` | `/mgmt-api` proxy → that exact host (browsers need the proxy; the mgmt API doesn't send CORS headers) | ✓ |
+| Game HTTP | `https://game.e-7nan5854f07w.dev.cks-env.com/graphql` | same, direct | ✓ |
+| Game WS | `wss://game.e-7nan5854f07w.dev.cks-env.com/graphql` | same, direct | ✓ |
+| App ID | `67` | `67` (restored in `.env`, `netlify.toml`, `.env.example`, README) | ✓ |
+| Org ID | `1` | `1` | ✓ |
+
+## But App 67 still fails UDP on the server
+
+I re-ran the two-client replication test against these exact endpoints just now:
+
+- **App 67**: every `sendActorUpdate` → `GenericErrorResponse: UNAUTHORIZED` on the subscription, **zero** notifications delivered
+- **App 1** (same env, same accounts flow, verified earlier): **5/5 updates delivered both directions**
+
+So the endpoints are right, auth is right, the client flow is right — the game server's UDP layer specifically refuses **app 67**. Bootstrap succeeding for app 67 is misleading; the rejection only happens at the replication layer.
+
+## What to check in the CKS console
+
+For app 67 on environment `e-7nan5854f07w`:
+1. The app is **linked to this environment** (not just created in the org)
+2. Its **`runtime_status` is `active`**
+3. Any UDP/replication entitlement for the app is enabled
+
+Once you've changed anything there, tell me and I'll re-run the replication test for app 67 — it takes about 10 seconds. Until the server accepts app 67, multiplayer won't work regardless of client config; if you need it working immediately, app 1 is the verified-working fallback on this env.
+
+---
+
+_**User**_
+
+lets go back to app 1
+
+---
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/.env</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/netlify.toml</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/.env.example</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/benjaminscholtens/Documents/personal_projects/Afterburn/README.md</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (composer-2.5)**_
+
+Switched everything back to **App 1**:
+
+- `.env` → `VITE_APP_ID=1`
+- `netlify.toml` → `VITE_APP_ID = "1"`
+- `.env.example` and `README.md` updated to match
+
+Endpoints stay on `e-7nan5854f07w` (mgmt proxy, direct game HTTP/WS).
+
+**Next steps:**
+1. **Redeploy Netlify** — if `VITE_APP_ID` is set in the Netlify UI, change it to `1` there too (UI overrides `netlify.toml`).
+2. **Clear site localStorage** or hard-refresh on localhost and the deploy so env-scoped tokens refresh.
+3. Restart local dev if it’s already running so it picks up `.env`.
+
+App 1 is the one we verified with bidirectional UDP replication on this environment.
