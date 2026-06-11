@@ -11,14 +11,11 @@
   VITE_MANAGEMENT_API_URL = "/mgmt-api"
   VITE_MANAGEMENT_GRAPHQL_URL = "/mgmt-api/graphql"
   VITE_ENV_HANDLE = "e-7nan5854f07w"
-  VITE_GAME_API_HTTP_URL = "/game-api/graphql"
+  # Game API allows Netlify origins via CORS — direct URL avoids proxy failures under UDP load.
+  VITE_GAME_API_HTTP_URL = "https://game.e-7nan5854f07w.dev.cks-env.com/graphql"
   VITE_GAME_API_WS_URL = "wss://game.e-7nan5854f07w.dev.cks-env.com/graphql"
   VITE_APP_ID = "67"
   VITE_ORG_ID = "1"
 
-# /mgmt-api and /game-api proxies are generated into public/_redirects at build time.
-# SPA fallback only — do not add those paths here or they will override the generated proxies.
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+# /mgmt-api proxy is generated into public/_redirects at build time (game API is direct — see above).
+# SPA fallback lives in public/_redirects — do not add [[redirects]] here; it can override API proxies.

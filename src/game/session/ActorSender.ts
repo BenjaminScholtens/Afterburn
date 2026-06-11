@@ -15,6 +15,7 @@ export class ActorSender {
   private stateEncoder: (pose: ActorPose) => string = encodeActorState;
   private actorUuid: string | null = null;
   private syncIntervalMs = ACTOR_SYNC_INTERVAL_MS;
+  private sendInFlight = false;
 
   constructor(
     private readonly session: CrowdySession,
@@ -62,18 +63,25 @@ export class ActorSender {
   }
 
   private async sendOnce(): Promise<void> {
-    if (!this.provider) return;
-    const pose = this.provider.getPose();
-    const { chunk } = worldToChunkInput(pose.worldX, pose.worldY);
-    const seq = this.nextSeq();
-    await this.session.sendActorUpdate({
-      chunk,
-      state: this.stateEncoder(pose),
-      sequenceNumber: seq,
-      distance: 8,
-      decayRate: 0,
-      uuid: this.actorUuid ?? undefined,
-    });
+    if (!this.provider || this.sendInFlight) return;
+    this.sendInFlight = true;
+    try {
+      const pose = this.provider.getPose();
+      const { chunk } = worldToChunkInput(pose.worldX, pose.worldY);
+      const seq = this.nextSeq();
+      await this.session.sendActorUpdate({
+        chunk,
+        state: this.stateEncoder(pose),
+        sequenceNumber: seq,
+        distance: 8,
+        decayRate: 0,
+        uuid: this.actorUuid ?? undefined,
+      });
+    } catch (error) {
+      console.warn('Actor update failed:', error);
+    } finally {
+      this.sendInFlight = false;
+    }
   }
 
   private nextSeq(): number {

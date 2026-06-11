@@ -10,11 +10,11 @@ export const MANAGEMENT_GRAPHQL_URL =
 
 export const GAME_HTTP_URL =
   import.meta.env.VITE_GAME_API_HTTP_URL ??
-  'https://game.e-zt0psk82q3bi.dev.cks-env.com/graphql';
+  'https://game.e-7nan5854f07w.dev.cks-env.com/graphql';
 
 export const GAME_WS_URL =
   import.meta.env.VITE_GAME_API_WS_URL ??
-  'wss://game.e-zt0psk82q3bi.dev.cks-env.com/graphql';
+  'wss://game.e-7nan5854f07w.dev.cks-env.com/graphql';
 
 export const APP_ID = import.meta.env.VITE_APP_ID ?? '1';
 export const ORG_ID = import.meta.env.VITE_ORG_ID ?? '1';
@@ -27,8 +27,8 @@ export const TILE_SIZE = 8;
 export const CHUNK_VOXEL_SIZE = 16;
 
 export const ACTOR_SYNC_INTERVAL_MS = 100;
-/** Battle pose sync — 30 Hz keeps rival positions tight at cruise speed. */
-export const BATTLE_ACTOR_SYNC_INTERVAL_MS = 33;
+/** Battle pose sync — 30 Hz local; slower on production to avoid flooding HTTP. */
+export const BATTLE_ACTOR_SYNC_INTERVAL_MS = import.meta.env.PROD ? 100 : 33;
 export const ACTOR_STATE_BYTES = 96;
 
 /** Viewport dimensions in world pixels. */

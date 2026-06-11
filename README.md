@@ -108,12 +108,12 @@ In **Site configuration → Environment variables** (scoped to **Build**), set a
 | Variable | Example |
 | --- | --- |
 | `VITE_ENV_HANDLE` | `e-7nan5854f07w` |
-| `VITE_GAME_API_HTTP_URL` | `/game-api/graphql` (proxied — do not use the direct `game.*` URL on Netlify) |
+| `VITE_GAME_API_HTTP_URL` | `https://game.e-7nan5854f07w.dev.cks-env.com/graphql` (direct — game API CORS allows Netlify origins) |
 | `VITE_GAME_API_WS_URL` | `wss://game.e-7nan5854f07w.dev.cks-env.com/graphql` (direct; Netlify cannot proxy WebSockets) |
 | `VITE_APP_ID` | `67` (app id from that env) |
 | `VITE_ORG_ID` | `1` |
 
-`netlify.toml` already sets `VITE_MANAGEMENT_API_URL=/mgmt-api` and `VITE_GAME_API_HTTP_URL=/game-api/graphql`. The build generates `public/_redirects` so `/mgmt-api` and `/game-api` proxy to `https://api.<VITE_ENV_HANDLE>.dev.cks-env.com` and `https://game.<VITE_ENV_HANDLE>.dev.cks-env.com`. Override with `MANAGEMENT_API_PROXY_TARGET` / `GAME_API_PROXY_TARGET` if needed.
+`netlify.toml` sets `VITE_MANAGEMENT_API_URL=/mgmt-api`. The build generates `public/_redirects` so `/mgmt-api` proxies to `https://api.<VITE_ENV_HANDLE>.dev.cks-env.com`. Game HTTP/WS hit the game server directly (the dev-tier game API reflects your Netlify origin in CORS). Override with `MANAGEMENT_API_PROXY_TARGET` if needed.
 
 After changing env vars: **Clear cache and deploy site**, then hard-refresh the browser (or clear site localStorage) so guest auth re-runs against the correct env.
 

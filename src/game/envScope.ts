@@ -1,6 +1,6 @@
 const ENV_MARKER_KEY = 'cks-demo-env-handle';
 const DEFAULT_GAME_HTTP =
-  'https://game.e-zt0psk82q3bi.dev.cks-env.com/graphql';
+  'https://game.e-7nan5854f07w.dev.cks-env.com/graphql';
 
 /** Derive env slug from game URL (e.g. game.e-zt0psk82q3bi.dev.cks-env.com → e-zt0psk82q3bi). */
 export function resolveEnvHandle(): string {
